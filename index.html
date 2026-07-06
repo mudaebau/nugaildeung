@@ -644,6 +644,14 @@ tr:last-child td{border-bottom:none}
   </section>
 </div>
 
+<!-- ================= 대회요강 (공개 링크) ================= -->
+<div class="mobile" id="viewNotice" style="display:none">
+  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>실서비스: 공개 링크로 접속 · 로그인 불필요</span></div>
+  <section class="page on" style="padding-top:16px">
+    <div id="noticeBody"><p class="sub" style="text-align:center;padding:30px 0">불러오는 중…</p></div>
+  </section>
+</div>
+
 <!-- 점수 정정 확인 -->
 <div class="overlay" id="corrOv">
   <div class="pad">
@@ -764,7 +772,7 @@ function dday(d){const diff=Math.ceil((new Date(d)-new Date('2026-07-03'))/86400
 /* ================= 화면 전환 + 뒤로가기 (History API) ================= */
 let curView='Owner',curPage='opHome',navStack=[];
 function renderLoc(){
-  ['Owner','Judge','Board','Apply'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
+  ['Owner','Judge','Board','Apply','Notice'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
   if(curView==='Owner'){
     document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===curPage));
     document.querySelectorAll('#viewOwner .page').forEach(p=>p.classList.toggle('on',p.id===curPage))}
@@ -847,6 +855,57 @@ async function loadTournaments(){
     return dbToTournament(row,count||0)}));
   tournaments=withCounts;
   renderHome()}
+
+/* ================= 대회요강 (?notice=) ================= */
+async function loadNotice(tournamentId){
+  const{data:t,error}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
+  if(error||!t){
+    $('#noticeBody').innerHTML='<p class="sub" style="text-align:center;padding:30px 0">대회 정보를 찾을 수 없습니다</p>';
+    return}
+  renderNotice(t)}
+function noticeStatusLabel(s){
+  return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
+function renderNotice(t){
+  const period=t.date_start===t.date_end?(t.date_start||'—').replaceAll('-','.')
+    :`${(t.date_start||'').replaceAll('-','.')} ~ ${(t.date_end||'').replaceAll('-','.')}`;
+  const venues=(t.venues||[]).join(', ')||'—';
+  const holes=(t.rounds||1)*18;
+  const parTot=(t.course_pars||[]).reduce((a,c)=>a+(Array.isArray(c)?c.reduce((x,y)=>x+y,0):(+c||0)),0);
+  const awardList=['종합 1·2·3위'];
+  if(t.awards){
+    if(t.awards.gender)awardList.push('남녀부');
+    if(t.awards.age)awardList.push('연령부 (60·70·80대)');
+    if(t.awards.club)awardList.push('클럽 대항전')}
+  const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
+  const fieldList=Object.keys(fieldLabels).filter(k=>t.fields&&t.fields[k]).map(k=>fieldLabels[k]);
+  $('#noticeBody').innerHTML=`
+    <div class="poster">
+      <div class="pdate">${noticeStatusLabel(t.status)}</div>
+      <h3>${t.name}</h3>
+      <div class="pmeta">주최·주관 ${t.host_org||'—'}<br>${period} · ${venues}</div>
+    </div>
+    <div class="card">
+      <label class="fl" style="margin-top:0">경기 방식</label>
+      <p>${holes}홀 스트로크 · ${t.rounds||1}개 코스${parTot?` · PAR ${parTot}`:''}</p>
+      <label class="fl">모집 정원</label>
+      <p>${t.cap}명</p>
+      <label class="fl">동점자 처리</label>
+      <p>${t.tie_rule||'—'}</p>
+    </div>
+    <div class="card">
+      <label class="fl" style="margin-top:0">시상 부문</label>
+      <p>${awardList.join(' · ')}</p>
+      <label class="fl">접수 시 수집 정보</label>
+      <p>${fieldList.join(', ')||'—'}</p>
+    </div>
+    <div class="card">
+      <button class="btn full" onclick="copyNoticeLink('${t.id}')">요강 링크 복사</button>
+      ${t.status==='open'?`<button class="btn full ghost" style="margin-top:10px" onclick="location.href='?apply=${t.id}'">참가 신청하기</button>`:''}
+    </div>`}
+function copyNoticeLink(id){
+  const link=`${location.origin}${location.pathname}?notice=${id}`;
+  navigator.clipboard?.writeText(link).catch(()=>{});
+  toast('요강 링크가 복사되었습니다')}
 
 /* ================= auth ================= */
 function whoRender(){
@@ -1613,13 +1672,16 @@ function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.disp
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
   const qs=new URLSearchParams(location.search);
-  const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply');
+  const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply'),noticeId=qs.get('notice');
   if(jToken&&await enterViaJudgeToken(jToken)){
     const bb=document.querySelector('.backbar');if(bb)bb.style.display='none';
     curView='Judge';renderLoc();return}
   if(boardId){
     await loadBoardData(boardId);subscribeBoardRealtime(boardId);
     curView='Board';renderLoc();return}
+  if(noticeId){
+    curView='Notice';renderLoc();
+    await loadNotice(noticeId);return}
   renderStaff();renderPlayers();renderVenues();
   await loadTournaments();
   if(applyId)openApply(applyId)})();
