@@ -294,7 +294,7 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
 <!-- ================= 메인 앱 ================= -->
@@ -703,6 +703,13 @@ tr:last-child td{border-bottom:none}
 <div class="toast" id="toastEl"></div>
 
 <script>
+/* ================= Supabase =================
+   anon key는 공개되어도 되는 키입니다 — 실제 접근 제어는 Supabase RLS 정책이 담당합니다
+   (누가일등 DB 설계서 2단계). 점수 입력처럼 검증이 필요한 쓰기는 이후 단계에서 RPC로 감쌉니다. */
+const SUPABASE_URL='https://tbmwdekzujfrebjlicnx.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRibXdkZWt6dWpmcmViamxpY254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzM3NjksImV4cCI6MjA5ODgwOTc2OX0.CkSEnsjmEBiPGjt1dIO4LPkyiBkmWQ_BpptO4GMVH9k';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
 /* ================= state ================= */
 const PARS18=[3,4,3,3,4,3,5,4,4, 3,3,4,5,3,4,3,4,4]; // 코스당 파 66
 let ROUNDS=2,HOLES=36,PAR_TOT=132;
@@ -715,7 +722,7 @@ let boardMode=-1,jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parE
 const config={created:false,name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:120,
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false}};
-const user={loggedIn:false,name:'',phone:''};
+const user={loggedIn:false,name:'',phone:'',id:null};
 let staff=[
   {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true,link:'none'},
   {name:'이도현',phone:'010-8873-0294',duty:'2코스 심판 (미사한강)',canScore:true,link:'none'},
@@ -723,13 +730,8 @@ let staff=[
   {name:'정우성',phone:'010-6640-2381',duty:'본부석·시상',canScore:false,link:'none'}];
 let players=[],groups=[],curGroup=0,curStaff=0,curHole=0,padTarget=null,simTimer=null,logEntries=[],pending=[],curFilter='all';
 
-/* 공개 대회 리스트 (샘플) */
-let tournaments=[
-  {id:1,name:'하남시장배 생활체육 파크골프대회',place:'미사한강 파크골프장',date:'2026-07-03',status:'live',players:96,cap:120,host:'하남시파크골프협회',mine:false},
-  {id:2,name:'솔터공원 7월 월례오픈',place:'솔터공원 파크골프장',date:'2026-07-12',status:'open',players:41,cap:80,host:'솔터공원회',mine:false},
-  {id:3,name:'한강은빛회 창립 5주년 친선전',place:'광나루 파크골프장',date:'2026-07-19',status:'open',players:28,cap:60,host:'한강은빛회',mine:false},
-  {id:4,name:'제3회 경기도협회장배',place:'여주 파크골프장',date:'2026-06-14',status:'done',players:128,cap:128,host:'경기도파크골프협회',mine:false,winner:'박정순 (여·72)'},
-  {id:5,name:'청솔클럽 6월 정기전',place:'솔터공원 파크골프장',date:'2026-06-07',status:'done',players:36,cap:40,host:'청솔클럽',mine:false,winner:'오세창 (남·66)'}];
+/* 공개 대회 리스트 — Supabase tournaments 테이블에서 로드 (loadTournaments 참고) */
+let tournaments=[];
 
 const DEMO=[["김영수","남",71],["박순자","여",68],["이철호","남",74],["최금례","여",70],
 ["정만식","남",69],["한옥분","여",72],["오세창","남",66],["윤정님","여",65],
@@ -805,7 +807,7 @@ function statusInfo(t){
 function tcardHTML(t){
   const s=statusInfo(t);
 
-  return`<button class="tcard ${t.mine?'mine':''}" onclick="openT(${t.id})">
+  return`<button class="tcard ${t.mine?'mine':''}" onclick="openT('${t.id}')">
     ${t.mine?'<span class="mine-tag">내가 개설한 대회</span>':''}
     <div class="trow1"><span class="tstat ${s.cls}">${s.label}</span><b class="tn">${t.name}</b></div>
     <div class="tmeta">${t.date.replaceAll('-','.')}${t.dateE&&t.dateE!==t.date?' ~ '+t.dateE.slice(5).replace('-','.'):''} · ${t.place}<br>주최 ${t.host} · 참가 <span class="num">${t.players}</span>명${t.winner?` · 우승 ${t.winner}`:''}</div>
@@ -826,6 +828,20 @@ function openT(id){
   if(t.status==='open'){openApply(id);return}
   toast('실서비스: 최종 결과·기록 페이지로 이동')}
 
+function dbToTournament(row,playerCount){
+  const venues=row.venues||[];
+  return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
+    date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,
+    host:row.host_org,mine:!!(user.id&&row.owner_id===user.id)}}
+async function loadTournaments(){
+  const{data,error}=await sb.from('tournaments').select('*').order('created_at',{ascending:false});
+  if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
+  const withCounts=await Promise.all(data.map(async row=>{
+    const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
+    return dbToTournament(row,count||0)}));
+  tournaments=withCounts;
+  renderHome()}
+
 /* ================= auth ================= */
 function whoRender(){
   $('#whoBox').innerHTML=user.loggedIn?`<b>${user.name}</b> 님 · 운영자`:'둘러보는 중 · 로그인 안 함'}
@@ -839,15 +855,17 @@ function sendCode(){
 function verifyCode(){
   if($('#loginCode').value!=='0000'){toast('인증번호가 일치하지 않습니다 (데모: 0000)');return}
   $('#authStep2').style.display='none';$('#authStep3').style.display='block'}
-function finishSignup(){
+async function finishSignup(){
   const n=$('#loginName').value.trim();
   if(!n){toast('이름을 입력해 주세요');return}
-  user.loggedIn=true;user.name=n;
+  const{data,error}=await sb.from('operators').upsert({phone:user.phone,name:n},{onConflict:'phone'}).select().single();
+  if(error){toast('가입 처리 중 오류가 발생했습니다');console.error(error);return}
+  user.id=data.id;user.name=data.name;user.loggedIn=true;
   whoRender();
   $('#authStep3').style.display='none';$('#wizBox').style.display='block';
   $('#ownerName').textContent=user.name;
   $('#ownerPhone').textContent=maskPhone(user.phone)+' · 전체 권한';
-  toast(`${n} 님, 가입 완료! 이제 대회를 개설하세요`)}
+  toast(`${user.name} 님, 가입 완료! 이제 대회를 개설하세요`)}
 
 /* ================= wizard ================= */
 const VENUE_DEFAULTS=['솔터공원 파크골프장','미사한강 파크골프장','광나루 파크골프장','여주 파크골프장'];
@@ -1034,7 +1052,8 @@ function drawQR(){
   [[0,0],[0,22],[22,0]].forEach(([r,c2])=>{
     x.fillRect(c2,r,7,7);x.fillStyle='#fff';x.fillRect(c2+1,r+1,5,5);
     x.fillStyle='#12241C';x.fillRect(c2+2,r+2,3,3)})}
-function createTournament(){
+async function createTournament(){
+  if(!user.id){toast('로그인이 필요합니다');return}
   config.created=true;
   config.name=$('#fName').value;config.hostOrg=$('#fHost').value;
   config.dateS=$('#fDateS').value;config.dateE=$('#fDateE').value;
@@ -1050,7 +1069,22 @@ function createTournament(){
   config.place=uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:'');
   boardMode=-1;jRound=0;
   document.querySelectorAll('.bnav button').forEach(t=>t.classList.remove('lock'));
-  tournaments.unshift({id:99,name:config.name,place:config.place,date:config.dateS,dateE:config.dateE,
+
+  const tournamentId=crypto.randomUUID();
+  const{error:tErr}=await sb.from('tournaments').insert({
+    id:tournamentId,owner_id:user.id,name:config.name,host_org:config.hostOrg,
+    date_start:config.dateS,date_end:config.dateE,rounds:ROUNDS,venues:config.venues,
+    course_pars:coursePars,tie_rule:config.tie,cap:config.cap,fields:config.fields,
+    awards:config.awards,status:'ready'});
+  if(tErr){toast('대회 저장에 실패했습니다');console.error(tErr);config.created=false;return}
+  config.id=tournamentId;
+
+  if(staff.length){
+    const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
+    const{error:sErr}=await sb.from('staff').insert(staffRows);
+    if(sErr)console.error(sErr)}
+
+  tournaments.unshift({id:tournamentId,name:config.name,place:config.place,date:config.dateS,dateE:config.dateE,
     status:'ready',players:0,cap:config.cap,host:config.hostOrg||user.name,mine:true});
   const period=config.dateS===config.dateE?config.dateS.replaceAll('-','.')
     :`${config.dateS.replaceAll('-','.')} ~ ${config.dateE.slice(5).replace('-','.')}`;
@@ -1425,7 +1459,7 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
 
 function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
-renderStaff();renderPlayers();renderHome();renderVenues();
+renderStaff();renderPlayers();renderVenues();loadTournaments();
 </script>
 </body>
 </html>
