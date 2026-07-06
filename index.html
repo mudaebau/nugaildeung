@@ -1611,14 +1611,16 @@ function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.disp
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
   const qs=new URLSearchParams(location.search);
-  const jToken=qs.get('j'),boardId=qs.get('board');
+  const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply');
   if(jToken&&await enterViaJudgeToken(jToken)){
     const bb=document.querySelector('.backbar');if(bb)bb.style.display='none';
     curView='Judge';renderLoc();return}
   if(boardId){
     await loadBoardData(boardId);subscribeBoardRealtime(boardId);
     curView='Board';renderLoc();return}
-  renderStaff();renderPlayers();renderVenues();loadTournaments()})();
+  renderStaff();renderPlayers();renderVenues();
+  await loadTournaments();
+  if(applyId)openApply(applyId)})();
 </script>
 </body>
 </html>
