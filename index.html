@@ -785,7 +785,7 @@ function openJudge(i){
   if(!groups.length){toast('참가자 등록·조편성 후 이용할 수 있습니다');return}
   curStaff=Math.min(i,judges().length-1);
   navTo('Judge')}
-function openBoard(){navTo('Board')}
+async function openBoard(){navTo('Board');await loadBoardData(config.id);subscribeBoardRealtime(config.id)}
 
 /* ================= nav ================= */
 function goTab(id){
@@ -1369,7 +1369,13 @@ function openPad(pi,gi){padTarget={pi,gi};
   g+=`<button class="padbtn clear" onclick="setScore(null)">지우기</button>`;
   $('#padGrid').innerHTML=g;$('#ov').classList.add('on')}
 function closePad(){$('#ov').classList.remove('on');padTarget=null}
-function setScore(v){if(!padTarget)return;
+function currentJudgeToken(){const j=judges()[curStaff];return j&&j.token}
+async function submitScoreToServer(pi,gi,v,reason){
+  const token=currentJudgeToken(),playerId=players[pi].id;
+  if(!token||!playerId)return;
+  const{error}=await sb.rpc('submit_score',{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null});
+  if(error){toast('서버 저장 실패: '+error.message);console.error(error)}}
+async function setScore(v){if(!padTarget)return;
   const{pi,gi}=padTarget;const old=players[pi].scores[gi];
   if(old!=null&&v!=null&&v!==old){
     corrPend={pi,gi,old,v};closePad();
@@ -1379,14 +1385,16 @@ function setScore(v){if(!padTarget)return;
   const who=(judges()[curStaff]||{name:'운영자'}).name;
   if(v!=null){addLog(`${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 <b>${players[pi].name}</b> ${v}타 — ${who} 심판`);
     $('#jLive').style.display='inline-flex';clearTimeout(window._lv);window._lv=setTimeout(()=>$('#jLive').style.display='none',2500)}
-  closePad();renderHole();refreshAll()}
-function applyCorr(reason){if(!corrPend)return;
+  closePad();renderHole();refreshAll();
+  await submitScoreToServer(pi,gi,v,null)}
+async function applyCorr(reason){if(!corrPend)return;
   const{pi,gi,old,v}=corrPend;
   players[pi].scores[gi]=v;
   const who=(judges()[curStaff]||{name:'운영자'}).name;
   addLog(`<b style="color:var(--coral)">🔁 정정</b> ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 <b>${players[pi].name}</b> ${old}→${v}타 · 사유: ${reason} — ${who} 심판`);
   corrPend=null;$('#corrOv').classList.remove('on');
-  renderHole();refreshAll();toast('점수를 정정하고 이력에 기록했습니다')}
+  renderHole();refreshAll();toast('점수를 정정하고 이력에 기록했습니다');
+  await submitScoreToServer(pi,gi,v,reason)}
 function cancelCorr(){corrPend=null;$('#corrOv').classList.remove('on');toast('정정을 취소했습니다')}
 function addLog(html){
   const t=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1416,6 +1424,47 @@ function standings(mode=-1){
   return act.concat(outs)}
 
 /* ================= 전광판 ================= */
+async function loadBoardData(tournamentId){
+  if(!tournamentId)return;
+  const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
+  if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return}
+  config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;config.venues=t.venues||[];
+  config.cap=t.cap;config.created=true;
+  ROUNDS=t.rounds;HOLES=ROUNDS*18;coursePars=t.course_pars||[];
+  PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
+  $('#boardTitle').textContent=t.name;
+  $('#boardSub').textContent=`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${t.host_org||''}`;
+
+  const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',tournamentId)
+    .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
+  if(pErr){toast('참가자 정보를 불러오지 못했습니다');return}
+  const{data:sRows}=await sb.from('scores').select('player_id,hole_index,strokes').eq('tournament_id',tournamentId);
+  const scoreMap={};
+  (sRows||[]).forEach(r=>{(scoreMap[r.player_id]=scoreMap[r.player_id]||{})[r.hole_index]=r.strokes});
+  players=pRows.map(r=>{
+    const arr=Array(HOLES).fill(null);
+    const sm=scoreMap[r.id];if(sm)Object.keys(sm).forEach(h=>arr[+h]=sm[h]);
+    return{id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+      region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+      group:r.group_no!=null?r.group_no:-1,scores:arr}});
+  const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
+  groups=Array.from({length:maxG+1},()=>[]);
+  players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
+  renderBoard();renderResult()}
+let boardChannel=null;
+function subscribeBoardRealtime(tournamentId){
+  if(boardChannel){sb.removeChannel(boardChannel);boardChannel=null}
+  if(!tournamentId)return;
+  boardChannel=sb.channel('scores-'+tournamentId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'scores',filter:'tournament_id=eq.'+tournamentId},payload=>{
+      const row=(payload.eventType==='DELETE')?payload.old:payload.new;
+      if(!row)return;
+      const p=players.find(x=>x.id===row.player_id);
+      if(!p)return;
+      p.scores[row.hole_index]=payload.eventType==='DELETE'?null:row.strokes;
+      renderBoard();renderResult();
+      if(curView==='Judge')renderHole()})
+    .subscribe()}
 function vShort(r){return (config.venues[r]||`${r+1}코스`).replace(' 파크골프장','').slice(0,5)}
 function renderBoardChips(){
   if(!config.created){$('#boardModeChips').innerHTML='';return}
@@ -1561,10 +1610,14 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
 function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
-  const jToken=new URLSearchParams(location.search).get('j');
+  const qs=new URLSearchParams(location.search);
+  const jToken=qs.get('j'),boardId=qs.get('board');
   if(jToken&&await enterViaJudgeToken(jToken)){
     const bb=document.querySelector('.backbar');if(bb)bb.style.display='none';
     curView='Judge';renderLoc();return}
+  if(boardId){
+    await loadBoardData(boardId);subscribeBoardRealtime(boardId);
+    curView='Board';renderLoc();return}
   renderStaff();renderPlayers();renderVenues();loadTournaments()})();
 </script>
 </body>
