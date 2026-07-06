@@ -570,6 +570,13 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <button class="btn full big" id="holeNextBtn" onclick="moveHole(1)">다음 홀로 →</button>
+    <div class="card" id="scPhotoCard" style="margin-top:14px">
+      <label class="fl" style="margin-top:0">스코어카드 사진 <span class="pill gray" style="margin-left:4px">선택</span></label>
+      <p class="sub" style="margin-bottom:10px">이 조 · 이 코스의 스코어카드 사진을 보조 증빙으로 남길 수 있어요. 점수에 자동 반영되지는 않습니다.</p>
+      <div id="scPhotoPreview"></div>
+      <input type="file" accept="image/*" capture="environment" id="scPhotoInput" style="display:none" onchange="uploadScorecardPhoto(this.files[0]);this.value=''">
+      <button class="btn ghost full" onclick="document.getElementById('scPhotoInput').click()">사진 촬영/첨부</button>
+    </div>
     <div class="log" style="margin-top:14px"><h4>실시간 입력 기록 — 전광판에 즉시 반영</h4><div id="logBox"><div style="color:var(--muted)">아직 입력이 없습니다</div></div></div>
   </section>
 </div>
@@ -1383,8 +1390,10 @@ function renderJudge(){
     $('#jRoundChips').innerHTML='';$('#jGroupChips').innerHTML='';
     $('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem">이 링크는 점수 입력 권한이 없습니다. 담당 업무 안내는 운영자에게 문의하세요.</div>';
     $('#hDots').innerHTML='';$('#hProg').textContent='';$('#holeNextBtn').style.display='none';
+    $('#scPhotoCard').style.display='none';
     return}
   $('#holeNextBtn').style.display='';
+  $('#scPhotoCard').style.display='';
   const js=judges();if(curStaff>=js.length)curStaff=0;
   $('#jSel').innerHTML=js.map((s,i)=>`<option value="${i}" ${i===curStaff?'selected':''}>${s.name}</option>`).join('');
   const j=js[curStaff]||{name:'—',duty:''};
@@ -1396,7 +1405,31 @@ function renderJudge(){
   $('#jGroupChips').innerHTML=groups.map((g,i)=>
     `<button class="chip ${i===curGroup?'on':''}" onclick="curGroup=${i};renderJudge()">${i+1}조</button>`).join('')
     ||'<span class="sub">메인 앱에서 참가자 등록·조편성을 먼저 해주세요</span>';
-  renderHole()}
+  renderHole();loadScorecardPhoto()}
+async function loadScorecardPhoto(){
+  const box=$('#scPhotoPreview');if(!box)return;
+  if(!config.id||curGroup==null||curGroup<0||!groups.length){box.innerHTML='';return}
+  box.innerHTML='<p class="sub" style="margin-bottom:10px">불러오는 중…</p>';
+  const{data,error}=await sb.from('scorecard_photos').select('photo_url,created_at')
+    .eq('tournament_id',config.id).eq('group_no',curGroup).eq('course_no',jRound)
+    .order('created_at',{ascending:false}).limit(1);
+  if(error||!data||!data.length){box.innerHTML='<p class="sub" style="margin-bottom:10px">아직 첨부된 사진이 없습니다</p>';return}
+  const when=new Date(data[0].created_at).toLocaleString('ko-KR');
+  box.innerHTML=`<a href="${data[0].photo_url}" target="_blank"><img src="${data[0].photo_url}" style="width:100%;border-radius:14px;margin-bottom:10px;display:block"></a><p class="sub" style="margin-bottom:10px">${when} 첨부됨 — 새로 촬영하면 최신 사진으로 표시됩니다</p>`}
+async function uploadScorecardPhoto(file){
+  if(!file)return;
+  if(!config.id||curGroup==null||curGroup<0){toast('조편성 후 이용할 수 있습니다');return}
+  toast('업로드 중…');
+  const path=`${config.id}/${curGroup}-${jRound}-${Date.now()}.jpg`;
+  const{error:upErr}=await sb.storage.from('scorecards').upload(path,file,{contentType:file.type||'image/jpeg'});
+  if(upErr){toast('업로드 실패: '+upErr.message);console.error(upErr);return}
+  const{data:pub}=sb.storage.from('scorecards').getPublicUrl(path);
+  const uploaderId=(judges()[curStaff]||{}).id||null;
+  const{error:insErr}=await sb.from('scorecard_photos').insert({
+    tournament_id:config.id,group_no:curGroup,course_no:jRound,photo_url:pub.publicUrl,uploaded_by:uploaderId});
+  if(insErr){toast('저장 실패');console.error(insErr);return}
+  toast('스코어카드 사진이 저장되었습니다');
+  loadScorecardPhoto()}
 function renderHole(){
   if(curGroup>=groups.length)curGroup=Math.max(0,groups.length-1);
   if(!groups.length){$('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem">조편성 후 입력할 수 있습니다</div>';$('#hDots').innerHTML='';$('#hProg').textContent='';return}
