@@ -1015,16 +1015,16 @@ async function submitSingle(){
 
   const okCount=await countStatus(applyT.id,'ok');
   const willWait=okCount>=applyT.cap;
-  const{error}=await sb.from('players').insert({
+  const{data,error}=await sb.from('players').insert({
     tournament_id:applyT.id,name:p.name,phone:p.phone,
     sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,nick:p.nick||null,
-    status:willWait?'wait':'ok'});
+    status:willWait?'wait':'ok'}).select('id').single();
   if(error){
     if(error.code==='23505'){toast('이미 접수된 전화번호입니다');return}
     toast('접수 처리 중 오류가 발생했습니다');console.error(error);return}
 
   if(applyT.mine){
-    const local={...p,scores:Array(HOLES).fill(null),group:-1};
+    const local={...p,id:data.id,scores:Array(HOLES).fill(null),group:-1};
     if(willWait)waitlist.push(local);else players.push(local);
     renderPlayers();syncMine();updateApplyStat()}
   else if(!willWait)applyT.players++;
@@ -1049,13 +1049,13 @@ async function submitGroup(){
   let okCount=await countStatus(applyT.id,'ok');
   for(const r of apPending){
     const status=okCount<applyT.cap?'ok':'wait';
-    const{error}=await sb.from('players').insert({
+    const{data,error}=await sb.from('players').insert({
       tournament_id:applyT.id,name:r.name,phone:r.phone,
-      sex:r.sex||null,age:r.age||null,club,region:null,nick:null,status});
+      sex:r.sex||null,age:r.age||null,club,region:null,nick:null,status}).select('id').single();
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
     added++;
-    if(status==='ok'){okCount++;if(applyT.mine)players.push({...r,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1});else applyT.players++}
-    else{waited++;if(applyT.mine)waitlist.push({...r,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1})}}
+    if(status==='ok'){okCount++;if(applyT.mine)players.push({...r,id:data.id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1});else applyT.players++}
+    else{waited++;if(applyT.mine)waitlist.push({...r,id:data.id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1})}}
   apPending=[];
   if(applyT.mine){renderPlayers();syncMine();updateApplyStat()}
   renderCap();renderHome();
@@ -1147,16 +1147,27 @@ function parsePaste(){
   $('#confirmBtn').textContent=`${pending.length}명 등록 확정`;
   $('#previewCard').style.display='block';
   toast(`${pending.length}명 인식 — 확인 후 등록하세요`)}
-function confirmPaste(){
+async function confirmPaste(){
   let added=0,dup=0;
-  pending.forEach(p=>{if(players.some(x=>x.phone===p.phone))dup++;else{players.push(p);added++}});
+  for(const p of pending){
+    const{data,error}=await sb.from('players').insert({
+      tournament_id:config.id,name:p.name,phone:p.phone,
+      sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,nick:p.nick||null,
+      status:'ok'}).select('id').single();
+    if(error){if(error.code==='23505')dup++;else console.error(error);continue}
+    players.push({...p,id:data.id});added++}
   pending=[];$('#previewCard').style.display='none';$('#pasteBox').value='';
-  syncMine();renderPlayers();makeGroups(false);refreshAll();
+  syncMine();renderPlayers();await makeGroups(false);refreshAll();
   toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외(전화번호 기준)`:''}`)}
-function loadDemo(){
+async function loadDemo(){
+  const rows=DEMO.map((n,i)=>({tournament_id:config.id,name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
+    club:CLUBS[i%4],region:'하남',status:'ok'}));
+  const{data,error}=await sb.from('players').upsert(rows,{onConflict:'tournament_id,phone'}).select('id,phone');
+  if(error){toast('데모 등록 중 오류가 발생했습니다');console.error(error);return}
+  const idByPhone={};data.forEach(r=>idByPhone[r.phone]=r.id);
   players=DEMO.map((n,i)=>({name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
-    club:CLUBS[i%4],region:'하남',nick:'',scores:Array(HOLES).fill(null),group:-1}));
-  syncMine();renderPlayers();makeGroups(false);refreshAll();
+    club:CLUBS[i%4],region:'하남',nick:'',id:idByPhone[genPhone(i)],scores:Array(HOLES).fill(null),group:-1}));
+  syncMine();renderPlayers();await makeGroups(false);refreshAll();
   goTab('opGroups');toast('데모 32명 등록 + 자동 조편성 완료')}
 function syncMine(){const t=tournaments.find(x=>x.mine);if(t){t.players=players.length;renderHome();updateApplyStat()}}
 function renderPlayers(){
@@ -1209,7 +1220,14 @@ function promoteWait(i){
   toast(`${p.name} 님을 참가자로 승격했습니다 — 확정 문자 발송(실서비스)`)}
 
 /* ================= 조편성 ================= */
-function makeGroups(announce){
+async function persistGroups(){
+  if(!config.id)return;
+  const updates=[];
+  groups.forEach((g,gi)=>g.forEach((pi,order)=>{
+    const p=players[pi];
+    if(p.id)updates.push(sb.from('players').update({group_no:gi,group_order:order}).eq('id',p.id))}));
+  await Promise.all(updates)}
+async function makeGroups(announce){
   swapSel=null;
   if(!players.length){groups=[];$('#groupsBox').innerHTML='<p class="sub">참가자를 먼저 등록하세요.</p>';return}
   const n=Math.ceil(players.length/4);
@@ -1218,14 +1236,15 @@ function makeGroups(announce){
   Object.values(byClub).forEach(a=>a.sort(()=>Math.random()-.5));
   let gi=0;Object.values(byClub).flat().forEach(pi=>{groups[gi%n].push(pi);players[pi].group=gi%n;gi++});
   renderGroups();renderPlayers();
-  if(announce)toast('조편성 완료')}
+  if(announce)toast('조편성 완료');
+  await persistGroups()}
 function renderGroups(){
   $('#groupsBox').innerHTML=groups.map((g,i)=>{
     const startV=config.venues.length?config.venues[i%config.venues.length].replace(' 파크골프장',''):'';
     return`<div class="gcard"><div class="ghead"><b>${i+1}조</b><span class="tee">${startV?'1코스 출발: '+startV:''}</span></div>
     <ul>${g.map(pi=>{const p=players[pi];
       return`<li onclick="pickSwap(${pi})" style="cursor:pointer;${swapSel===pi?'background:var(--main-soft);border-radius:10px;padding-left:10px;padding-right:10px;outline:2.5px solid var(--main)':''}${isOut(p)?';opacity:.5':''}">${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}<span>${p.club||''}</span></li>`}).join('')}</ul></div>`}).join('')}
-function pickSwap(pi){
+async function pickSwap(pi){
   if(swapSel===null){swapSel=pi;renderGroups();
     toast(`${players[pi].name} 님 선택 — 자리를 바꿀 상대를 누르세요`);return}
   if(swapSel===pi){swapSel=null;renderGroups();toast('선택을 취소했습니다');return}
@@ -1236,7 +1255,8 @@ function pickSwap(pi){
   groups[gb][groups[gb].indexOf(b)]=a;
   players[a].group=gb;players[b].group=ga;
   const msg=`${players[a].name} ↔ ${players[b].name} 조를 맞바꿨습니다 (${ga+1}조 ↔ ${gb+1}조)`;
-  swapSel=null;renderGroups();renderPlayers();refreshAll();toast(msg)}
+  swapSel=null;renderGroups();renderPlayers();refreshAll();toast(msg);
+  await persistGroups()}
 const gcardStyle=document.createElement('style');
 gcardStyle.textContent='';document.head.appendChild(gcardStyle);
 
