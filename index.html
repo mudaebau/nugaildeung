@@ -854,6 +854,10 @@ async function countStatus(tournamentId,status){
   const{count}=await sb.from('players').select('*',{count:'exact',head:true})
     .eq('tournament_id',tournamentId).eq('status',status);
   return count||0}
+async function loadPrimaryStage(tournamentId){
+  const{data,error}=await sb.from('stages').select('*').eq('tournament_id',tournamentId).eq('seq',1).maybeSingle();
+  if(error){console.error(error);return null}
+  return data}
 async function loadTournaments(){
   const{data,error}=await sb.from('tournaments').select('*').order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
@@ -869,15 +873,19 @@ async function loadNotice(tournamentId){
   if(error||!t){
     $('#noticeBody').innerHTML='<p class="sub" style="text-align:center;padding:30px 0">대회 정보를 찾을 수 없습니다</p>';
     return}
-  renderNotice(t)}
+  const stage=await loadPrimaryStage(tournamentId);
+  renderNotice(t,stage)}
 function noticeStatusLabel(s){
   return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
-function renderNotice(t){
+function renderNotice(t,stage){
   const period=t.date_start===t.date_end?(t.date_start||'—').replaceAll('-','.')
     :`${(t.date_start||'').replaceAll('-','.')} ~ ${(t.date_end||'').replaceAll('-','.')}`;
-  const venues=(t.venues||[]).join(', ')||'—';
-  const holes=(t.rounds||1)*18;
-  const parTot=(t.course_pars||[]).reduce((a,c)=>a+(Array.isArray(c)?c.reduce((x,y)=>x+y,0):(+c||0)),0);
+  const venuesArr=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
+  const venues=venuesArr.join(', ')||'—';
+  const coursePraArr=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
+  const roundsN=coursePraArr.length||t.rounds||1;
+  const holes=roundsN*18;
+  const parTot=coursePraArr.reduce((a,c)=>a+(Array.isArray(c)?c.reduce((x,y)=>x+y,0):(+c||0)),0);
   const awardList=['종합 1·2·3위'];
   if(t.awards){
     if(t.awards.gender)awardList.push('남녀부');
@@ -893,11 +901,11 @@ function renderNotice(t){
     </div>
     <div class="card">
       <label class="fl" style="margin-top:0">경기 방식</label>
-      <p>${holes}홀 스트로크 · ${t.rounds||1}개 코스${parTot?` · PAR ${parTot}`:''}</p>
+      <p>${holes}홀 스트로크 · ${roundsN}개 코스${parTot?` · PAR ${parTot}`:''}</p>
       <label class="fl">모집 정원</label>
       <p>${t.cap}명</p>
       <label class="fl">동점자 처리</label>
-      <p>${t.tie_rule||'—'}</p>
+      <p>${(stage&&stage.tie_rule)||t.tie_rule||'—'}</p>
     </div>
     <div class="card">
       <label class="fl" style="margin-top:0">시상 부문</label>
@@ -1181,6 +1189,12 @@ async function createTournament(){
   if(tErr){toast('대회 저장에 실패했습니다');console.error(tErr);config.created=false;return}
   config.id=tournamentId;
 
+  const{error:stErr}=await sb.from('stages').insert({
+    tournament_id:tournamentId,seq:1,name:'본선',kind:'round',
+    date_start:config.dateS,date_end:config.dateE,venues:config.venues,
+    course_pars:coursePars,use_groups:true,tie_rule:config.tie,status:'ready'});
+  if(stErr)console.error(stErr);
+
   if(staff.length){
     const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
     const{data:sData,error:sErr}=await sb.from('staff').insert(staffRows).select('id,token,phone');
@@ -1351,11 +1365,14 @@ async function enterViaJudgeToken(token){
   const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',s.tournament_id).single();
   if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return false}
 
+  const stage=await loadPrimaryStage(t.id);
   config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;
-  config.dateS=t.date_start;config.dateE=t.date_end;config.venues=t.venues||[];
+  config.dateS=t.date_start;config.dateE=t.date_end;
+  config.venues=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
   config.cap=t.cap;config.fields=t.fields||config.fields;config.awards=t.awards||config.awards;
   config.created=true;
-  ROUNDS=t.rounds;HOLES=ROUNDS*18;coursePars=t.course_pars||[];
+  const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
+  ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
   PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
 
   const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',t.id)
@@ -1522,9 +1539,12 @@ async function loadBoardData(tournamentId){
   if(!tournamentId)return;
   const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
   if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return}
-  config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;config.venues=t.venues||[];
+  const stage=await loadPrimaryStage(tournamentId);
+  config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;
+  config.venues=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
   config.cap=t.cap;config.created=true;
-  ROUNDS=t.rounds;HOLES=ROUNDS*18;coursePars=t.course_pars||[];
+  const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
+  ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
   PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
   $('#boardTitle').textContent=t.name;
   $('#boardSub').textContent=`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${t.host_org||''}`;
