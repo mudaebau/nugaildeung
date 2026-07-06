@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>누가일등 — 파크골프 대회 플랫폼</title>
+<link rel="icon" href="brand/favicon-32.png">
+<link rel="apple-touch-icon" href="brand/apple-touch-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -40,7 +42,7 @@ button{font-family:inherit;cursor:pointer}
 .appbar{background:var(--main);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
 .abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
-.logo .flag{width:20px;height:20px;background:var(--sun);clip-path:polygon(0 0,100% 25%,0 50%,0 100%,14% 100%,14% 0);border-radius:2px}
+.logo .flag{width:20px;height:20px;background:url('brand/symbol-white.svg') center/contain no-repeat}
 .appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
@@ -590,7 +592,7 @@ tr:last-child td{border-bottom:none}
       </div>
       <div class="bhead" id="bhead"></div>
       <div class="brows" id="brows"><div class="bempty">참가자를 등록하면 명단이 표시됩니다</div></div>
-      <div class="boardfoot"><span>누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
+      <div class="boardfoot"><span style="display:flex;align-items:center;gap:6px"><img src="brand/symbol-white.svg" alt="" style="width:16px;height:16px">누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
     </div>
   </div>
 </div>
