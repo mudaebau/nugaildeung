@@ -464,7 +464,7 @@ tr:last-child td{border-bottom:none}
       <div class="urlchip">nuga1.kr/t/1024/apply</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn sm ghost" onclick="toast('신청 링크가 복사되었습니다')">주소 복사</button>
-        <button class="btn sm" onclick="openApply(99)">미리보기</button>
+        <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
       </div>
     </div>
 
@@ -833,6 +833,10 @@ function dbToTournament(row,playerCount){
   return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,
     host:row.host_org,mine:!!(user.id&&row.owner_id===user.id)}}
+async function countStatus(tournamentId,status){
+  const{count}=await sb.from('players').select('*',{count:'exact',head:true})
+    .eq('tournament_id',tournamentId).eq('status',status);
+  return count||0}
 async function loadTournaments(){
   const{data,error}=await sb.from('tournaments').select('*').order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
@@ -1000,23 +1004,36 @@ function rcptShow(no,msg){
   $('#rcptNo').textContent=no;
   $('#rcptMsg').innerHTML=msg;window.scrollTo(0,0)}
 function rcptNo(){return '2607-'+String(Math.floor(Math.random()*900)+100)}
-function submitSingle(){
+async function submitSingle(){
   const f=applyFields(applyT);
   const name=$('#apiName').value.trim(),phone=$('#apiPhone').value.trim();
   if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
   const p={name,phone:phone.replace(/[\s\.]/g,'').replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3'),
     sex:f.sex?$('#apiSex').value:'',age:f.age?+($('#apiAge').value||0)||'':'',
     club:f.club?($('#apiClub').value.trim()||'무소속'):'',region:f.region?$('#apiRegion').value.trim():'',
-    nick:f.nick?$('#apiNick').value.trim():'',scores:Array(HOLES).fill(null),group:-1};
+    nick:f.nick?$('#apiNick').value.trim():''};
+
+  const okCount=await countStatus(applyT.id,'ok');
+  const willWait=okCount>=applyT.cap;
+  const{error}=await sb.from('players').insert({
+    tournament_id:applyT.id,name:p.name,phone:p.phone,
+    sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,nick:p.nick||null,
+    status:willWait?'wait':'ok'});
+  if(error){
+    if(error.code==='23505'){toast('이미 접수된 전화번호입니다');return}
+    toast('접수 처리 중 오류가 발생했습니다');console.error(error);return}
+
   if(applyT.mine){
-    if(players.some(x=>x.phone===p.phone)||waitlist.some(x=>x.phone===p.phone)){toast('이미 접수된 전화번호입니다');return}
-    if(players.length>=config.cap){
-      waitlist.push(p);renderWait();renderCap();
-      rcptShow('대기 '+waitlist.length+'번',`<b>${name}</b> 님, 정원(${config.cap}명)이 마감되어<br><b>대기 ${waitlist.length}번</b>으로 접수되었습니다.<br>빈자리가 나면 순서대로 확정 문자가 발송됩니다.`);return}
-    players.push(p);syncMine();renderPlayers();updateApplyStat()}
-  else applyT.players++;
+    const local={...p,scores:Array(HOLES).fill(null),group:-1};
+    if(willWait)waitlist.push(local);else players.push(local);
+    renderPlayers();syncMine();updateApplyStat()}
+  else if(!willWait)applyT.players++;
   renderCap();renderHome();
-  rcptShow(rcptNo(),`<b>${name}</b> 님, ${applyT.name}<br>접수가 완료되었습니다.<br>대회 안내와 조편성표가 문자로 발송됩니다.`)}
+
+  if(willWait){
+    const waitNo=await countStatus(applyT.id,'wait');
+    rcptShow('대기 '+waitNo+'번',`<b>${name}</b> 님, 정원(${applyT.cap}명)이 마감되어<br><b>대기 ${waitNo}번</b>으로 접수되었습니다.<br>빈자리가 나면 순서대로 확정 문자가 발송됩니다.`)}
+  else rcptShow(rcptNo(),`<b>${name}</b> 님, ${applyT.name}<br>접수가 완료되었습니다.<br>대회 안내와 조편성표가 문자로 발송됩니다.`)}
 function apParse(){
   apPending=$('#apPaste').value.split('\n').map(parseLine).filter(Boolean);
   if(!apPending.length){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
@@ -1026,18 +1043,21 @@ function apParse(){
   $('#apConfirmBtn').textContent=`${apPending.length}명 단체 신청하기`;
   $('#apPreview').style.display='block';
   toast(`${apPending.length}명 인식 — 확인 후 신청하세요`)}
-function submitGroup(){
+async function submitGroup(){
   const club=$('#apClub').value.trim()||'무소속';
   let added=0,dup=0,waited=0;
-  apPending.forEach(r=>{
-    const p={...r,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1};
-    if(applyT.mine){
-      if(players.some(x=>x.phone===p.phone)||waitlist.some(x=>x.phone===p.phone)){dup++;return}
-      if(players.length>=config.cap){waitlist.push(p);waited++;return}
-      players.push(p);added++}
-    else{applyT.players++;added++}});
+  let okCount=await countStatus(applyT.id,'ok');
+  for(const r of apPending){
+    const status=okCount<applyT.cap?'ok':'wait';
+    const{error}=await sb.from('players').insert({
+      tournament_id:applyT.id,name:r.name,phone:r.phone,
+      sex:r.sex||null,age:r.age||null,club,region:null,nick:null,status});
+    if(error){if(error.code==='23505')dup++;else console.error(error);continue}
+    added++;
+    if(status==='ok'){okCount++;if(applyT.mine)players.push({...r,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1});else applyT.players++}
+    else{waited++;if(applyT.mine)waitlist.push({...r,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1})}}
   apPending=[];
-  if(applyT.mine){syncMine();renderPlayers();updateApplyStat()}
+  if(applyT.mine){renderPlayers();syncMine();updateApplyStat()}
   renderCap();renderHome();
   rcptShow(rcptNo(),`<b>${club}</b> ${added}명 접수 완료${waited?` · 정원 마감으로 <b>${waited}명 대기</b> 전환`:''}${dup?` · 중복 ${dup}명 제외`:''}.<br>총무님 번호로 접수 명단이 문자 발송되며,<br>운영자 참가자 명단에 실시간 반영되었습니다.`)}
 function resetApply(){openApply(applyT.id)}
