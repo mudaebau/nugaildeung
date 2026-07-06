@@ -724,10 +724,10 @@ const config={created:false,name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:''
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false}};
 const user={loggedIn:false,name:'',phone:'',id:null};
 let staff=[
-  {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true,link:'none'},
-  {name:'이도현',phone:'010-8873-0294',duty:'2코스 심판 (미사한강)',canScore:true,link:'none'},
-  {name:'최유라',phone:'010-4419-7765',duty:'예비 심판 · 전 코스',canScore:true,link:'none'},
-  {name:'정우성',phone:'010-6640-2381',duty:'본부석·시상',canScore:false,link:'none'}];
+  {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
+  {name:'이도현',phone:'010-8873-0294',duty:'2코스 심판 (미사한강)',canScore:true},
+  {name:'최유라',phone:'010-4419-7765',duty:'예비 심판 · 전 코스',canScore:true},
+  {name:'정우성',phone:'010-6640-2381',duty:'본부석·시상',canScore:false}];
 let players=[],groups=[],curGroup=0,curStaff=0,curHole=0,padTarget=null,simTimer=null,logEntries=[],pending=[],curFilter='all';
 
 /* 공개 대회 리스트 — Supabase tournaments 테이블에서 로드 (loadTournaments 참고) */
@@ -927,24 +927,32 @@ function renderStaff(){
 function addStaff(){
   const n=$('#sfName').value.trim(),p=$('#sfPhone').value.trim(),d=$('#sfDuty').value.trim()||'담당 미지정';
   if(!n||!/\d{3}/.test(p)){toast('이름과 전화번호를 입력해 주세요');return}
-  staff.push({name:n,phone:p,duty:d,canScore:true,link:'none'});
+  staff.push({name:n,phone:p,duty:d,canScore:true});
   $('#sfName').value='';$('#sfPhone').value='';$('#sfDuty').value='';
   renderStaff();renderTools();toast(`${n} 스탭 추가`)}
 
 /* ================= 대회 도구 ================= */
-function renderTools(){
+function judgeLink(s){return `${location.origin}${location.pathname}?j=${s.token}`}
+async function refreshStaffStatus(){
+  if(!config.id)return;
+  const{data,error}=await sb.from('staff').select('id,link_opened_at').eq('tournament_id',config.id);
+  if(error){console.error(error);return}
+  const byId={};data.forEach(r=>byId[r.id]=r.link_opened_at);
+  staff.forEach(s=>{if(s.id&&byId[s.id]!==undefined)s.link_opened_at=byId[s.id]})}
+async function renderTools(){
+  await refreshStaffStatus();
   const js=judges();
-  const opened=js.filter(s=>s.link==='opened').length;
-  const sent=js.filter(s=>s.link!=='none').length;
+  const opened=js.filter(s=>s.link_opened_at).length;
+  const sent=js.filter(s=>s.sentLocally||s.link_opened_at).length;
   $('#linkStat').textContent=sent===0?'미발송':opened===js.length?'전원 접속 ✓':`발송 ${sent} · 접속 ${opened}/${js.length}`;
   $('#linkStat').className='pill '+(sent===0?'gray':opened===js.length?'':'amber');
   $('#toolStaff').innerHTML=js.map((s,i)=>{
-    const st=s.link==='opened'?'<span class="pill">✓ 접속함</span>'
-      :s.link==='sent'?'<span class="pill amber">미접속</span>'
+    const st=s.link_opened_at?'<span class="pill">✓ 접속함</span>'
+      :s.sentLocally?'<span class="pill amber">미접속</span>'
       :'<span class="pill gray">미발송</span>';
-    const act=s.link==='none'?''
-      :s.link==='sent'?`<button class="btn sm ghost" onclick="resend(${i})">재발송</button>`
-      :`<button class="btn sm ghost" onclick="openJudge(${i})">화면 보기</button>`;
+    const act=!s.token?''
+      :s.link_opened_at?`<button class="btn sm ghost" onclick="openJudge(${i})">화면 보기</button>`
+      :`<button class="btn sm ghost" onclick="copyJudgeLink(${i})">${s.sentLocally?'다시 복사':'링크 복사'}</button>`;
     return`<div class="toolrow">
       <div class="avatar">${s.name[0]}</div>
       <div class="info"><b>${s.name}</b><span class="num">${maskPhone(s.phone)} · ${s.duty}</span></div>
@@ -953,10 +961,16 @@ function renderTools(){
   $('#sendAllBtn').style.display=sent===js.length&&js.length?'none':'block'}
 function sendLinks(){
   const js=judges();
-  js.forEach((s,i)=>{if(s.link==='none'){s.link='sent';
-    setTimeout(()=>{s.link='opened';renderTools()},1200+i*1400)}});
-  renderTools();toast('심판 링크를 문자로 발송했습니다 — 접속하면 ✓ 로 바뀝니다')}
-function resend(i){toast(`${judges()[i].name} 님에게 링크를 다시 보냈습니다`)}
+  js.forEach(s=>{if(!s.sentLocally&&!s.link_opened_at)s.sentLocally=true});
+  renderTools();
+  toast('발송 표시 완료 — 아래 각 심판의 "링크 복사" 버튼으로 실제 링크를 복사해 카톡으로 전달하세요')}
+async function copyJudgeLink(i){
+  const s=judges()[i];if(!s||!s.token)return;
+  const link=judgeLink(s);
+  try{await navigator.clipboard.writeText(link)}catch(e){}
+  s.sentLocally=true;renderTools();
+  toast(`${s.name} 님 링크가 복사되었습니다 — 카톡으로 전달하세요`)}
+function resend(i){copyJudgeLink(i)}
 
 /* ================= 참가 신청 페이지 ================= */
 let applyT=null,applyMode='single',apPending=[];
@@ -1101,8 +1115,9 @@ async function createTournament(){
 
   if(staff.length){
     const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
-    const{error:sErr}=await sb.from('staff').insert(staffRows);
-    if(sErr)console.error(sErr)}
+    const{data:sData,error:sErr}=await sb.from('staff').insert(staffRows).select('id,token,phone');
+    if(sErr)console.error(sErr);
+    else sData.forEach(row=>{const s=staff.find(x=>x.phone===row.phone);if(s){s.id=row.id;s.token=row.token;s.link_opened_at=null}})}
 
   tournaments.unshift({id:tournamentId,name:config.name,place:config.place,date:config.dateS,dateE:config.dateE,
     status:'ready',players:0,cap:config.cap,host:config.hostOrg||user.name,mine:true});
@@ -1260,9 +1275,55 @@ async function pickSwap(pi){
 const gcardStyle=document.createElement('style');
 gcardStyle.textContent='';document.head.appendChild(gcardStyle);
 
+/* ================= 심판 토큰 링크 (?j=token) ================= */
+let judgeTokenMode=false;
+async function enterViaJudgeToken(token){
+  const{data:s,error:sErr}=await sb.from('staff').select('*').eq('token',token).single();
+  if(sErr||!s){toast('유효하지 않은 링크입니다');return false}
+  const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',s.tournament_id).single();
+  if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return false}
+
+  config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;
+  config.dateS=t.date_start;config.dateE=t.date_end;config.venues=t.venues||[];
+  config.cap=t.cap;config.fields=t.fields||config.fields;config.awards=t.awards||config.awards;
+  config.created=true;
+  ROUNDS=t.rounds;HOLES=ROUNDS*18;coursePars=t.course_pars||[];
+  PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
+
+  const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',t.id)
+    .order('group_no',{ascending:true}).order('group_order',{ascending:true});
+  if(pErr){toast('참가자 정보를 불러오지 못했습니다');return false}
+  players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+    region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+    group:r.group_no!=null?r.group_no:-1,scores:Array(HOLES).fill(null)}));
+  const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
+  groups=Array.from({length:maxG+1},()=>[]);
+  players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
+
+  staff=[{id:s.id,name:s.name,phone:s.phone,duty:s.duty,canScore:s.can_score,token:s.token,link_opened_at:s.link_opened_at}];
+  curStaff=0;jRound=0;curHole=0;curGroup=0;
+  judgeTokenMode=true;
+
+  if(!s.link_opened_at){
+    const nowIso=new Date().toISOString();
+    const{error:uErr}=await sb.from('staff').update({link_opened_at:nowIso}).eq('id',s.id);
+    if(!uErr)staff[0].link_opened_at=nowIso}
+  return true}
+
 /* ================= 심판 ================= */
 function judges(){return staff.filter(s=>s.canScore)}
 function renderJudge(){
+  if(judgeTokenMode&&staff.length===1&&!staff[0].canScore){
+    const s=staff[0];
+    $('#jSel').innerHTML='';
+    $('#jAvatar').textContent=s.name[0]||'—';
+    $('#jName').textContent=s.name+' 님';
+    $('#jDuty').textContent=(s.duty||'')+' · 점수 입력 권한이 없는 스탭입니다';
+    $('#jRoundChips').innerHTML='';$('#jGroupChips').innerHTML='';
+    $('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem">이 링크는 점수 입력 권한이 없습니다. 담당 업무 안내는 운영자에게 문의하세요.</div>';
+    $('#hDots').innerHTML='';$('#hProg').textContent='';$('#holeNextBtn').style.display='none';
+    return}
+  $('#holeNextBtn').style.display='';
   const js=judges();if(curStaff>=js.length)curStaff=0;
   $('#jSel').innerHTML=js.map((s,i)=>`<option value="${i}" ${i===curStaff?'selected':''}>${s.name}</option>`).join('');
   const j=js[curStaff]||{name:'—',duty:''};
@@ -1499,7 +1560,12 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
 
 function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
-renderStaff();renderPlayers();renderVenues();loadTournaments();
+(async()=>{
+  const jToken=new URLSearchParams(location.search).get('j');
+  if(jToken&&await enterViaJudgeToken(jToken)){
+    const bb=document.querySelector('.backbar');if(bb)bb.style.display='none';
+    curView='Judge';renderLoc();return}
+  renderStaff();renderPlayers();renderVenues();loadTournaments()})();
 </script>
 </body>
 </html>
