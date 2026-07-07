@@ -160,6 +160,12 @@ tr:last-child td{border-bottom:none}
 .livecard .lmeta{font-size:14px;color:#C7DBEF}
 .livecard .lmore{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:14.5px;color:#9FBEDC}
 .livecard .lmore b{color:#fff;font-weight:700;font-size:16px}
+.livecard .ltop3{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)}
+.livecard .lp{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:14px}
+.livecard .lp .lrank{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto}
+.livecard .lp.top1 .lrank{background:var(--sun);color:#6b4e07}
+.livecard .lp .lname{flex:1;color:#fff;font-weight:600}
+.livecard .lp .lsc{color:#C7DBEF}
 .opencard{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:14px}
 .opencard:active{transform:scale(.99)}
 .oc-top{display:flex;align-items:flex-start;gap:14px}
@@ -1111,6 +1117,8 @@ function feedCardHTML(t){
     <div class="lrow"><span class="lpill"><i></i>LIVE</span><span class="lsub">참가 <span class="num">${t.players}</span>명</span></div>
     <h3>${t.name}</h3>
     <div class="lmeta">${periodLabel(t)} · ${t.place}</div>
+    ${t.top3&&t.top3.length?`<div class="ltop3">${t.top3.map((s,i)=>
+      `<div class="lp ${i===0?'top1':''}"><span class="lrank">${i+1}</span><span class="lname">${s.name}</span><span class="lsc num">${s.total}타</span></div>`).join('')}</div>`:''}
     <div class="lmore"><span>실시간 전광판 보기</span><b>›</b></div>
   </button>`;
   if(t.status==='open')return`<button class="opencard" onclick="openT('${t.id}')">
@@ -1242,7 +1250,11 @@ async function loadTournaments(){
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
   const withCounts=await Promise.all(data.map(async row=>{
     const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
-    return dbToTournament(row,count||0)}));
+    const t=dbToTournament(row,count||0);
+    if(t.status==='live'){
+      const{data:top3,error:t3Err}=await sb.rpc('top3_standings',{p_tournament_id:row.id});
+      if(t3Err)console.error(t3Err);else t.top3=top3}
+    return t}));
   tournaments=withCounts;
   renderHome()}
 
