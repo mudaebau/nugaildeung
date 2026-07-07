@@ -405,25 +405,23 @@ tr:last-child td{border-bottom:none}
       <div class="wprog" id="wizProg"></div>
 
       <div class="wpane on" id="wpBasic">
-        <h2 class="wq">대회 기본 정보를 알려주세요</h2>
+        <h2 class="wq">대회명과 주최를 알려주세요</h2>
         <p class="wsub">스탭·참가자는 전화번호로만 식별 — 설치도 가입도 없습니다.</p>
         <div class="card">
           <label class="fl" style="margin-top:0">대회명</label>
           <input type="text" id="fName" value="제1회 임팩트파크골프 챌린지컵">
           <label class="fl">주최 · 주관</label>
           <input type="text" id="fHost" value="임팩트파크골프 · 다운솔루텍">
-          <label class="fl">대회 유형</label>
-          <div class="modew">
-            <button class="on" id="tField" onclick="setTourType('field')">필드</button>
-            <button id="tScreen" onclick="setTourType('screen')">스크린</button>
-          </div>
-          <div class="frow" style="margin-top:16px">
-            <div><label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120"></div>
-            <div><label class="fl" style="margin-top:0">동점 처리</label>
-            <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select></div>
-          </div>
         </div>
         <div class="wnav"><span></span><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpType">
+        <h2 class="wq">어떤 유형의 대회인가요?</h2>
+        <p class="wsub">필드는 현장 라운드, 스크린은 기간 중 자유 방문 방식이에요</p>
+        <button class="optbig on" id="obTypeField" onclick="setTourType('field')"><span class="on-dot"></span><div><b>필드</b><span>파크골프장에서 지정일에 라운드 진행</span></div></button>
+        <button class="optbig" id="obTypeScreen" onclick="setTourType('screen')"><span class="on-dot"></span><div><b>스크린</b><span>기간 중 매장을 자유롭게 방문해 기록 제출</span></div></button>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
       <div class="wpane" id="wpStageCount">
@@ -560,11 +558,20 @@ tr:last-child td{border-bottom:none}
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
-      <div class="wpane" id="wpInfo">
-        <h2 class="wq">참가자 정보와 시상 부문을 골라주세요</h2>
+      <div class="wpane" id="wpCap">
+        <h2 class="wq">모집 정원과 동점 처리를 정해주세요</h2>
         <div class="card">
-          <label class="fl" style="margin-top:0">참가자에게 받을 정보</label>
-          <p class="sub" style="margin-bottom:10px">선택한 항목이 접수·명단·시상에 그대로 반영됩니다.</p>
+          <label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120">
+          <label class="fl">동점 처리</label>
+          <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpParticipantInfo">
+        <h2 class="wq">참가자에게 어떤 정보를 받을까요?</h2>
+        <p class="wsub">선택한 항목이 접수·명단·시상에 그대로 반영됩니다.</p>
+        <div class="card">
           <div class="optrow">
             <div class="opt fixed">전화번호 <span class="tick">필수</span></div>
             <div class="opt on" data-f="name">이름 <span class="tick">✓</span></div>
@@ -574,15 +581,28 @@ tr:last-child td{border-bottom:none}
             <div class="opt on" data-f="club">소속 클럽 <span class="tick">✓</span></div>
             <div class="opt" data-f="region">지역</div>
           </div>
-          <label class="fl" style="margin-top:22px">시상 부문</label>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpAwards">
+        <h2 class="wq">시상 부문을 선택해주세요</h2>
+        <p class="wsub">중복 수상 제외로 자동 집계됩니다.</p>
+        <div class="card">
           <div class="optrow">
             <div class="opt fixed">종합 1·2·3위 <span class="tick">기본</span></div>
             <div class="opt on" data-a="gender">남녀부 <span class="tick">✓</span></div>
             <div class="opt" data-a="age">연령부 (60·70·80대)</div>
             <div class="opt" data-a="club">클럽 대항전</div>
           </div>
-          <p class="sub" style="margin:10px 0 0;font-size:15px">중복 수상 제외로 자동 집계됩니다.</p>
         </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpNoticePreview">
+        <h2 class="wq">요강 미리보기예요</h2>
+        <p class="wsub">지금까지 입력한 내용으로 참가자에게 보일 요강입니다 (선택 — 확인만 하고 넘어가도 됩니다)</p>
+        <div id="noticePreviewBody"></div>
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
@@ -1272,8 +1292,8 @@ function setStageFieldsFor(n,t){
   if(t==='field'&&!document.querySelectorAll('.venueIn'+n).length)window['renderVenues'+n]()}
 function setTourType(t){
   config.type=t;
-  $('#tField').classList.toggle('on',t==='field');
-  $('#tScreen').classList.toggle('on',t==='screen');
+  $('#obTypeField').classList.toggle('on',t==='field');
+  $('#obTypeScreen').classList.toggle('on',t==='screen');
   $('#fieldFields').style.display=t==='field'?'block':'none';
   $('#screenFields').style.display=t==='screen'?'block':'none';
   $('#fDateSLabel').textContent=t==='screen'?'기간 시작일':'시작일';
@@ -1382,10 +1402,10 @@ function cyclePar(h){const c=coursePars[parEditIdx];c[h]=c[h]>=5?3:c[h]+1;drawPa
 function closeParEdit(){$('#parOv').classList.remove('on');renderVenues()}
 let wStepIdx=0;
 function wizardSteps(){
-  const steps=['wpBasic','wpStageCount','wpStage1'];
+  const steps=['wpBasic','wpType','wpStageCount','wpStage1'];
   if(config.stageCount>=2)steps.push('wpStage2');
   if(config.stageCount===3)steps.push('wpStage3');
-  steps.push('wpInfo','wpStaff');
+  steps.push('wpCap','wpParticipantInfo','wpAwards','wpNoticePreview','wpStaff');
   return steps}
 function renderWizProgress(){
   const box=$('#wizProg');if(!box)return;
@@ -1397,9 +1417,41 @@ function wizShow(idx){
   document.querySelectorAll('.wpane').forEach(p=>p.classList.remove('on'));
   $('#'+steps[wStepIdx]).classList.add('on');
   renderWizProgress();
+  if(steps[wStepIdx]==='wpNoticePreview')renderNoticePreview();
   window.scrollTo(0,0)}
 function wizNext(){wizShow(wStepIdx+1)}
 function wizPrev(){wizShow(wStepIdx-1)}
+function renderNoticePreview(){
+  const name=$('#fName').value||'—';
+  const host=$('#fHost').value||'—';
+  const typeLabel=config.type==='screen'?'스크린':'필드';
+  const dateS=$('#fDateS').value,dateE=$('#fDateE').value;
+  const dateStr=dateS&&dateE?(dateS===dateE?dateS:`${dateS} ~ ${dateE}`):'—';
+  const venues=[...document.querySelectorAll(config.type==='screen'?'.screenVenueIn':'.venueIn')].map(v=>v.value.trim()).filter(Boolean);
+  const cap=$('#fCap').value||'—';
+  const tie=$('#fTie').value||'—';
+  const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
+  const infoList=['전화번호',...Object.keys(config.fields).filter(f=>config.fields[f]).map(f=>fieldLabels[f]||f)];
+  const awardLabels={gender:'남녀부',age:'연령부',club:'클럽 대항전'};
+  const awardList=['종합 1·2·3위',...Object.keys(config.awards).filter(a=>config.awards[a]).map(a=>awardLabels[a]||a)];
+  $('#noticePreviewBody').innerHTML=`
+    <div class="poster">
+      <div class="pdate">${typeLabel} · ${config.stageCount}단계</div>
+      <h3>${name}</h3>
+      <div class="pmeta">${host}<br>${dateStr}</div>
+    </div>
+    <div class="card">
+      <label class="fl" style="margin-top:0">진행 코스</label>
+      <p>${venues.length?venues.join(', '):'—'}</p>
+      <label class="fl">모집 정원</label>
+      <p>${cap}명</p>
+      <label class="fl">동점 처리</label>
+      <p>${tie}</p>
+      <label class="fl">참가자 정보</label>
+      <p>${infoList.join(' · ')}</p>
+      <label class="fl">시상</label>
+      <p>${awardList.join(' · ')}</p>
+    </div>`}
 document.querySelectorAll('.opt[data-a]').forEach(o=>{
   o.onclick=()=>{const a=o.dataset.a;
     config.awards[a]=!config.awards[a];
