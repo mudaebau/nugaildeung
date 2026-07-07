@@ -259,6 +259,23 @@ tr:last-child td{border-bottom:none}
 .backbar button{border:none;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px;padding:10px 16px;border-radius:99px}
 .backbar span{opacity:.85;font-weight:400}
 
+/* ===== 운영 허브 도구 리스트 ===== */
+.tools{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.trow{display:flex;align-items:center;gap:13px;padding:16px 18px;cursor:pointer}
+.tools .trow:not(:last-child){border-bottom:1px solid var(--line)}
+.trow .tic{width:42px;height:42px;border-radius:13px;background:var(--main-soft);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.trow .tic svg{width:21px;height:21px;stroke:var(--main-deep)}
+.trow .tt{flex:1;min-width:0}
+.trow .tt b{display:block;font-size:15.5px;font-weight:700}
+.trow .tt span{font-size:12.5px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint);white-space:nowrap}
+.trow .st2.warn{color:#C9930A}
+.trow .st2.gray{color:var(--muted);font-weight:600}
+.trow .chev{color:#B7C6D5;font-size:18px;transition:transform .2s;flex:0 0 auto}
+.trow.open .chev{transform:rotate(90deg)}
+.tooldetail{display:none;padding:0 18px 18px}
+.tooldetail.on{display:block}
+
 /* ===== 대회 도구 ===== */
 .toolrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line)}
 .toolrow:last-child{border-bottom:none}
@@ -656,37 +673,48 @@ tr:last-child td{border-bottom:none}
 
     <div class="stats" id="opStats"></div>
 
-    <div class="card">
-      <label class="fl" style="display:flex;align-items:center;gap:8px">심판 링크 발송
-        <span class="pill gray" id="linkStat">미발송</span></label>
-      <p class="sub" style="margin-bottom:6px">스탭에게 각자의 입력 링크를 문자로 보냅니다.</p>
-      <div id="toolStaff"></div>
-      <button class="btn full" style="margin-top:12px" id="sendAllBtn" onclick="sendLinks()">전체 발송</button>
-      <button class="btn ghost full" style="margin-top:8px" onclick="openJudge(0)">내가 직접 입력하기</button>
-    </div>
+    <div class="tools">
+      <div class="trow" id="trowJudge" onclick="toggleTool('Judge')">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>
+        <span class="tt"><b>심판 링크 발송</b><span>스탭에게 입력 링크를 문자로 보냅니다</span></span>
+        <span class="st2 gray" id="linkStat">미발송</span><span class="chev">›</span>
+      </div>
+      <div class="tooldetail" id="toolDetailJudge">
+        <div id="toolStaff"></div>
+        <button class="btn full" style="margin-top:12px" id="sendAllBtn" onclick="sendLinks()">전체 발송</button>
+        <button class="btn ghost full" style="margin-top:8px" onclick="openJudge(0)">내가 직접 입력하기</button>
+      </div>
 
-    <div class="card">
-      <label class="fl">전광판</label>
-      <p class="sub" style="margin-bottom:12px">대회장 TV에 연결된 노트북에서 이 주소를 여세요.</p>
-      <div class="qrbox">
-        <canvas id="qrCanvas" width="29" height="29"></canvas>
-        <div style="flex:1;min-width:170px">
-          <div class="urlchip" id="boardUrl">nuga1.kr/t/1024/board</div>
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn sm ghost" onclick="toast('주소가 복사되었습니다')">주소 복사</button>
-            <button class="btn sm" onclick="openBoard()">열기</button>
+      <div class="trow" id="trowBoard" onclick="toggleTool('Board')">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+        <span class="tt"><b>전광판</b><span id="boardUrlSummary">nuga1.kr/t/1024/board</span></span>
+        <span class="chev">›</span>
+      </div>
+      <div class="tooldetail" id="toolDetailBoard">
+        <p class="sub" style="margin-bottom:12px">대회장 TV에 연결된 노트북에서 이 주소를 여세요.</p>
+        <div class="qrbox">
+          <canvas id="qrCanvas" width="29" height="29"></canvas>
+          <div style="flex:1;min-width:170px">
+            <div class="urlchip" id="boardUrl">nuga1.kr/t/1024/board</div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn sm ghost" onclick="toast('주소가 복사되었습니다')">주소 복사</button>
+              <button class="btn sm" onclick="openBoard()">열기</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <label class="fl">참가 신청 링크 <span class="pill gray" id="applyStat">접수 0명</span></label>
-      <p class="sub" style="margin-bottom:12px">클럽 카톡방에 공유하면 접수가 명단에 실시간 반영됩니다.</p>
-      <div class="urlchip">nuga1.kr/t/1024/apply</div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn sm ghost" onclick="toast('신청 링크가 복사되었습니다')">주소 복사</button>
-        <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
+      <div class="trow" id="trowApply" onclick="toggleTool('Apply')">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg></span>
+        <span class="tt"><b>참가 신청 링크</b><span>클럽 카톡방에 공유하면 실시간 반영됩니다</span></span>
+        <span class="st2 gray" id="applyStat">접수 0명</span><span class="chev">›</span>
+      </div>
+      <div class="tooldetail" id="toolDetailApply">
+        <div class="urlchip">nuga1.kr/t/1024/apply</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn sm ghost" onclick="toast('신청 링크가 복사되었습니다')">주소 복사</button>
+          <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
+        </div>
       </div>
     </div>
 
@@ -1507,7 +1535,7 @@ async function renderTools(){
   const opened=js.filter(s=>s.link_opened_at).length;
   const sent=js.filter(s=>s.sentLocally||s.link_opened_at).length;
   $('#linkStat').textContent=sent===0?'미발송':opened===js.length?'전원 접속 ✓':`발송 ${sent} · 접속 ${opened}/${js.length}`;
-  $('#linkStat').className='pill '+(sent===0?'gray':opened===js.length?'':'amber');
+  $('#linkStat').className='st2 '+(sent===0?'gray':opened===js.length?'':'warn');
   $('#toolStaff').innerHTML=js.map((s,i)=>{
     const st=s.link_opened_at?'<span class="pill">✓ 접속함</span>'
       :s.sentLocally?'<span class="pill amber">미접속</span>'
@@ -1637,7 +1665,11 @@ async function submitGroup(){
   renderCap();renderHome();
   rcptShow(rcptNo(),`<b>${club}</b> ${added}명 접수 완료${waited?` · 정원 마감으로 <b>${waited}명 대기</b> 전환`:''}${dup?` · 중복 ${dup}명 제외`:''}.<br>총무님 번호로 접수 명단이 문자 발송되며,<br>운영자 참가자 명단에 실시간 반영되었습니다.`)}
 function resetApply(){openApply(applyT.id)}
-function updateApplyStat(){const el=$('#applyStat');if(el){el.textContent='접수 '+players.length+'명';el.className='pill'+(players.length?'':' gray')}}
+function updateApplyStat(){const el=$('#applyStat');if(el){el.textContent='접수 '+players.length+'명';el.className='st2'+(players.length?'':' gray')}}
+function toggleTool(name){
+  const row=$('#trow'+name),detail=$('#toolDetail'+name);
+  const open=!detail.classList.contains('on');
+  row.classList.toggle('open',open);detail.classList.toggle('on',open)}
 function drawQR(){
   const c=$('#qrCanvas');if(!c)return;const x=c.getContext('2d');
   x.fillStyle='#fff';x.fillRect(0,0,29,29);x.fillStyle='#12241C';
