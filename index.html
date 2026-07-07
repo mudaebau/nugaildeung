@@ -231,6 +231,9 @@ tr:last-child td{border-bottom:none}
 .capbar i{display:block;height:100%;background:var(--sun);border-radius:99px;transition:width .5s}
 .capnote{display:flex;justify-content:space-between;font-size:15px;margin-top:8px;opacity:.95}
 .modew{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.modew3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:15px}
+.modew3 button.on{background:var(--main);color:#fff;border-color:var(--main)}
 .modew button{min-height:64px;padding:12px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:19px}
 .modew button.on{background:var(--main);color:#fff;border-color:var(--main)}
 .receipt{text-align:center;padding:28px 16px}
@@ -265,6 +268,8 @@ tr:last-child td{border-bottom:none}
 .bchip.on{background:var(--sun);color:#5c4708;border-color:var(--sun)}
 .boardfoot{padding:14px 24px;color:#6E93BC;font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .bempty{color:#7FA5CB;text-align:center;padding:54px 20px;font-size:19px}
+.cutline{display:flex;align-items:center;gap:8px;margin:2px 24px;border-top:2px dashed var(--coral)}
+.cutline span{color:var(--coral);font-size:12px;font-weight:600;white-space:nowrap;transform:translateY(-9px);background:var(--board-bg);padding:0 8px}
 :fullscreen .boardshell{border-radius:0;min-height:100vh}
 
 /* ===== 결과 ===== */
@@ -404,12 +409,13 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="card">
           <label class="fl" style="margin-top:0">몇 단계 대회인가요?</label>
-          <div class="modew">
+          <div class="modew3">
             <button class="on" id="tStage1" onclick="setStageCount(1)">1단계</button>
-            <button id="tStage2" onclick="setStageCount(2)">2단계 (예선→결승)</button>
+            <button id="tStage2" onclick="setStageCount(2)">2단계<br>(예선→결승)</button>
+            <button id="tStage3" onclick="setStageCount(3)">3단계<br>(예선→본선→결승)</button>
           </div>
           <div id="stage2Box" style="display:none">
-            <label class="fl">2단계(결승) 기간</label>
+            <label class="fl" id="stage2TitleLabel">2단계(결승) 기간</label>
             <div class="frow">
               <div><input type="date" id="fDateS2" value="2026-07-27"></div>
               <div><input type="date" id="fDateE2" value="2026-07-27"></div>
@@ -435,8 +441,8 @@ tr:last-child td{border-bottom:none}
               <label class="fl">코스(매장)명 · 총파</label>
               <div id="screenVenueBox2"></div>
             </div>
-            <label class="fl">예선 → 결승 진출 방식</label>
-            <select id="fCutMode" onchange="toggleCutMode()">
+            <label class="fl" id="cut1Label">예선 → 결승 진출 방식</label>
+            <select id="fCutMode" onchange="toggleCutMode(1)">
               <option value="total">전체 인원</option>
               <option value="gender">남녀 구분</option>
             </select>
@@ -445,6 +451,44 @@ tr:last-child td{border-bottom:none}
               <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM" value="12"></div>
               <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF" value="12"></div>
             </div>
+          </div>
+        </div>
+        <div class="card" id="stage3Box" style="display:none">
+          <label class="fl" style="margin-top:0">3단계(결승) 기간</label>
+          <div class="frow">
+            <div><input type="date" id="fDateS3" value="2026-07-28"></div>
+            <div><input type="date" id="fDateE3" value="2026-07-28"></div>
+          </div>
+          <div id="fieldFields3">
+            <label class="fl">경기 규모</label>
+            <select id="fHoles3" onchange="renderVenues3()">
+              <option value="18" selected>18홀 (1개 코스)</option>
+              <option value="36">36홀 (2개 코스)</option>
+              <option value="54">54홀 (3개 코스)</option>
+              <option value="72">72홀 (4개 코스)</option>
+            </select>
+            <label class="fl">골프장 (코스별)</label>
+            <div id="venueBox3"></div>
+          </div>
+          <div id="screenFields3" style="display:none">
+            <label class="fl">진행 코스(매장) 수</label>
+            <select id="fScreenCourses3" onchange="renderScreenVenues3()">
+              <option value="1" selected>1개 코스</option>
+              <option value="2">2개 코스</option>
+              <option value="3">3개 코스</option>
+            </select>
+            <label class="fl">코스(매장)명 · 총파</label>
+            <div id="screenVenueBox3"></div>
+          </div>
+          <label class="fl">본선 → 결승 진출 방식</label>
+          <select id="fCutMode2" onchange="toggleCutMode(2)">
+            <option value="total">전체 인원</option>
+            <option value="gender">남녀 구분</option>
+          </select>
+          <div id="cutTotalBox2"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal2" value="12"></div>
+          <div id="cutGenderBox2" class="frow" style="display:none">
+            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM2" value="6"></div>
+            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF2" value="6"></div>
           </div>
         </div>
         <div class="wnav"><span></span><button class="btn" onclick="wgo(2)">다음 →</button></div>
@@ -585,7 +629,10 @@ tr:last-child td{border-bottom:none}
   <section class="page" id="opGroups">
     <h2 class="sec">조편성</h2>
     <p class="sub">이름을 누르고 바꿀 상대를 누르면 조가 맞바뀝니다.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"><button class="btn" onclick="makeGroups(true)">자동 조편성</button><button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button></div>
+    <div id="groupsDisabledNote" class="card" style="display:none;text-align:center;padding:30px 20px">
+      <p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
+    </div>
+    <div id="groupsActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"><button class="btn" onclick="makeGroups(true)">자동 조편성</button><button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button></div>
     <div id="groupsBox"></div>
   </section>
 
@@ -659,6 +706,11 @@ tr:last-child td{border-bottom:none}
       <input type="tel" id="peStrokes" placeholder="예: 68">
       <label class="fl">플레이 매장 <span style="color:var(--muted);font-weight:400">(선택)</span></label>
       <input type="text" id="peStore" placeholder="예: 강남점">
+      <label class="fl">스코어카드 사진 <span class="pill gray" style="margin-left:4px">선택</span></label>
+      <p class="sub" style="margin-bottom:8px">보조 증빙일 뿐 총타수에 자동 반영되지 않습니다.</p>
+      <div id="pePhotoPreview"></div>
+      <input type="file" accept="image/*" capture="environment" id="pePhotoInput" style="display:none" onchange="pickPeriodPhoto(this.files[0])">
+      <button class="btn ghost full" onclick="document.getElementById('pePhotoInput').click()">사진 촬영/첨부</button>
       <button class="btn full big" style="margin-top:12px" onclick="submitPlayEntry()">기록 제출</button>
     </div>
     <div class="log" style="margin-top:14px"><h4 id="logTitle">실시간 입력 기록 — 전광판에 즉시 반영</h4><div id="logBox"><div style="color:var(--muted)">아직 입력이 없습니다</div></div></div>
@@ -818,6 +870,7 @@ const PRESET66=[3,4,3,3,4,3,5,4,4,3,3,4,5,3,4,3,4,4];
 const PRESET54=Array(18).fill(3);
 let coursePars=[];
 let coursePars2=[];
+let coursePars3=[];
 const parAt=gi=>{const r=Math.floor(gi/18);return (coursePars[r]||PRESET66)[gi%18]};
 const isOut=p=>p.st==='wd'||p.st==='dq';
 let boardMode=-1,jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
@@ -894,7 +947,15 @@ function goTab(id){
   if(id==='opCreate'&&config.created){toast('초기 버전은 대회 1개 운영 — 운영 탭으로 이동합니다');id='opManage'}
   if((id==='opManage'||id==='opPlayers'||id==='opGroups'||id==='opResult')&&!config.created){toast('내 대회를 먼저 개설해 주세요 — 홈의 [새 대회 개설하기]');return}
   navTo('Owner',id);
-  if(id==='opManage')renderStageStepper()}
+  if(id==='opManage')renderStageStepper();
+  if(id==='opGroups')renderGroupsTabState()}
+function renderGroupsTabState(){
+  const box=$('#groupsDisabledNote');if(!box)return;
+  const disabled=judgeStageKind==='period';
+  box.style.display=disabled?'block':'none';
+  $('#groupsActions').style.display=disabled?'none':'grid';
+  if(disabled)$('#groupsBox').innerHTML='';
+  else renderGroups()}
 document.querySelectorAll('.bnav button').forEach(b=>b.onclick=()=>goTab(b.dataset.page));
 
 /* ================= 홈: 대회 리스트 ================= */
@@ -994,12 +1055,19 @@ async function advanceStage(){
   await sb.from('stages').update({status:'done'}).eq('id',curStage.id);
   await sb.from('stages').update({status:'open'}).eq('id',nextStage.id);
 
+  lastAdvanceResult=`[${config.name}] ${nextStage.name} 진출자 안내\n${nextStage.name} 진출자 ${advanced.length}명: ${advanced.map(p=>p.name).join(', ')}\n일정: ${nextStage.date_start||''}${nextStage.date_end&&nextStage.date_end!==nextStage.date_start?' ~ '+nextStage.date_end:''}`;
   $('#advanceResultBox').innerHTML=`<div class="card" style="background:var(--main-soft);border:none">
     <b>${nextStage.name} 진출자 ${advanced.length}명</b>
-    <p class="sub" style="margin-top:6px">${advanced.map(p=>p.name).join(', ')}</p></div>`;
+    <p class="sub" style="margin-top:6px">${advanced.map(p=>p.name).join(', ')}</p>
+    <button class="btn ghost full" style="margin-top:10px" onclick="copyAdvanceResult()">진출 안내 문구 복사 (카톡·문자 발송용)</button></div>`;
   toast(`${nextStage.name} 진출자 ${advanced.length}명이 선발되었습니다`);
   renderStageStepper();
   await loadBoardData(config.id)}
+let lastAdvanceResult='';
+async function copyAdvanceResult(){
+  if(!lastAdvanceResult)return;
+  try{await navigator.clipboard.writeText(lastAdvanceResult)}catch(e){}
+  toast('진출 안내 문구가 복사되었습니다 — 카톡방·문자로 붙여넣으세요')}
 async function loadTournaments(){
   const{data,error}=await sb.from('tournaments').select('*').order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
@@ -1090,6 +1158,12 @@ async function finishSignup(){
   toast(`${user.name} 님, 가입 완료! 이제 대회를 개설하세요`)}
 
 /* ================= wizard ================= */
+function setStageFieldsFor(n,t){
+  if(config.stageCount<n)return;
+  $('#fieldFields'+n).style.display=t==='field'?'block':'none';
+  $('#screenFields'+n).style.display=t==='screen'?'block':'none';
+  if(t==='screen'&&!document.querySelectorAll('.screenVenueIn'+n).length)window['renderScreenVenues'+n]();
+  if(t==='field'&&!document.querySelectorAll('.venueIn'+n).length)window['renderVenues'+n]()}
 function setTourType(t){
   config.type=t;
   $('#tField').classList.toggle('on',t==='field');
@@ -1099,27 +1173,23 @@ function setTourType(t){
   $('#fDateSLabel').textContent=t==='screen'?'기간 시작일':'시작일';
   $('#fDateELabel').textContent=t==='screen'?'기간 종료일':'종료일';
   if(t==='screen'&&!document.querySelectorAll('.screenVenueIn').length)renderScreenVenues();
-  if(config.stageCount===2){
-    $('#fieldFields2').style.display=t==='field'?'block':'none';
-    $('#screenFields2').style.display=t==='screen'?'block':'none';
-    if(t==='screen'&&!document.querySelectorAll('.screenVenueIn2').length)renderScreenVenues2();
-    if(t==='field'&&!document.querySelectorAll('.venueIn2').length)renderVenues2()}}
+  setStageFieldsFor(2,t);setStageFieldsFor(3,t)}
 function setStageCount(n){
   config.stageCount=n;
   $('#tStage1').classList.toggle('on',n===1);
   $('#tStage2').classList.toggle('on',n===2);
-  $('#stage2Box').style.display=n===2?'block':'none';
-  if(n===2){
-    if(config.type==='screen'){
-      $('#fieldFields2').style.display='none';$('#screenFields2').style.display='block';
-      if(!document.querySelectorAll('.screenVenueIn2').length)renderScreenVenues2()}
-    else{
-      $('#fieldFields2').style.display='block';$('#screenFields2').style.display='none';
-      if(!document.querySelectorAll('.venueIn2').length)renderVenues2()}}}
-function toggleCutMode(){
-  const m=$('#fCutMode').value;
-  $('#cutTotalBox').style.display=m==='total'?'block':'none';
-  $('#cutGenderBox').style.display=m==='gender'?'flex':'none'}
+  $('#tStage3').classList.toggle('on',n===3);
+  $('#stage2Box').style.display=n>=2?'block':'none';
+  $('#stage3Box').style.display=n===3?'block':'none';
+  $('#stage2TitleLabel').textContent=n===3?'2단계(본선) 기간':'2단계(결승) 기간';
+  $('#cut1Label').textContent=n===3?'예선 → 본선 진출 방식':'예선 → 결승 진출 방식';
+  if(n>=2)setStageFieldsFor(2,config.type);
+  if(n===3)setStageFieldsFor(3,config.type)}
+function toggleCutMode(which){
+  const suf=which===2?'2':'';
+  const m=$('#fCutMode'+suf).value;
+  $('#cutTotalBox'+suf).style.display=m==='total'?'block':'none';
+  $('#cutGenderBox'+suf).style.display=m==='gender'?'flex':'none'}
 const SCREEN_VENUE_DEFAULTS=['1번 매장','2번 매장','3번 매장','4번 매장','5번 매장','6번 매장'];
 function renderScreenVenues(){
   const n=+$('#fScreenCourses').value;
@@ -1134,6 +1204,13 @@ function renderScreenVenues2(){
     `<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
       <input type="text" class="screenVenueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스 매장명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
       <input type="tel" class="screenParIn2" style="width:90px;flex:0 0 auto" placeholder="총파" value="66">
+    </div>`).join('')}
+function renderScreenVenues3(){
+  const n=+$('#fScreenCourses3').value;
+  $('#screenVenueBox3').innerHTML=Array.from({length:n},(_,i)=>
+    `<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
+      <input type="text" class="screenVenueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스 매장명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
+      <input type="tel" class="screenParIn3" style="width:90px;flex:0 0 auto" placeholder="총파" value="66">
     </div>`).join('')}
 const VENUE_DEFAULTS=['솔터공원 파크골프장','미사한강 파크골프장','광나루 파크골프장','여주 파크골프장'];
 function renderVenues(){
@@ -1162,6 +1239,20 @@ function renderVenues2(){
     return`<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
       <input type="text" class="venueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스 골프장명" value="${VENUE_DEFAULTS[i]||''}">
       <select class="parSel2" style="width:118px;flex:0 0 auto;padding:12px 8px;font-size:15px" onchange="coursePars2[${i}]=this.value==='66'?[...PRESET66]:[...PRESET54]">
+        <option value="66" ${preset==='66'?'selected':''}>파 66</option>
+        <option value="54" ${preset==='54'?'selected':''}>전홀 파3</option>
+      </select>
+    </div>`}).join('')}
+function renderVenues3(){
+  const n=(+$('#fHoles3').value)/18;
+  const next=Array.from({length:n},(_,i)=>coursePars3[i]||[...PRESET66]);
+  coursePars3=next;
+  $('#venueBox3').innerHTML=Array.from({length:n},(_,i)=>{
+    const sum=coursePars3[i].reduce((a,b)=>a+b,0);
+    const preset=sum===66&&coursePars3[i].join()===PRESET66.join()?'66':'54';
+    return`<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
+      <input type="text" class="venueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스 골프장명" value="${VENUE_DEFAULTS[i]||''}">
+      <select class="parSel3" style="width:118px;flex:0 0 auto;padding:12px 8px;font-size:15px" onchange="coursePars3[${i}]=this.value==='66'?[...PRESET66]:[...PRESET54]">
         <option value="66" ${preset==='66'?'selected':''}>파 66</option>
         <option value="54" ${preset==='54'?'selected':''}>전홀 파3</option>
       </select>
@@ -1402,21 +1493,21 @@ async function createTournament(){
   if(tErr){toast('대회 저장에 실패했습니다');console.error(tErr);config.created=false;return}
   config.id=tournamentId;
 
-  let advanceCut=null;
-  if(config.stageCount===2){
-    const cutMode=$('#fCutMode').value;
-    advanceCut=cutMode==='gender'
-      ?{m:Math.max(1,+$('#fCutM').value||12),f:Math.max(1,+$('#fCutF').value||12)}
-      :{total:Math.max(2,+$('#fCutTotal').value||24)}}
+  function readCut(suf){
+    const mode=$('#fCutMode'+suf).value;
+    return mode==='gender'
+      ?{m:Math.max(1,+$('#fCutM'+suf).value||12),f:Math.max(1,+$('#fCutF'+suf).value||12)}
+      :{total:Math.max(2,+$('#fCutTotal'+suf).value||24)}}
 
+  const stage1Cut=config.stageCount>=2?readCut(''):null;
   const{error:stErr}=await sb.from('stages').insert({
-    tournament_id:tournamentId,seq:1,name:config.stageCount===2?'예선':'본선',kind:stageKind,
+    tournament_id:tournamentId,seq:1,name:config.stageCount>=2?'예선':'본선',kind:stageKind,
     date_start:config.dateS,date_end:config.dateE,venues:stageVenues,
     course_pars:stageCoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-    advance_cut:advanceCut,status:'open'});
+    advance_cut:stage1Cut,status:'open'});
   if(stErr)console.error(stErr);
 
-  if(config.stageCount===2){
+  if(config.stageCount>=2){
     let stage2Venues,stage2CoursePars;
     if(config.type==='screen'){
       stage2Venues=[...document.querySelectorAll('.screenVenueIn2')].map((v,i)=>v.value.trim()||`${i+1}코스`);
@@ -1425,12 +1516,29 @@ async function createTournament(){
       stage2Venues=[...document.querySelectorAll('.venueIn2')].map((v,i)=>v.value.trim()||`${i+1}코스`);
       stage2CoursePars=coursePars2}
     const dateS2=$('#fDateS2').value||config.dateS,dateE2=$('#fDateE2').value||config.dateE;
+    const stage2Cut=config.stageCount===3?readCut('2'):null;
     const{error:st2Err}=await sb.from('stages').insert({
-      tournament_id:tournamentId,seq:2,name:'결승',kind:stageKind,
+      tournament_id:tournamentId,seq:2,name:config.stageCount===3?'본선':'결승',kind:stageKind,
       date_start:dateS2,date_end:dateE2,venues:stage2Venues,
       course_pars:stage2CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-      advance_cut:null,status:'waiting'});
+      advance_cut:stage2Cut,status:'waiting'});
     if(st2Err)console.error(st2Err)}
+
+  if(config.stageCount===3){
+    let stage3Venues,stage3CoursePars;
+    if(config.type==='screen'){
+      stage3Venues=[...document.querySelectorAll('.screenVenueIn3')].map((v,i)=>v.value.trim()||`${i+1}코스`);
+      stage3CoursePars=[...document.querySelectorAll('.screenParIn3')].map(v=>+v.value||66)}
+    else{
+      stage3Venues=[...document.querySelectorAll('.venueIn3')].map((v,i)=>v.value.trim()||`${i+1}코스`);
+      stage3CoursePars=coursePars3}
+    const dateS3=$('#fDateS3').value||config.dateS,dateE3=$('#fDateE3').value||config.dateE;
+    const{error:st3Err}=await sb.from('stages').insert({
+      tournament_id:tournamentId,seq:3,name:'결승',kind:stageKind,
+      date_start:dateS3,date_end:dateE3,venues:stage3Venues,
+      course_pars:stage3CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
+      advance_cut:null,status:'waiting'});
+    if(st3Err)console.error(st3Err)}
 
   if(staff.length){
     const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
@@ -1700,6 +1808,12 @@ function selectPeriodPlayer(id){
   const p=players.find(x=>x.id===id);
   $('#peSelectedInfo').innerHTML=p?`<span class="pill">${p.name} 선택됨</span> <span class="num" style="color:var(--muted)">${maskPhone(p.phone)}</span>`:'';
   renderPeriodPlayerList()}
+let peSelectedPhotoFile=null;
+function pickPeriodPhoto(file){
+  if(!file)return;
+  peSelectedPhotoFile=file;
+  const url=URL.createObjectURL(file);
+  $('#pePhotoPreview').innerHTML=`<img src="${url}" style="width:100%;border-radius:14px;margin-bottom:10px;display:block">`}
 async function submitPlayEntry(){
   if(!peSelectedPlayer){toast('참가자를 먼저 선택해 주세요');return}
   const strokes=+$('#peStrokes').value;
@@ -1707,11 +1821,18 @@ async function submitPlayEntry(){
   const store=$('#peStore').value.trim()||null;
   const token=currentJudgeToken();
   if(!token){toast('심판 인증 정보가 없습니다');return}
-  const{error}=await sb.rpc('submit_play',{p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store});
+  let evidenceUrl=null;
+  if(peSelectedPhotoFile){
+    toast('사진 업로드 중…');
+    const path=`${config.id}/plays/${peSelectedPlayer}-${jRound}-${Date.now()}.jpg`;
+    const{error:upErr}=await sb.storage.from('scorecards').upload(path,peSelectedPhotoFile,{contentType:peSelectedPhotoFile.type||'image/jpeg'});
+    if(upErr){toast('사진 업로드 실패: '+upErr.message);console.error(upErr)}
+    else{const{data:pub}=sb.storage.from('scorecards').getPublicUrl(path);evidenceUrl=pub.publicUrl}}
+  const{error}=await sb.rpc('submit_play',{p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store,p_evidence_url:evidenceUrl});
   if(error){toast('저장 실패: '+error.message);console.error(error);return}
   const p=players.find(x=>x.id===peSelectedPlayer);
-  addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}`);
-  $('#peStrokes').value='';$('#peStore').value='';
+  addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}${evidenceUrl?' · 사진 첨부':''}`);
+  $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
   toast('기록이 저장되었습니다')}
 async function loadScorecardPhoto(){
   const box=$('#scPhotoPreview');if(!box)return;
@@ -1909,8 +2030,11 @@ function renderBoardChips(){
   if(ROUNDS>1)for(let r=0;r<ROUNDS;r++)
     h+=`<button class="bchip ${boardMode===r?'on':''}" onclick="boardMode=${r};renderBoard()">${r+1}C ${vShort(r)}</button>`;
   $('#boardModeChips').innerHTML=h}
-function periodStandings(){
-  const arr=players.map(p=>{
+let periodGenderFilter='all';
+function periodStandings(genderFilter='all'){
+  let pool=players;
+  if(genderFilter!=='all')pool=pool.filter(p=>p.sex===genderFilter);
+  const arr=pool.map(p=>{
     const bestArr=Array.from({length:ROUNDS},(_,c)=>p.best&&p.best[c]!=null?p.best[c]:null);
     const completed=bestArr.filter(v=>v!=null).length;
     const tot=completed===ROUNDS?bestArr.reduce((a,b)=>a+b,0):null;
@@ -1922,20 +2046,28 @@ function periodStandings(){
     return x.tot-y.tot});
   return act.concat(outs)}
 function renderPeriodBoard(){
-  $('#boardModeChips').innerHTML='';
   const box=$('#brows');
-  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';return}
+  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
+  $('#boardModeChips').innerHTML=[['all','전체'],['남','남자'],['여','여자']].map(([g,label])=>
+    `<button class="bchip ${periodGenderFilter===g?'on':''}" onclick="periodGenderFilter='${g}';renderBoard()">${label}</button>`).join('');
   const cols=`56px 1fr ${Array(ROUNDS).fill('62px').join(' ')} 90px`;
   const bh=$('#bhead');bh.style.gridTemplateColumns=cols;
   bh.innerHTML=`<div>순위</div><div>선수</div>${Array.from({length:ROUNDS},(_,r)=>`<div style="text-align:right">${vShort(r)}</div>`).join('')}<div style="text-align:right">합계</div>`;
-  const st=periodStandings();
+  const st=periodStandings(periodGenderFilter);
+  const cut=boardActiveStage&&boardActiveStage.advance_cut;
+  let cutAfter=-1;
+  if(cut){
+    if(periodGenderFilter==='all'&&cut.total!=null)cutAfter=cut.total;
+    else if(periodGenderFilter==='남'&&cut.m!=null)cutAfter=cut.m;
+    else if(periodGenderFilter==='여'&&cut.f!=null)cutAfter=cut.f}
   let rankN=0;
   box.innerHTML=st.map((s,i)=>{
     const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FF9B7E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
       :`<div class="rank num">${s.tot!=null?++rankN:'·'}</div>`;
     const mid=s.bestArr.map(v=>`<div class="rsc">${v!=null?v:'·'}</div>`).join('');
     const totalCell=s.out?'—':(s.tot!=null?s.tot:`${s.completed}/${ROUNDS}`);
-    return`<div class="brow ${i===0&&s.tot!=null&&!s.out?'top1':''}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
+    const cutLine=cutAfter>0&&i===cutAfter?'<div class="cutline"><span>진출선 ('+cutAfter+'명)</span></div>':'';
+    return cutLine+`<div class="brow ${i===0&&s.tot!=null&&!s.out?'top1':''}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
       ${mid}
