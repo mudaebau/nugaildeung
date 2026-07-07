@@ -102,14 +102,18 @@ textarea{resize:vertical;line-height:1.65;font-size:17px}
 .opt.fixed{background:var(--main-deep);border-color:var(--main-deep);color:#fff}
 .opt .tick{font-size:14px}
 
-/* 위저드 단계 */
-.wizsteps{display:flex;gap:8px;margin-bottom:18px}
-.wstep{flex:1;background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:10px 6px;font-size:14px;font-weight:600;color:var(--muted);text-align:center}
-.wstep .n{font-family:'Oswald',sans-serif;color:var(--sun);font-size:20px;display:block}
-.wstep.cur{border-color:var(--main);color:var(--main-deep)}
-.wstep.cur .n{color:var(--main)}
-.wstep.done{background:#E7F5EE;border-color:#E7F5EE;color:#2E8B63}
-.wstep.done .n{color:var(--mint)}
+/* 위저드 — 대화형 단계 */
+.wprog{display:flex;gap:6px;margin-bottom:26px}
+.wprog i{flex:1;height:5px;border-radius:99px;background:var(--line);font-style:normal}
+.wprog i.d{background:var(--main)}
+.wq{font-size:24px;font-weight:700;line-height:1.45;margin-bottom:6px}
+.wsub{font-size:14px;color:var(--muted);margin-bottom:20px}
+.optbig{width:100%;text-align:left;background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:19px 20px;margin-bottom:12px;display:flex;align-items:center;gap:15px}
+.optbig.on{border-color:var(--main);background:var(--main-soft)}
+.optbig .on-dot{width:26px;height:26px;border-radius:50%;border:2px solid #C9D8E7;flex:0 0 auto}
+.optbig.on .on-dot{border:8px solid var(--main)}
+.optbig b{display:block;font-size:17px;font-weight:700}
+.optbig span{font-size:13px;color:var(--muted)}
 .wpane{display:none}.wpane.on{display:block}
 .wnav{display:flex;justify-content:space-between;margin-top:18px;gap:10px}
 
@@ -398,17 +402,13 @@ tr:last-child td{border-bottom:none}
 
     <!-- 위저드 -->
     <div id="wizBox" style="display:none">
-      <h2 class="sec">대회 개설</h2>
-      <p class="sub">스탭·참가자는 <b>전화번호</b>로만 식별 — 설치도 가입도 없습니다.</p>
-      <div class="wizsteps">
-        <div class="wstep cur" id="ws1"><span class="n">1</span>대회 개요</div>
-        <div class="wstep" id="ws2"><span class="n">2</span>정보 항목</div>
-        <div class="wstep" id="ws3"><span class="n">3</span>운영진</div>
-      </div>
+      <div class="wprog" id="wizProg"></div>
 
-      <div class="wpane on" id="wp1">
+      <div class="wpane on" id="wpBasic">
+        <h2 class="wq">대회 기본 정보를 알려주세요</h2>
+        <p class="wsub">스탭·참가자는 전화번호로만 식별 — 설치도 가입도 없습니다.</p>
         <div class="card">
-          <label class="fl">대회명</label>
+          <label class="fl" style="margin-top:0">대회명</label>
           <input type="text" id="fName" value="제1회 임팩트파크골프 챌린지컵">
           <label class="fl">주최 · 주관</label>
           <input type="text" id="fHost" value="임팩트파크골프 · 다운솔루텍">
@@ -418,6 +418,28 @@ tr:last-child td{border-bottom:none}
             <button id="tScreen" onclick="setTourType('screen')">스크린</button>
           </div>
           <div class="frow" style="margin-top:16px">
+            <div><label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120"></div>
+            <div><label class="fl" style="margin-top:0">동점 처리</label>
+            <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select></div>
+          </div>
+        </div>
+        <div class="wnav"><span></span><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpStageCount">
+        <h2 class="wq">몇 단계 대회인가요?</h2>
+        <p class="wsub">단계마다 기간·코스·진출 인원을 따로 정할 수 있어요</p>
+        <button class="optbig on" id="obStage1" onclick="setStageCount(1)"><span class="on-dot"></span><div><b>1단계 — 단판 대회</b><span>한 번에 순위 결정 · 가장 일반적</span></div></button>
+        <button class="optbig" id="obStage2" onclick="setStageCount(2)"><span class="on-dot"></span><div><b>2단계 — 예선 → 결승</b><span>예선 후 상위 진출자가 결승 진행</span></div></button>
+        <button class="optbig" id="obStage3" onclick="setStageCount(3)"><span class="on-dot"></span><div><b>3단계 — 예선 → 본선 → 결승</b><span>대규모 대회 · 협회전</span></div></button>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpStage1">
+        <h2 class="wq" id="stage1QTitle">코스와 기간을 정해주세요</h2>
+        <p class="wsub">선택한 유형에 맞는 코스 정보를 입력하세요</p>
+        <div class="card">
+          <div class="frow">
             <div><label class="fl" style="margin-top:0" id="fDateSLabel">시작일</label><input type="date" id="fDateS" value="2026-07-25"></div>
             <div><label class="fl" style="margin-top:0" id="fDateELabel">종료일</label><input type="date" id="fDateE" value="2026-07-26"></div>
           </div>
@@ -446,60 +468,69 @@ tr:last-child td{border-bottom:none}
             <div id="screenVenueBox"></div>
             <p class="sub" style="margin-top:8px">참가자가 기간 중 자유롭게 방문해 기록을 제출하는 방식입니다 — 조편성 없이 진행돼요.</p>
           </div>
-          <div class="frow" style="margin-top:16px">
-            <div><label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120"></div>
-            <div><label class="fl" style="margin-top:0">동점 처리</label>
-            <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select></div>
+        </div>
+        <div class="card" id="stage1CutBox" style="display:none">
+          <label class="fl" style="margin-top:0" id="cut1Label">예선 → 결승 진출 방식</label>
+          <select id="fCutMode" onchange="toggleCutMode(1)">
+            <option value="total">전체 인원</option>
+            <option value="gender">남녀 구분</option>
+          </select>
+          <div id="cutTotalBox"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal" value="24"></div>
+          <div id="cutGenderBox" class="frow" style="display:none">
+            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM" value="12"></div>
+            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF" value="12"></div>
           </div>
         </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpStage2">
+        <h2 class="wq" id="stage2QTitle">2단계(결승) 코스와 기간을 정해주세요</h2>
         <div class="card">
-          <label class="fl" style="margin-top:0">몇 단계 대회인가요?</label>
-          <div class="modew3">
-            <button class="on" id="tStage1" onclick="setStageCount(1)">1단계</button>
-            <button id="tStage2" onclick="setStageCount(2)">2단계<br>(예선→결승)</button>
-            <button id="tStage3" onclick="setStageCount(3)">3단계<br>(예선→본선→결승)</button>
+          <div class="frow">
+            <div><input type="date" id="fDateS2" value="2026-07-27"></div>
+            <div><input type="date" id="fDateE2" value="2026-07-27"></div>
           </div>
-          <div id="stage2Box" style="display:none">
-            <label class="fl" id="stage2TitleLabel">2단계(결승) 기간</label>
-            <div class="frow">
-              <div><input type="date" id="fDateS2" value="2026-07-27"></div>
-              <div><input type="date" id="fDateE2" value="2026-07-27"></div>
-            </div>
-            <div id="fieldFields2">
-              <label class="fl">경기 규모</label>
-              <select id="fHoles2" onchange="renderVenues2()">
-                <option value="18" selected>18홀 (1개 코스)</option>
-                <option value="36">36홀 (2개 코스)</option>
-                <option value="54">54홀 (3개 코스)</option>
-                <option value="72">72홀 (4개 코스)</option>
-              </select>
-              <label class="fl">골프장 (코스별)</label>
-              <div id="venueBox2"></div>
-            </div>
-            <div id="screenFields2" style="display:none">
-              <label class="fl">진행 코스(매장) 수</label>
-              <select id="fScreenCourses2" onchange="renderScreenVenues2()">
-                <option value="1" selected>1개 코스</option>
-                <option value="2">2개 코스</option>
-                <option value="3">3개 코스</option>
-              </select>
-              <label class="fl">코스(매장)명 · 총파</label>
-              <div id="screenVenueBox2"></div>
-            </div>
-            <label class="fl" id="cut1Label">예선 → 결승 진출 방식</label>
-            <select id="fCutMode" onchange="toggleCutMode(1)">
-              <option value="total">전체 인원</option>
-              <option value="gender">남녀 구분</option>
+          <div id="fieldFields2">
+            <label class="fl">경기 규모</label>
+            <select id="fHoles2" onchange="renderVenues2()">
+              <option value="18" selected>18홀 (1개 코스)</option>
+              <option value="36">36홀 (2개 코스)</option>
+              <option value="54">54홀 (3개 코스)</option>
+              <option value="72">72홀 (4개 코스)</option>
             </select>
-            <div id="cutTotalBox"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal" value="24"></div>
-            <div id="cutGenderBox" class="frow" style="display:none">
-              <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM" value="12"></div>
-              <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF" value="12"></div>
-            </div>
+            <label class="fl">골프장 (코스별)</label>
+            <div id="venueBox2"></div>
+          </div>
+          <div id="screenFields2" style="display:none">
+            <label class="fl">진행 코스(매장) 수</label>
+            <select id="fScreenCourses2" onchange="renderScreenVenues2()">
+              <option value="1" selected>1개 코스</option>
+              <option value="2">2개 코스</option>
+              <option value="3">3개 코스</option>
+            </select>
+            <label class="fl">코스(매장)명 · 총파</label>
+            <div id="screenVenueBox2"></div>
           </div>
         </div>
-        <div class="card" id="stage3Box" style="display:none">
-          <label class="fl" style="margin-top:0">3단계(결승) 기간</label>
+        <div class="card" id="stage2CutBox" style="display:none">
+          <label class="fl" style="margin-top:0">본선 → 결승 진출 방식</label>
+          <select id="fCutMode2" onchange="toggleCutMode(2)">
+            <option value="total">전체 인원</option>
+            <option value="gender">남녀 구분</option>
+          </select>
+          <div id="cutTotalBox2"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal2" value="12"></div>
+          <div id="cutGenderBox2" class="frow" style="display:none">
+            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM2" value="6"></div>
+            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF2" value="6"></div>
+          </div>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpStage3">
+        <h2 class="wq">3단계(결승) 코스와 기간을 정해주세요</h2>
+        <div class="card">
           <div class="frow">
             <div><input type="date" id="fDateS3" value="2026-07-28"></div>
             <div><input type="date" id="fDateE3" value="2026-07-28"></div>
@@ -525,23 +556,14 @@ tr:last-child td{border-bottom:none}
             <label class="fl">코스(매장)명 · 총파</label>
             <div id="screenVenueBox3"></div>
           </div>
-          <label class="fl">본선 → 결승 진출 방식</label>
-          <select id="fCutMode2" onchange="toggleCutMode(2)">
-            <option value="total">전체 인원</option>
-            <option value="gender">남녀 구분</option>
-          </select>
-          <div id="cutTotalBox2"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal2" value="12"></div>
-          <div id="cutGenderBox2" class="frow" style="display:none">
-            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM2" value="6"></div>
-            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF2" value="6"></div>
-          </div>
         </div>
-        <div class="wnav"><span></span><button class="btn" onclick="wgo(2)">다음 →</button></div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
-      <div class="wpane" id="wp2">
+      <div class="wpane" id="wpInfo">
+        <h2 class="wq">참가자 정보와 시상 부문을 골라주세요</h2>
         <div class="card">
-          <label class="fl">참가자에게 받을 정보</label>
+          <label class="fl" style="margin-top:0">참가자에게 받을 정보</label>
           <p class="sub" style="margin-bottom:10px">선택한 항목이 접수·명단·시상에 그대로 반영됩니다.</p>
           <div class="optrow">
             <div class="opt fixed">전화번호 <span class="tick">필수</span></div>
@@ -552,7 +574,7 @@ tr:last-child td{border-bottom:none}
             <div class="opt on" data-f="club">소속 클럽 <span class="tick">✓</span></div>
             <div class="opt" data-f="region">지역</div>
           </div>
-          <label class="fl" style="margin-top:22px">시상 부문 <span style="color:var(--muted);font-weight:500;font-size:15px"></span></label>
+          <label class="fl" style="margin-top:22px">시상 부문</label>
           <div class="optrow">
             <div class="opt fixed">종합 1·2·3위 <span class="tick">기본</span></div>
             <div class="opt on" data-a="gender">남녀부 <span class="tick">✓</span></div>
@@ -561,13 +583,13 @@ tr:last-child td{border-bottom:none}
           </div>
           <p class="sub" style="margin:10px 0 0;font-size:15px">중복 수상 제외로 자동 집계됩니다.</p>
         </div>
-        
-        <div class="wnav"><button class="btn ghost" onclick="wgo(1)">← 이전</button><button class="btn" onclick="wgo(3)">다음 →</button></div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
-      <div class="wpane" id="wp3">
+      <div class="wpane" id="wpStaff">
+        <h2 class="wq">운영진을 등록해주세요</h2>
         <div class="card">
-          <label class="fl">대표운영자</label>
+          <label class="fl" style="margin-top:0">대표운영자</label>
           <div class="staffrow">
             <div class="avatar lead">대표</div>
             <div class="info"><b id="ownerName">—</b><span class="num" id="ownerPhone">— · 전체 권한</span></div>
@@ -581,7 +603,7 @@ tr:last-child td{border-bottom:none}
           <input type="text" id="sfDuty" placeholder="담당 (예: A코스 1–5홀 심판)" style="margin-top:8px">
           <button class="btn ghost full" style="margin-top:10px" onclick="addStaff()">+ 스탭 추가</button>
         </div>
-        <div class="wnav"><button class="btn ghost" onclick="wgo(2)">← 이전</button><button class="btn big" onclick="createTournament()">대회 개설 완료</button></div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn big" onclick="createTournament()">대회 개설 완료</button></div>
       </div>
     </div>
   </section>
@@ -1238,6 +1260,7 @@ async function finishSignup(){
   $('#authStep3').style.display='none';$('#wizBox').style.display='block';
   $('#ownerName').textContent=user.name;
   $('#ownerPhone').textContent=maskPhone(user.phone)+' · 전체 권한';
+  wizShow(0);
   toast(`${user.name} 님, 가입 완료! 이제 대회를 개설하세요`)}
 
 /* ================= wizard ================= */
@@ -1259,15 +1282,17 @@ function setTourType(t){
   setStageFieldsFor(2,t);setStageFieldsFor(3,t)}
 function setStageCount(n){
   config.stageCount=n;
-  $('#tStage1').classList.toggle('on',n===1);
-  $('#tStage2').classList.toggle('on',n===2);
-  $('#tStage3').classList.toggle('on',n===3);
-  $('#stage2Box').style.display=n>=2?'block':'none';
-  $('#stage3Box').style.display=n===3?'block':'none';
-  $('#stage2TitleLabel').textContent=n===3?'2단계(본선) 기간':'2단계(결승) 기간';
+  $('#obStage1').classList.toggle('on',n===1);
+  $('#obStage2').classList.toggle('on',n===2);
+  $('#obStage3').classList.toggle('on',n===3);
+  $('#stage1CutBox').style.display=n>=2?'block':'none';
+  $('#stage2CutBox').style.display=n===3?'block':'none';
+  $('#stage1QTitle').textContent=n===1?'코스와 기간을 정해주세요':'예선 코스와 기간을 정해주세요';
+  $('#stage2QTitle').textContent=n===3?'본선 코스와 기간을 정해주세요':'2단계(결승) 코스와 기간을 정해주세요';
   $('#cut1Label').textContent=n===3?'예선 → 본선 진출 방식':'예선 → 결승 진출 방식';
   if(n>=2)setStageFieldsFor(2,config.type);
-  if(n===3)setStageFieldsFor(3,config.type)}
+  if(n===3)setStageFieldsFor(3,config.type);
+  renderWizProgress()}
 function toggleCutMode(which){
   const suf=which===2?'2':'';
   const m=$('#fCutMode'+suf).value;
@@ -1355,8 +1380,26 @@ function drawParGrid(){
   $('#parSum').textContent=coursePars[parEditIdx].reduce((a,b)=>a+b,0)}
 function cyclePar(h){const c=coursePars[parEditIdx];c[h]=c[h]>=5?3:c[h]+1;drawParGrid()}
 function closeParEdit(){$('#parOv').classList.remove('on');renderVenues()}
-function wgo(n){[1,2,3].forEach(i=>{$('#wp'+i).classList.toggle('on',i===n);
-  const w=$('#ws'+i);w.classList.toggle('cur',i===n);w.classList.toggle('done',i<n)});window.scrollTo(0,0)}
+let wStepIdx=0;
+function wizardSteps(){
+  const steps=['wpBasic','wpStageCount','wpStage1'];
+  if(config.stageCount>=2)steps.push('wpStage2');
+  if(config.stageCount===3)steps.push('wpStage3');
+  steps.push('wpInfo','wpStaff');
+  return steps}
+function renderWizProgress(){
+  const box=$('#wizProg');if(!box)return;
+  const steps=wizardSteps();
+  box.innerHTML=steps.map((_,i)=>`<i class="${i<=wStepIdx?'d':''}"></i>`).join('')}
+function wizShow(idx){
+  const steps=wizardSteps();
+  wStepIdx=Math.max(0,Math.min(idx,steps.length-1));
+  document.querySelectorAll('.wpane').forEach(p=>p.classList.remove('on'));
+  $('#'+steps[wStepIdx]).classList.add('on');
+  renderWizProgress();
+  window.scrollTo(0,0)}
+function wizNext(){wizShow(wStepIdx+1)}
+function wizPrev(){wizShow(wStepIdx-1)}
 document.querySelectorAll('.opt[data-a]').forEach(o=>{
   o.onclick=()=>{const a=o.dataset.a;
     config.awards[a]=!config.awards[a];
