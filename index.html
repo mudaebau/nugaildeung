@@ -136,22 +136,49 @@ tr:last-child td{border-bottom:none}
 .filterrow::-webkit-scrollbar{display:none}
 .fchip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:600;font-size:17px;color:var(--muted)}
 .fchip.on{background:var(--main-deep);color:#fff;border-color:var(--main-deep)}
-.tcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:block;width:100%;text-align:left;position:relative}
-.tcard:active{transform:scale(.99)}
-.tcard.mine{border:2px solid var(--sun)}
-.tcard .mine-tag{position:absolute;top:-12px;left:16px;background:var(--sun);color:#6b4e07;font-size:14px;font-weight:700;padding:4px 12px;border-radius:99px}
-.tcard .trow1{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.tcard .tstat{font-size:14px;font-weight:700;padding:6px 12px;border-radius:99px;flex:0 0 auto}
 .tstat.live{background:var(--coral);color:#fff}
 .tstat.open{background:var(--mint);color:#fff}
 .tstat.done{background:#E9EEF4;color:var(--muted)}
 .tstat.ready{background:var(--main-soft);color:var(--main-deep)}
-.tcard b.tn{font-size:20px;line-height:1.4}
-.tcard .tmeta{color:var(--muted);font-size:15px;line-height:1.7;font-weight:400}
-.tcard .tfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:16px;color:var(--muted)}
-.tcard .tfoot .go{color:var(--main-deep);font-weight:600}
 .secttl{font-size:15px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:20px 0 12px;display:flex;align-items:center;gap:10px}
 .secttl::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ===== 홈 피드 카드 (v2.1 Phase E) ===== */
+.hello{font-size:15px;color:var(--muted);margin:2px 0 16px}
+.hello b{color:var(--ink);font-weight:700}
+.livecard{display:block;width:100%;text-align:left;background:linear-gradient(165deg,#1D3D5C,var(--board-bg));border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.livecard:active{transform:scale(.99)}
+.livecard .lrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.livecard .lpill{background:var(--coral);font-size:13px;font-weight:700;padding:5px 12px;border-radius:99px;display:flex;align-items:center;gap:6px}
+.livecard .lpill i{width:7px;height:7px;border-radius:50%;background:#fff;font-style:normal}
+.livecard .lsub{font-size:13px;color:#9FBEDC;margin-left:auto}
+.livecard h3{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.livecard .lmeta{font-size:14px;color:#C7DBEF}
+.livecard .lmore{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:14.5px;color:#9FBEDC}
+.livecard .lmore b{color:#fff;font-weight:700;font-size:16px}
+.opencard{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:14px}
+.opencard:active{transform:scale(.99)}
+.oc-top{display:flex;align-items:flex-start;gap:14px}
+.dday{background:var(--main-soft);color:var(--main-deep);border-radius:16px;padding:10px 8px;text-align:center;min-width:74px;flex:0 0 auto}
+.dday b{font-family:'Oswald',sans-serif;font-size:23px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:12px;font-weight:500}
+.oc-info h4{font-size:18px;font-weight:700;line-height:1.45;margin-bottom:3px}
+.oc-info p{font-size:14px;color:var(--muted)}
+.capbar{margin-top:14px;background:var(--main-soft);height:8px;border-radius:99px;overflow:hidden}
+.capbar i{display:block;height:100%;background:var(--main);border-radius:99px}
+.oc-foot{display:flex;justify-content:space-between;margin-top:10px;font-size:14px;color:var(--muted)}
+.oc-foot .go{color:var(--main-deep);font-weight:700}
+.minecard{display:flex;width:100%;text-align:left;align-items:center;gap:14px;background:var(--paper);border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px;position:relative}
+.minecard:active{transform:scale(.99)}
+.minecard .mk{position:absolute;top:-13px;left:16px;background:var(--sun);color:#6b4e07;font-size:13px;font-weight:700;padding:4px 12px;border-radius:99px}
+.minecard .mc-body h4{font-size:17px;font-weight:700}
+.minecard .mc-body p{font-size:14px;color:var(--muted);margin-top:3px}
+.minecard .go{margin-left:auto;color:var(--main-deep);font-weight:700;font-size:22px;flex:0 0 auto}
+.simplecard{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:12px}
+.simplecard:active{transform:scale(.99)}
+.simplecard .sc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.simplecard .sc-top b{font-size:18px;line-height:1.4}
+.simplecard p{color:var(--muted);font-size:14px;line-height:1.6}
 
 /* ===== 로그인 ===== */
 .authbox{max-width:340px;margin:0 auto;text-align:center;padding-top:14px}
@@ -312,8 +339,9 @@ tr:last-child td{border-bottom:none}
     <div class="who" id="whoBox">둘러보는 중 · 로그인 안 함</div>
   </header>
 
-  <!-- 홈: 대회 리스트 -->
+  <!-- 홈: 대회 피드 -->
   <section class="page on" id="opHome">
+    <p class="hello" id="homeGreeting"></p>
     <button class="btn full" style="margin-bottom:16px" onclick="goTab('opCreate')">새 대회 개설하기</button>
     <div class="filterrow" id="filterRow">
       <button class="fchip on" data-f="all">전체</button>
@@ -968,23 +996,48 @@ function statusInfo(t){
   if(t.status==='open')return{cls:'open',label:`접수중 ${dday(t.date)}`};
   if(t.status==='ready')return{cls:'ready',label:'개설 완료'};
   return{cls:'done',label:'종료'}}
-function tcardHTML(t){
+function periodLabel(t){
+  return t.date.replaceAll('-','.')+(t.dateE&&t.dateE!==t.date?' ~ '+t.dateE.slice(5).replace('-','.'):'')}
+function feedCardHTML(t){
   const s=statusInfo(t);
-
-  return`<button class="tcard ${t.mine?'mine':''}" onclick="openT('${t.id}')">
-    ${t.mine?'<span class="mine-tag">내가 개설한 대회</span>':''}
-    <div class="trow1"><span class="tstat ${s.cls}">${s.label}</span><b class="tn">${t.name}</b></div>
-    <div class="tmeta">${t.date.replaceAll('-','.')}${t.dateE&&t.dateE!==t.date?' ~ '+t.dateE.slice(5).replace('-','.'):''} · ${t.place}<br>주최 ${t.host} · 참가 <span class="num">${t.players}</span>명${t.winner?` · 우승 ${t.winner}`:''}</div>
+  if(t.status==='live')return`<button class="livecard" onclick="openT('${t.id}')">
+    <div class="lrow"><span class="lpill"><i></i>LIVE</span><span class="lsub">참가 <span class="num">${t.players}</span>명</span></div>
+    <h3>${t.name}</h3>
+    <div class="lmeta">${periodLabel(t)} · ${t.place}</div>
+    <div class="lmore"><span>실시간 전광판 보기</span><b>›</b></div>
+  </button>`;
+  if(t.status==='open')return`<button class="opencard" onclick="openT('${t.id}')">
+    <div class="oc-top">
+      <div class="dday"><b>${dday(t.date)||'D-DAY'}</b><span>접수 마감</span></div>
+      <div class="oc-info"><h4>${t.name}</h4><p>${periodLabel(t)} · ${t.place}</p></div>
+    </div>
+    <div class="capbar"><i style="width:${Math.min(100,Math.round(t.players/Math.max(1,t.cap)*100))}%"></i></div>
+    <div class="oc-foot"><span>모집 <span class="num">${t.players}</span> / <span class="num">${t.cap}</span>명</span><span class="go">신청하기 ›</span></div>
+  </button>`;
+  return`<button class="simplecard" onclick="openT('${t.id}')">
+    <div class="sc-top"><span class="tstat ${s.cls}">${s.label}</span><b>${t.name}</b></div>
+    <p>${periodLabel(t)} · ${t.place}<br>주최 ${t.host} · 참가 <span class="num">${t.players}</span>명${t.winner?` · 우승 ${t.winner}`:''}</p>
+  </button>`}
+function mineCardHTML(t){
+  const s=statusInfo(t);
+  return`<button class="minecard" onclick="openT('${t.id}')">
+    <span class="mk">내 대회</span>
+    <div class="mc-body"><h4>${t.name}</h4><p>${s.label} · 참가 <span class="num">${t.players}</span>명</p></div>
+    <span class="go">›</span>
   </button>`}
 function renderHome(){
   const mine=tournaments.filter(t=>t.mine);
   const rest=tournaments.filter(t=>!t.mine&&(curFilter==='all'||t.status===curFilter));
+  const greet=$('#homeGreeting');
+  if(greet)greet.textContent=user.loggedIn
+    ?`${user.name} 님, ${tournaments.some(t=>t.status==='live')?'지금 순위가 바뀌고 있어요':'오늘도 좋은 라운드 되세요'}`
+    :(tournaments.some(t=>t.status==='live')?'지금 진행 중인 대회에서 순위가 바뀌고 있어요':'');
   $('#mineSection').innerHTML=mine.length&&(curFilter==='all')
-    ?`<div class="secttl">내 대회</div>${mine.map(tcardHTML).join('')}`:'';
+    ?`<div class="secttl">내 대회</div>${mine.map(mineCardHTML).join('')}`:'';
   const order={live:0,open:1,ready:1,done:2};
   rest.sort((a,b)=>order[a.status]-order[b.status]||a.date.localeCompare(b.date));
   $('#listSection').innerHTML=(curFilter==='all'?'<div class="secttl">전체 대회</div>':'')
-    +(rest.length?rest.map(tcardHTML).join(''):'<p class="sub" style="text-align:center;padding:30px 0">해당하는 대회가 없습니다</p>')}
+    +(rest.length?rest.map(feedCardHTML).join(''):'<p class="sub" style="text-align:center;padding:30px 0">해당하는 대회가 없습니다</p>')}
 function openT(id){
   const t=tournaments.find(x=>x.id===id);
   if(t.mine){goTab('opManage');return}
