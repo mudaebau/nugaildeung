@@ -330,6 +330,21 @@ tr:last-child td{border-bottom:none}
 .pod .sc{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:var(--main-deep)}
 .pod.first{border:2px solid var(--sun)}
 
+/* ===== 순위 리스트 (결과 화면) ===== */
+.rrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.rrow:last-child{border-bottom:none}
+.rrow .rk{width:32px;height:32px;border-radius:50%;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;flex:0 0 auto}
+.rrow.top1 .rk{background:var(--sun);color:#6b4e07}
+.rrow .info{flex:1;min-width:0}
+.rrow .info b{display:block;font-size:17px}
+.rrow .info span{color:var(--muted);font-size:13px}
+.rrow .sc{text-align:right;flex:0 0 auto}
+.rrow .sc b{display:block;font-size:17px}
+.rrow .sc span{font-size:13px;color:var(--muted)}
+.rrow .sc span.minus{color:var(--red)}
+.printonly{display:none}
+@media print{.printonly{display:table}}
+
 /* ===== 조편성 카드 ===== */
 .gcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
 .gcard .ghead{background:var(--main);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline}
@@ -701,7 +716,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="card" id="previewCard" style="display:none">
       <label class="fl">인식 결과</label>
-      <div style="overflow-x:auto"><table id="prevTable"><thead></thead><tbody></tbody></table></div>
+      <div id="prevList"></div>
       <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
     </div>
     <div class="card" id="waitCard" style="display:none">
@@ -710,8 +725,8 @@ tr:last-child td{border-bottom:none}
       <div id="waitBox"></div>
     </div>
     <p class="sub" style="margin-bottom:8px">참가자를 누르면 수정·기권·삭제할 수 있습니다.</p>
-    <div class="card" style="padding:0;overflow-x:auto">
-      <table id="ptable"><thead></thead><tbody></tbody></table>
+    <div class="card" style="padding:0 18px">
+      <div id="ptable"></div>
     </div>
   </section>
 
@@ -732,12 +747,13 @@ tr:last-child td{border-bottom:none}
     <p class="sub" id="resultSub">경기 진행 전입니다.</p>
     <div class="podium" id="podium"></div>
     <div id="awardsBox"></div>
-    <div class="card" style="padding:0;overflow-x:auto">
-      <table id="rtable">
-        <thead><tr><th class="tac">순위</th><th>이름</th><th>클럽</th><th class="tac">합계</th><th class="tac">타수차</th></tr></thead>
-        <tbody></tbody>
-      </table>
+    <div class="card" style="padding:0 18px">
+      <div id="rankList"></div>
     </div>
+    <table id="rtablePrint" class="printonly">
+      <thead><tr><th class="tac">순위</th><th>이름</th><th>클럽</th><th class="tac">합계</th><th class="tac">타수차</th></tr></thead>
+      <tbody></tbody>
+    </table>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
   </section>
 
@@ -1765,9 +1781,10 @@ function parsePaste(){
   pending=$('#pasteBox').value.split('\n').map(parseLine).filter(Boolean)
     .map(r=>({...r,club,region:'하남',nick:'',scores:Array(HOLES).fill(null),group:-1}));
   if(!pending.length){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
-  const cols=activeCols();
-  $('#prevTable thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.label}</th>`).join('')+'</tr>';
-  $('#prevTable tbody').innerHTML=pending.map(p=>'<tr>'+cols.map(c=>`<td>${c.k==='phone'?'<span class=num style=font-size:.78rem>'+p.phone+'</span>':(p[c.k]||'—')}</td>`).join('')+'</tr>').join('');
+  const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
+  $('#prevList').innerHTML=pending.map(p=>
+    `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
+     <div class="info"><b>${p.name}</b><span class="num">${p.phone}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div></div>`).join('');
   $('#confirmBtn').textContent=`${pending.length}명 등록 확정`;
   $('#previewCard').style.display='block';
   toast(`${pending.length}명 인식 — 확인 후 등록하세요`)}
@@ -1795,12 +1812,16 @@ async function loadDemo(){
   goTab('opGroups');toast('데모 32명 등록 + 자동 조편성 완료')}
 function syncMine(){const t=tournaments.find(x=>x.mine);if(t){t.players=players.length;renderHome();updateApplyStat()}}
 function renderPlayers(){
-  const cols=activeCols();
-  $('#ptable thead').innerHTML='<tr><th>#</th>'+cols.map(c=>`<th>${c.label}</th>`).join('')+'<th class="tac">조</th></tr>';
-  $('#ptable tbody').innerHTML=players.length?players.map((p,i)=>
-    `<tr onclick="openPEdit(${i})" style="cursor:pointer;${isOut(p)?'opacity:.5':''}"><td class="num">${i+1}</td>`+cols.map(c=>`<td>${c.k==='phone'?'<span class=num style=font-size:.78rem>'+maskPhone(p.phone)+'</span>':c.k==='name'?'<b>'+p.name+'</b>'+(p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''):(p[c.k]||'—')}</td>`).join('')+
-    `<td class="tac">${p.group>=0?`<span class="pill">${p.group+1}조</span>`:'<span class="pill gray">—</span>'}</td></tr>`).join('')
-    :'<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:26px">등록된 참가자가 없습니다</td></tr>';
+  const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
+  $('#ptable').innerHTML=players.length?players.map((p,i)=>
+    `<div class="toolrow" style="cursor:pointer;${isOut(p)?'opacity:.5':''}" onclick="openPEdit(${i})">
+      <div class="avatar">${p.name[0]}</div>
+      <div class="info"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
+      <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div>
+      ${p.group>=0?`<span class="pill">${p.group+1}조</span>`:'<span class="pill gray">—</span>'}
+      <span style="color:var(--muted);font-size:20px">›</span>
+    </div>`).join('')
+    :'<p class="sub" style="text-align:center;padding:26px 0">등록된 참가자가 없습니다</p>';
   renderWait()}
 
 /* ===== 참가자 수정 · 기권/실격 · 삭제 ===== */
@@ -2345,10 +2366,20 @@ function renderResult(){
   if(aw&&config.tie.includes('별도선정'))aw+=`<p class="sub" style="margin-top:4px">※ 동점 발생 시 순위는 운영위 별도선정으로 확정됩니다.</p>`;
   $('#awardsBox').innerHTML=aw;
 
-  $('#rtable thead').innerHTML='<tr><th class="tac">순위</th><th>이름</th><th>클럽</th>'
+  $('#rankList').innerHTML=done.map((s,i)=>
+    `<div class="rrow ${i===0?'top1':''}"><div class="rk">${i+1}</div>
+     <div class="info"><b>${s.p.name}</b><span>${s.p.club||''}</span></div>
+     <div class="sc"><b class="num">${s.tot}</b><span class="num${s.topar<0?' minus':''}">${s.topar===0?'E':(s.topar>0?'+':'')+s.topar}</span></div></div>`).join('')
+    +outs.map(s=>
+    `<div class="rrow" style="opacity:.5"><div class="rk" style="background:#FBE2DB;color:#a83c26;font-size:12px">${s.p.st==='wd'?'WD':'DQ'}</div>
+     <div class="info"><b>${s.p.name}</b><span>${s.p.club||''}</span></div>
+     <div class="sc"><b class="num">${s.thru?s.tot:'–'}</b></div></div>`).join('')
+    ||'<p class="sub" style="text-align:center;padding:26px 0">아직 순위가 없습니다</p>';
+
+  $('#rtablePrint thead').innerHTML='<tr><th class="tac">순위</th><th>이름</th><th>클럽</th>'
     +Array.from({length:ROUNDS},(_,r)=>`<th class="tac">${r+1}C</th>`).join('')
     +'<th class="tac">합계</th><th class="tac">타수차</th></tr>';
-  $('#rtable tbody').innerHTML=done.map((s,i)=>
+  $('#rtablePrint tbody').innerHTML=done.map((s,i)=>
     `<tr><td class="tac num"><b>${i+1}</b></td><td><b>${s.p.name}</b></td><td>${s.p.club||''}</td>
      ${s.rt.map((v,r)=>`<td class="tac num">${s.rc[r]?v:'–'}</td>`).join('')}
      <td class="tac num"><b>${s.tot}</b></td><td class="tac num">${s.topar===0?'E':(s.topar>0?'+':'')+s.topar}</td></tr>`).join('')
