@@ -506,6 +506,30 @@ tr:last-child td{border-bottom:none}
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
+      <div class="wpane" id="wpEligibility">
+        <h2 class="wq">누구나 참가할 수 있나요?</h2>
+        <p class="wsub">참가 조건이 있으면 요강·신청 페이지에 안내되고, 신청 시 확인 체크가 필요해요</p>
+        <button class="optbig on" id="obElgOpen" onclick="setEligibility('open')"><span class="on-dot"></span><div><b>누구나 참가 가능</b><span>별도 자격 제한 없음</span></div></button>
+        <button class="optbig" id="obElgRestricted" onclick="setEligibility('restricted')"><span class="on-dot"></span><div><b>참가 조건 있음</b><span>지역·소속·구력 등 제한이 있는 대회</span></div></button>
+        <div class="card" id="eligTextBox" style="display:none">
+          <label class="fl" style="margin-top:0">참가 조건</label>
+          <textarea id="fEligText" rows="3" placeholder="예: 하남시 거주자 또는 하남 소재 클럽 소속에 한함"></textarea>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpVisibility">
+        <h2 class="wq">공개 대회인가요?</h2>
+        <p class="wsub">비공개 대회는 홈 화면에 노출되지 않고, 링크+비밀번호로만 입장할 수 있어요</p>
+        <button class="optbig on" id="obVisPublic" onclick="setVisibility('public')"><span class="on-dot"></span><div><b>공개 대회</b><span>홈 피드에 노출, 누구나 링크로 접속</span></div></button>
+        <button class="optbig" id="obVisPrivate" onclick="setVisibility('private')"><span class="on-dot"></span><div><b>비공개 대회</b><span>홈에 숨김, 입장 비밀번호 필요</span></div></button>
+        <div class="card" id="accessCodeBox" style="display:none">
+          <label class="fl" style="margin-top:0">입장 비밀번호 (4~6자리 숫자)</label>
+          <input type="tel" id="fAccessCode" maxlength="6" placeholder="예: 1234">
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNextFromVisibility()">다음 →</button></div>
+      </div>
+
       <div class="wpane" id="wpStageCount">
         <h2 class="wq">몇 단계 대회인가요?</h2>
         <p class="wsub">단계마다 기간·코스·진출 인원을 따로 정할 수 있어요</p>
@@ -664,12 +688,7 @@ tr:last-child td{border-bottom:none}
             <div class="opt" data-f="region">지역</div>
           </div>
         </div>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
-
-      <div class="wpane" id="wpAwards">
-        <h2 class="wq">시상 부문을 선택해주세요</h2>
-        <p class="wsub">중복 수상 제외로 자동 집계됩니다.</p>
+        <label class="fl">시상 부문 (중복 수상 제외 자동 집계)</label>
         <div class="card">
           <div class="optrow">
             <div class="opt fixed">종합 1·2·3위 <span class="tick">기본</span></div>
@@ -677,6 +696,36 @@ tr:last-child td{border-bottom:none}
             <div class="opt" data-a="age">연령부 (60·70·80대)</div>
             <div class="opt" data-a="club">클럽 대항전</div>
           </div>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpAwards">
+        <h2 class="wq">시상 내역을 알려주세요</h2>
+        <p class="wsub">참가자에게 요강으로 공개됩니다 (전부 선택 사항이에요)</p>
+        <div class="card">
+          <label class="fl" style="margin-top:0">총상금 규모 (선택)</label>
+          <input type="text" id="fPrizeTotal" placeholder="예: 총 500만원 상당">
+        </div>
+        <div class="card">
+          <label class="fl" style="margin-top:0">주요 시상</label>
+          <div id="prizeRows"></div>
+          <button class="btn ghost full" style="margin-top:10px" onclick="addPrizeRow()">+ 시상 항목 추가</button>
+          <button class="btn sm ghost full" style="margin-top:8px" onclick="fillDefaultPrizes()">1·2·3등 기본 채우기</button>
+        </div>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpNoticeExtra">
+        <h2 class="wq">요강에 더 담을 정보가 있나요?</h2>
+        <p class="wsub">전부 선택 사항이에요 — 비워두고 넘어가도 됩니다</p>
+        <div class="card">
+          <label class="fl" style="margin-top:0">문의처</label>
+          <input type="text" id="fContact" placeholder="예: 010-1234-5678 (총무 김OO)">
+          <label class="fl">참가비</label>
+          <input type="text" id="fFee" placeholder="예: 20,000원 (중식 포함, 현장 납부)">
+          <label class="fl">게임 규칙</label>
+          <textarea id="fRules" rows="3" placeholder="예: 로컬룰 적용, OB 시 1벌타 후 인접 지점 플레이"></textarea>
         </div>
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
@@ -989,6 +1038,13 @@ tr:last-child td{border-bottom:none}
     </div>
 
     <div id="applyForm">
+      <div class="card" id="apEligCard" style="display:none;background:var(--main-soft);border:none">
+        <label class="fl" style="margin-top:0">참가 조건</label>
+        <p class="sub" id="apEligText" style="margin-bottom:10px">—</p>
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">
+          <input type="checkbox" id="apEligCheck" style="width:20px;height:20px">참가 조건을 확인했습니다
+        </label>
+      </div>
       <div class="modew">
         <button class="on" id="mSingle" onclick="setApplyMode('single')">개인 신청</button>
         <button id="mGroup" onclick="setApplyMode('group')">단체 신청<br><small style="font-weight:400;font-size:.72rem">클럽 총무용</small></button>
@@ -1112,7 +1168,9 @@ const isOut=p=>p.st==='wd'||p.st==='dq';
 let boardMode=-1,jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
 const config={created:false,type:'field',stageCount:1,name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:120,
   awards:{gender:true,age:false,club:false},
-  fields:{name:true,nick:false,sex:true,age:true,club:true,region:false}};
+  fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
+  eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
+  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''}};
 const user={loggedIn:false,name:'',phone:'',id:null};
 let staff=[
   {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
@@ -1333,7 +1391,8 @@ function dbToTournament(row,playerCount){
   const venues=row.venues||[];
   return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,
-    host:row.host_org,mine:!!(user.id&&row.owner_id===user.id)}}
+    host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),
+    visibility:row.visibility||'public',noticeExtra:row.notice_extra||{}}}
 async function countStatus(tournamentId,status){
   const{count}=await sb.from('players').select('*',{count:'exact',head:true})
     .eq('tournament_id',tournamentId).eq('status',status);
@@ -1539,11 +1598,15 @@ function renderNotice(t,stage){
     if(t.awards.club)awardList.push('클럽 대항전')}
   const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
   const fieldList=Object.keys(fieldLabels).filter(k=>t.fields&&t.fields[k]).map(k=>fieldLabels[k]);
+  const ne=t.notice_extra||{};
+  const elig=ne.eligibility;
+  const eligText=elig&&elig.type==='restricted'?(elig.text||'참가 조건이 있습니다'):'누구나 참가 가능';
+  const prizes=(ne.prizes||[]).filter(p=>p.label);
   $('#noticeBody').innerHTML=`
     <div class="poster">
-      <div class="pdate">${noticeStatusLabel(t.status)}</div>
+      <div class="pdate">${noticeStatusLabel(t.status)}${t.visibility==='private'?' · 🔒 비공개':''}</div>
       <h3>${t.name}</h3>
-      <div class="pmeta">주최·주관 ${t.host_org||'—'}<br>${period} · ${venues}</div>
+      <div class="pmeta">주최·주관 ${t.host_org||'—'}<br>${period} · ${venues}${ne.prize_total?`<br>${ne.prize_total}`:''}</div>
     </div>
     <div class="card">
       <label class="fl" style="margin-top:0">경기 방식</label>
@@ -1552,12 +1615,18 @@ function renderNotice(t,stage){
       <p>${t.cap}명</p>
       <label class="fl">동점자 처리</label>
       <p>${(stage&&stage.tie_rule)||t.tie_rule||'—'}</p>
+      <label class="fl">참가 자격</label>
+      <p>${eligText}</p>
     </div>
     <div class="card">
       <label class="fl" style="margin-top:0">시상 부문</label>
       <p>${awardList.join(' · ')}</p>
+      ${prizes.length?`<label class="fl">시상 내역</label><p>${prizes.map(p=>`${p.label}${p.item?' — '+p.item:''}`).join('<br>')}</p>`:''}
       <label class="fl">접수 시 수집 정보</label>
       <p>${fieldList.join(', ')||'—'}</p>
+      ${ne.contact?`<label class="fl">문의처</label><p>${ne.contact}</p>`:''}
+      ${ne.fee?`<label class="fl">참가비</label><p>${ne.fee}</p>`:''}
+      ${ne.rules?`<label class="fl">게임 규칙</label><p>${ne.rules}</p>`:''}
     </div>
     <div class="card">
       <button class="btn full" onclick="copyNoticeLink('${t.id}')">요강 링크 복사</button>
@@ -1611,6 +1680,33 @@ function setTourType(t){
   $('#fDateELabel').textContent=t==='screen'?'기간 종료일':'종료일';
   if(t==='screen'&&!document.querySelectorAll('.screenVenueIn').length)renderScreenVenues();
   setStageFieldsFor(2,t);setStageFieldsFor(3,t)}
+function setEligibility(t){
+  config.eligibility.type=t;
+  $('#obElgOpen').classList.toggle('on',t==='open');
+  $('#obElgRestricted').classList.toggle('on',t==='restricted');
+  $('#eligTextBox').style.display=t==='restricted'?'block':'none'}
+function setVisibility(v){
+  config.visibility=v;
+  $('#obVisPublic').classList.toggle('on',v==='public');
+  $('#obVisPrivate').classList.toggle('on',v==='private');
+  $('#accessCodeBox').style.display=v==='private'?'block':'none'}
+function wizNextFromVisibility(){
+  if(config.visibility==='private'&&!/^\d{4,6}$/.test($('#fAccessCode').value.trim())){
+    toast('입장 비밀번호를 4~6자리 숫자로 입력해 주세요');return}
+  wizNext()}
+function renderPrizeRows(){
+  $('#prizeRows').innerHTML=config.prizes.map((p,i)=>`
+    <div class="frow" style="align-items:flex-start;margin-top:${i===0?'0':'10px'}">
+      <input type="text" placeholder="시상명 (예: 우승)" value="${p.label||''}" oninput="config.prizes[${i}].label=this.value">
+      <input type="text" placeholder="내용 (예: 200만원+트로피)" value="${p.item||''}" oninput="config.prizes[${i}].item=this.value">
+    </div>
+    <button class="btn sm ghost" style="margin-top:6px" onclick="removePrizeRow(${i})">이 항목 삭제</button>`).join('')
+    ||'<p class="sub">아직 등록된 시상 항목이 없습니다</p>'}
+function addPrizeRow(){config.prizes.push({label:'',item:''});renderPrizeRows()}
+function removePrizeRow(i){config.prizes.splice(i,1);renderPrizeRows()}
+function fillDefaultPrizes(){
+  config.prizes=[{label:'우승',item:''},{label:'준우승',item:''},{label:'3위',item:''}];
+  renderPrizeRows()}
 function setStageCount(n){
   config.stageCount=n;
   $('#obStage1').classList.toggle('on',n===1);
@@ -1713,10 +1809,10 @@ function cyclePar(h){const c=coursePars[parEditIdx];c[h]=c[h]>=5?3:c[h]+1;drawPa
 function closeParEdit(){$('#parOv').classList.remove('on');renderVenues()}
 let wStepIdx=0;
 function wizardSteps(){
-  const steps=['wpBasic','wpType','wpStageCount','wpStage1'];
+  const steps=['wpBasic','wpType','wpEligibility','wpVisibility','wpStageCount','wpStage1'];
   if(config.stageCount>=2)steps.push('wpStage2');
   if(config.stageCount===3)steps.push('wpStage3');
-  steps.push('wpCap','wpParticipantInfo','wpAwards','wpNoticePreview','wpStaff');
+  steps.push('wpCap','wpParticipantInfo','wpAwards','wpNoticeExtra','wpNoticePreview','wpStaff');
   return steps}
 function renderWizProgress(){
   const box=$('#wizProg');if(!box)return;
@@ -1745,9 +1841,13 @@ function renderNoticePreview(){
   const infoList=['전화번호',...Object.keys(config.fields).filter(f=>config.fields[f]).map(f=>fieldLabels[f]||f)];
   const awardLabels={gender:'남녀부',age:'연령부',club:'클럽 대항전'};
   const awardList=['종합 1·2·3위',...Object.keys(config.awards).filter(a=>config.awards[a]).map(a=>awardLabels[a]||a)];
+  const eligText=config.eligibility.type==='restricted'?($('#fEligText').value.trim()||'참가 조건 있음'):'누구나 참가 가능';
+  const visText=config.visibility==='private'?'비공개 (입장 비밀번호 필요)':'공개';
+  const prizeTotal=$('#fPrizeTotal').value.trim();
+  const prizeList=config.prizes.filter(p=>p.label).map(p=>`${p.label}${p.item?' — '+p.item:''}`);
   $('#noticePreviewBody').innerHTML=`
     <div class="poster">
-      <div class="pdate">${typeLabel} · ${config.stageCount}단계</div>
+      <div class="pdate">${typeLabel} · ${config.stageCount}단계 · ${visText}</div>
       <h3>${name}</h3>
       <div class="pmeta">${host}<br>${dateStr}</div>
     </div>
@@ -1758,10 +1858,13 @@ function renderNoticePreview(){
       <p>${cap}명</p>
       <label class="fl">동점 처리</label>
       <p>${tie}</p>
+      <label class="fl">참가 대상</label>
+      <p>${eligText}</p>
       <label class="fl">참가자 정보</label>
       <p>${infoList.join(' · ')}</p>
-      <label class="fl">시상</label>
+      <label class="fl">시상 부문</label>
       <p>${awardList.join(' · ')}</p>
+      ${prizeTotal||prizeList.length?`<label class="fl">시상 내역</label><p>${prizeTotal?prizeTotal+'<br>':''}${prizeList.join('<br>')}</p>`:''}
     </div>`}
 document.querySelectorAll('.opt[data-a]').forEach(o=>{
   o.onclick=()=>{const a=o.dataset.a;
@@ -1843,14 +1946,24 @@ function openApply(id){
   $('#apDate').textContent=period;
   $('#apName').textContent=t.name;
   const scale=t.mine?`${HOLES}홀 스트로크 · ${ROUNDS}개 코스`:'18홀 스트로크';
-  $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>참가비 20,000원 · 중식 포함 · 현장 납부`;
+  const ne=t.noticeExtra||{};
+  $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 20,000원 · 중식 포함 · 현장 납부'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
   renderCap();
   $('#apDday').textContent='접수 마감 '+(dday(t.date)||'—');
+  const elig=ne.eligibility;
+  const restricted=elig&&elig.type==='restricted';
+  $('#apEligCard').style.display=restricted?'block':'none';
+  $('#apEligText').textContent=restricted?(elig.text||'참가 조건이 있습니다'):'';
+  $('#apEligCheck').checked=false;
   renderSingleFields();
   $('#applyForm').style.display='block';$('#applyDone').style.display='none';
   $('#apPaste').value='';$('#apPreview').style.display='none';$('#apClub').value='';
   setApplyMode('single');
   navTo('Apply');window.scrollTo(0,0)}
+function eligibilityOk(){
+  if(!$('#apEligCard')||$('#apEligCard').style.display==='none')return true;
+  if(!$('#apEligCheck').checked){toast('참가 조건 확인 체크가 필요합니다');return false}
+  return true}
 function renderCap(){const t=applyT;
   $('#apBar').style.width=Math.min(100,Math.round(t.players/t.cap*100))+'%';
   $('#apCap').textContent=`모집 현황 ${t.players} / ${t.cap}명`}
@@ -1876,6 +1989,7 @@ function rcptShow(no,msg){
   $('#rcptMsg').innerHTML=msg;window.scrollTo(0,0)}
 function rcptNo(){return '2607-'+String(Math.floor(Math.random()*900)+100)}
 async function submitSingle(){
+  if(!eligibilityOk())return;
   const f=applyFields(applyT);
   const name=$('#apiName').value.trim(),phone=$('#apiPhone').value.trim();
   if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
@@ -1915,6 +2029,7 @@ function apParse(){
   $('#apPreview').style.display='block';
   toast(`${apPending.length}명 인식 — 확인 후 신청하세요`)}
 async function submitGroup(){
+  if(!eligibilityOk())return;
   const club=$('#apClub').value.trim()||'무소속';
   let added=0,dup=0,waited=0;
   let okCount=await countStatus(applyT.id,'ok');
@@ -1955,6 +2070,10 @@ async function createTournament(){
   if(config.dateE<config.dateS)config.dateE=config.dateS;
   config.tie=$('#fTie').value;
   config.cap=Math.max(8,+$('#fCap').value||120);
+  config.eligibility.text=$('#fEligText').value.trim();
+  config.accessCode=$('#fAccessCode').value.trim();
+  config.prizeTotal=$('#fPrizeTotal').value.trim();
+  config.noticeExtra={contact:$('#fContact').value.trim(),fee:$('#fFee').value.trim(),rules:$('#fRules').value.trim()};
   boardMode=-1;jRound=0;
 
   let stageVenues,stageCoursePars,stageKind,stageUseGroups;
@@ -1981,7 +2100,10 @@ async function createTournament(){
     id:tournamentId,owner_id:user.id,name:config.name,host_org:config.hostOrg,type:config.type,
     date_start:config.dateS,date_end:config.dateE,rounds:ROUNDS,venues:stageVenues,
     course_pars:stageCoursePars,tie_rule:config.tie,cap:config.cap,fields:config.fields,
-    awards:config.awards,status:'ready'});
+    awards:config.awards,status:'ready',
+    visibility:config.visibility,access_code:config.visibility==='private'?config.accessCode:null,
+    notice_extra:{eligibility:config.eligibility,prize_total:config.prizeTotal,
+      prizes:config.prizes.filter(p=>p.label),...config.noticeExtra}});
   if(tErr){toast('대회 저장에 실패했습니다');console.error(tErr);config.created=false;return}
   config.id=tournamentId;
 
@@ -2743,7 +2865,7 @@ setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-K
   if(noticeId){
     curView='Notice';renderLoc();
     await loadNotice(noticeId);return}
-  renderStaff();renderPlayers();renderVenues();
+  renderStaff();renderPlayers();renderVenues();renderPrizeRows();
   await loadTournaments();
   if(applyId)openApply(applyId)})();
 </script>
