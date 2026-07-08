@@ -42,7 +42,7 @@ button{font-family:inherit;cursor:pointer}
 .appbar{background:var(--main);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
 .abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
-.logo .flag{width:20px;height:20px;background:url('brand/symbol-white.svg') center/contain no-repeat}
+.logo .flag{width:20px;height:20px;background:url('brand/logo-symbol.svg') center/contain no-repeat}
 .appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
@@ -225,7 +225,7 @@ tr:last-child td{border-bottom:none}
 
 /* ===== 로그인 ===== */
 .authbox{max-width:340px;margin:0 auto;text-align:center;padding-top:14px}
-.authbox .bigflag{width:60px;height:60px;background:var(--sun);clip-path:polygon(0 0,100% 25%,0 50%,0 100%,14% 100%,14% 0);margin:0 auto 16px;border-radius:3px}
+.authbox .badge-logo{width:180px;height:auto;margin:0 auto 16px;display:block}
 .authbox h2{font-weight:700;font-size:26px;margin-bottom:8px;line-height:1.4}
 .authbox p{color:var(--muted);font-size:17px;margin-bottom:20px;line-height:1.65}
 .codeinput{letter-spacing:.55em;text-align:center;font-family:'Oswald',sans-serif;font-size:30px!important}
@@ -460,14 +460,14 @@ tr:last-child td{border-bottom:none}
   <section class="page" id="opCreate">
     <!-- 로그인 -->
     <div id="authStep1" class="authbox">
-      <div class="bigflag"></div>
+      <img src="brand/logo-badge.svg" alt="누가일등" class="badge-logo">
       <h2>대회를 개설하려면<br>회원 확인이 필요해요</h2>
       <p>운영자만 가입합니다.<br>스탭·참가자는 가입 없이 링크로 참여해요.</p>
       <input type="tel" id="loginPhone" placeholder="전화번호 (010-1234-5678)" style="text-align:center">
       <button class="btn full big" style="margin-top:12px" onclick="sendCode()">인증번호 받기</button>
     </div>
     <div id="authStep2" class="authbox" style="display:none">
-      <div class="bigflag"></div>
+      <img src="brand/logo-badge.svg" alt="누가일등" class="badge-logo">
       <h2>인증번호 입력</h2>
       <p id="codeSentTo"></p>
       <input type="tel" id="loginCode" class="codeinput" maxlength="4" placeholder="0000">
@@ -475,7 +475,7 @@ tr:last-child td{border-bottom:none}
       <button class="btn full big" onclick="verifyCode()">확인</button>
     </div>
     <div id="authStep3" class="authbox" style="display:none">
-      <div class="bigflag"></div>
+      <img src="brand/logo-badge.svg" alt="누가일등" class="badge-logo">
       <h2>처음 오셨네요!</h2>
       <p>운영자 이름만 입력하면 가입 완료입니다.</p>
       <input type="text" id="loginName" placeholder="이름 (예: 리얼스톤)" style="text-align:center" value="리얼스톤">
@@ -1026,7 +1026,7 @@ tr:last-child td{border-bottom:none}
       </div>
       <div class="bhead" id="bhead"></div>
       <div class="brows" id="brows"><div class="bempty">참가자를 등록하면 명단이 표시됩니다</div></div>
-      <div class="boardfoot"><span style="display:flex;align-items:center;gap:6px"><img src="brand/symbol-white.svg" alt="" style="width:16px;height:16px">누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
+      <div class="boardfoot"><span style="display:flex;align-items:center;gap:6px"><img src="brand/logo-symbol.svg" alt="" style="width:16px;height:16px">누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
     </div>
   </div>
 </div>
@@ -1037,6 +1037,7 @@ tr:last-child td{border-bottom:none}
   <section class="page on" style="padding-top:16px">
     <div id="applyGate" style="display:none"></div>
     <div class="poster" id="applyPoster">
+      <img src="brand/logo-badge.svg" alt="누가일등" style="height:28px;margin-bottom:12px;display:block">
       <div class="pdate" id="apDate">—</div>
       <h3 id="apName">—</h3>
       <div class="pmeta" id="apMeta">—</div>
@@ -1077,6 +1078,7 @@ tr:last-child td{border-bottom:none}
     </div>
 
     <div class="card receipt" id="applyDone" style="display:none">
+      <img src="brand/logo-badge.svg" alt="누가일등" style="height:30px;margin:0 auto 14px;display:block">
       <div class="big">🎉</div>
       <h3>접수가 완료되었습니다</h3>
       <div class="rn" id="rcptNo">—</div>
@@ -1651,6 +1653,7 @@ function renderNotice(t,stage){
   const prizes=(ne.prizes||[]).filter(p=>p.label);
   $('#noticeBody').innerHTML=`
     <div class="poster">
+      <img src="brand/logo-badge.svg" alt="누가일등" style="height:28px;margin-bottom:12px;display:block">
       <div class="pdate">${noticeStatusLabel(t.status)}${t.visibility==='private'?' · 🔒 비공개':''}</div>
       <h3>${t.name}</h3>
       <div class="pmeta">주최·주관 ${t.host_org||'—'}<br>${period} · ${venues}${ne.prize_total?`<br>${ne.prize_total}`:''}</div>

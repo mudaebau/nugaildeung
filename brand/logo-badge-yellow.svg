@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 84">
+  <rect width="252" height="84" rx="22" fill="#F7CF5C"/>
+  <g transform="translate(20,18)">
+    <rect x="0" y="0" width="13" height="13" rx="4" fill="#22303D"/>
+    <rect x="18" y="0" width="42" height="13" rx="6.5" fill="#22303D"/>
+    <rect x="0" y="18" width="13" height="13" rx="4" fill="#22303D"/>
+    <rect x="18" y="18" width="32" height="13" rx="6.5" fill="#22303D"/>
+    <rect x="0" y="36" width="13" height="13" rx="4" fill="#22303D" opacity=".5"/>
+    <rect x="18" y="36" width="24" height="13" rx="6.5" fill="#22303D" opacity=".5"/>
+  </g>
+  <text x="98" y="53" font-family="Noto Sans CJK KR" font-weight="900" font-size="30" fill="#22303D" letter-spacing="1">누가일등</text>
+</svg>
