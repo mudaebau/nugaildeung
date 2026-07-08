@@ -1070,7 +1070,7 @@ tr:last-child td{border-bottom:none}
         <textarea id="apPaste" rows="6" placeholder="김영수 010-2314-5678 남 71&#10;박순자, 010-9982-1123, 여, 68&#10;..."></textarea>
         <button class="btn full" style="margin-top:12px" onclick="apParse()">명단 인식</button>
         <div id="apPreview" style="display:none;margin-top:12px">
-          <div style="overflow-x:auto"><table id="apPrevTable"><thead></thead><tbody></tbody></table></div>
+          <div id="apPrevList"></div>
           <button class="btn full big" id="apConfirmBtn" style="margin-top:12px" onclick="submitGroup()">단체 신청하기</button>
         </div>
       </div>
@@ -2101,9 +2101,9 @@ async function submitSingle(){
 function apParse(){
   apPending=$('#apPaste').value.split('\n').map(parseLine).filter(Boolean);
   if(!apPending.length){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
-  const cols=[{k:'name',label:'이름'},{k:'phone',label:'전화번호'},{k:'sex',label:'성별'},{k:'age',label:'나이'}];
-  $('#apPrevTable thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.label}</th>`).join('')+'</tr>';
-  $('#apPrevTable tbody').innerHTML=apPending.map(p=>'<tr>'+cols.map(c=>`<td>${c.k==='phone'?'<span class=num style=font-size:.78rem>'+p.phone+'</span>':(p[c.k]||'—')}</td>`).join('')+'</tr>').join('');
+  $('#apPrevList').innerHTML=apPending.map(p=>
+    `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
+     <div class="info"><b>${p.name}</b><span class="num">${p.phone}${p.sex||p.age?' · '+[p.sex,p.age?p.age+'세':''].filter(Boolean).join(' '):''}</span></div></div>`).join('');
   $('#apConfirmBtn').textContent=`${apPending.length}명 단체 신청하기`;
   $('#apPreview').style.display='block';
   toast(`${apPending.length}명 인식 — 확인 후 신청하세요`)}
