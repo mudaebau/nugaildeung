@@ -733,7 +733,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <button class="btn full big" style="margin-top:4px" onclick="goTab('opResult')">결과 · 시상 확정하기</button>
+    <button class="btn full big" style="margin-top:4px" onclick="finalizeTournament()">결과 · 시상 확정하기</button>
   </section>
 
   <!-- 참가자 -->
@@ -2076,7 +2076,8 @@ async function submitPlayEntry(){
   const p=players.find(x=>x.id===peSelectedPlayer);
   addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}${evidenceUrl?' · 사진 첨부':''}`);
   $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
-  toast('기록이 저장되었습니다')}
+  toast('기록이 저장되었습니다');
+  await refreshMyTournamentStatus()}
 async function loadScorecardPhoto(){
   const box=$('#scPhotoPreview');if(!box)return;
   if(!config.id||curGroup==null||curGroup<0||!groups.length){box.innerHTML='';return}
@@ -2135,11 +2136,25 @@ function openPad(pi,gi){padTarget={pi,gi};
   $('#padGrid').innerHTML=g;$('#ov').classList.add('on')}
 function closePad(){$('#ov').classList.remove('on');padTarget=null}
 function currentJudgeToken(){const j=judges()[curStaff];return j&&j.token}
+async function refreshMyTournamentStatus(){
+  if(!config.id)return;
+  const{data,error}=await sb.from('tournaments').select('status').eq('id',config.id).single();
+  if(error||!data)return;
+  const t=tournaments.find(x=>x.mine);
+  if(t&&t.status!==data.status){t.status=data.status;renderHome()}}
+async function finalizeTournament(){
+  if(!config.id){goTab('opResult');return}
+  const{error}=await sb.rpc('finalize_tournament',{t_id:config.id});
+  if(error){toast(error.message);console.error(error);goTab('opResult');return}
+  toast('대회 결과 · 시상이 확정되었습니다');
+  await refreshMyTournamentStatus();
+  goTab('opResult')}
 async function submitScoreToServer(pi,gi,v,reason){
   const token=currentJudgeToken(),playerId=players[pi].id;
   if(!token||!playerId)return;
   const{error}=await sb.rpc('submit_score',{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null});
-  if(error){toast('서버 저장 실패: '+error.message);console.error(error)}}
+  if(error){toast('서버 저장 실패: '+error.message);console.error(error);return}
+  await refreshMyTournamentStatus()}
 async function setScore(v){if(!padTarget)return;
   const{pi,gi}=padTarget;const old=players[pi].scores[gi];
   if(old!=null&&v!=null&&v!==old){
@@ -2366,9 +2381,7 @@ function renderResult(){
     :done.length===0?'경기 진행 전입니다.'
     :finished?`전 코스 홀아웃 완료 — 동점은 ${config.tie}(으)로 처리.`:'중간 집계입니다.';
   const t=tournaments.find(x=>x.mine);
-  if(t){t.status=finished?'done':done.length?'live':'ready';
-    if(finished&&done.length)t.winner=`${done[0].p.name} (${done[0].p.sex}·${done[0].p.age})`;
-    renderHome()}
+  if(t&&finished&&done.length){t.winner=`${done[0].p.name} (${done[0].p.sex}·${done[0].p.age})`;renderHome()}
   const medals=['🥇','🥈','🥉'];
   const fmt=s=>`${s.tot}타 (${s.topar===0?'E':(s.topar>0?'+':'')+s.topar})`;
   $('#podium').innerHTML=done.slice(0,3).map((s,i)=>
