@@ -55,7 +55,6 @@ button{font-family:inherit;cursor:pointer}
 .bnav button .ic svg{width:25px;height:25px}
 .bnav button.on{color:var(--main-deep);font-weight:700}
 .bnav button.on .ic{background:var(--main-soft)}
-.bnav button.lock{opacity:.35}
 
 .page{display:none;padding:20px 16px 34px}
 .page.on{display:block}
@@ -189,6 +188,24 @@ tr:last-child td{border-bottom:none}
 .simplecard .sc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .simplecard .sc-top b{font-size:18px;line-height:1.4}
 .simplecard p{color:var(--muted);font-size:14px;line-height:1.6}
+
+/* ===== 내 대회 ===== */
+.mycard{background:var(--paper);border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px;cursor:pointer;width:100%;text-align:left;display:block}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.open{background:var(--mint);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.ready{background:var(--main-soft);color:var(--main-deep)}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald',sans-serif;font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:var(--main-soft);color:var(--main-deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mygo.primary{background:var(--main);color:#fff}
+.mycenter{text-align:center;padding:60px 20px}
+
 .stepper{display:flex;align-items:center;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .stepper .st{flex:1;text-align:center}
 .stepper .st b{display:block;font-size:15px;font-weight:700}
@@ -401,7 +418,6 @@ tr:last-child td{border-bottom:none}
   <!-- 홈: 대회 피드 -->
   <section class="page on" id="opHome">
     <p class="hello" id="homeGreeting"></p>
-    <button class="btn full" style="margin-bottom:16px" onclick="goTab('opCreate')">새 대회 개설하기</button>
     <div class="filterrow" id="filterRow">
       <button class="fchip on" data-f="all">전체</button>
       <button class="fchip" data-f="live">진행중</button>
@@ -410,6 +426,19 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="mineSection"></div>
     <div id="listSection"></div>
+    <button class="btn full" style="margin-top:4px" onclick="goTab('opCreate')">새 대회 개설하기</button>
+  </section>
+
+  <!-- 내 대회 -->
+  <section class="page" id="opMine">
+    <h2 class="sec">내 대회</h2>
+    <div id="mineListBox"></div>
+  </section>
+
+  <!-- MY -->
+  <section class="page" id="opMy">
+    <h2 class="sec">MY</h2>
+    <div id="myBox"></div>
   </section>
 
   <!-- 대회개설: 로그인 게이트 → 위저드 -->
@@ -792,11 +821,9 @@ tr:last-child td{border-bottom:none}
   </section>
 
   <nav class="bnav">
-    <button class="on" data-page="opHome"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></span>대회</button>
-    <button class="lock" data-page="opManage"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h7"/><path d="M17 8h3"/><circle cx="14" cy="8" r="2.6"/><path d="M4 16h3"/><path d="M13 16h7"/><circle cx="9" cy="16" r="2.6"/></svg></span>운영</button>
-    <button class="lock" data-page="opPlayers"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg></span>참가자</button>
-    <button class="lock" data-page="opGroups"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg></span>조편성</button>
-    <button class="lock" data-page="opResult"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></span>결과</button>
+    <button class="on" data-page="opHome"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></span>홈</button>
+    <button data-page="opMine"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></span>내 대회</button>
+    <button data-page="opMy"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></span>MY</button>
   </nav>
 </div>
 
@@ -1056,10 +1083,15 @@ function dday(d){const diff=Math.ceil((new Date(d)-new Date('2026-07-03'))/86400
 
 /* ================= 화면 전환 + 뒤로가기 (History API) ================= */
 let curView='Owner',curPage='opHome',navStack=[];
+function navGroupFor(page){
+  if(['opMine','opManage','opPlayers','opGroups','opResult'].includes(page))return 'opMine';
+  if(page==='opMy')return 'opMy';
+  return 'opHome'}
 function renderLoc(){
   ['Owner','Judge','Board','Apply','Notice'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
   if(curView==='Owner'){
-    document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===curPage));
+    const grp=navGroupFor(curPage);
+    document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===grp));
     document.querySelectorAll('#viewOwner .page').forEach(p=>p.classList.toggle('on',p.id===curPage))}
   if(curView==='Judge')renderJudge();
   if(curView==='Board')renderBoard();
@@ -1085,11 +1117,13 @@ async function openNotice(id){navTo('Notice');await loadNotice(id)}
 
 /* ================= nav ================= */
 function goTab(id){
-  if(id==='opCreate'&&config.created){toast('초기 버전은 대회 1개 운영 — 운영 탭으로 이동합니다');id='opManage'}
+  if(id==='opCreate'&&config.created){toast('초기 버전은 대회 1개 운영 — 내 대회로 이동합니다');id='opManage'}
   if((id==='opManage'||id==='opPlayers'||id==='opGroups'||id==='opResult')&&!config.created){toast('내 대회를 먼저 개설해 주세요 — 홈의 [새 대회 개설하기]');return}
   navTo('Owner',id);
   if(id==='opManage'){renderStageStepper();renderOpsStats()}
-  if(id==='opGroups')renderGroupsTabState()}
+  if(id==='opGroups')renderGroupsTabState()
+  if(id==='opMine')renderMyList()
+  if(id==='opMy')renderMyPage()}
 function renderGroupsTabState(){
   const box=$('#groupsDisabledNote');if(!box)return;
   const disabled=judgeStageKind==='period';
@@ -1257,6 +1291,90 @@ async function loadTournaments(){
     return t}));
   tournaments=withCounts;
   renderHome()}
+
+/* ================= 내 대회 / MY ================= */
+async function myTournamentStats(t){
+  const stats=[];
+  if(t.status==='live'){
+    const wait=await countStatus(t.id,'wait');
+    const{data:sRows}=await sb.from('staff').select('can_score,link_opened_at').eq('tournament_id',t.id);
+    const js=(sRows||[]).filter(s=>s.can_score);
+    const opened=js.filter(s=>s.link_opened_at).length;
+    stats.push({v:t.players,l:'참가자'},{v:wait,l:'대기자'},{v:`${opened}/${js.length}`,l:'심판 접속'})
+  }else if(t.status==='open'){
+    const wait=await countStatus(t.id,'wait');
+    stats.push({v:t.players,l:'접수'},{v:wait,l:'대기'},{v:t.cap,l:'정원'})
+  }else if(t.status==='ready'){
+    stats.push({v:t.players,l:'참가자'},{v:t.cap,l:'정원'})}
+  return stats}
+function myTournamentCardHTML(t,stats){
+  const label=t.status==='live'?'진행중 LIVE':t.status==='open'?'접수중':t.status==='done'?'종료':'개설 완료';
+  const statsHTML=stats.length?`<div class="mystats">${stats.map(s=>`<div><b class="num">${s.v}</b><span>${s.l}</span></div>`).join('')}</div>`:'';
+  const goLabel=t.status==='done'?'결과 보기':'대회 관리 열기';
+  return`<button class="mycard ${t.status==='live'?'':'plain'}" onclick="enterMyTournament('${t.id}')">
+    <div class="myrow1"><span class="stt ${t.status}">${label}</span></div>
+    <h4>${t.name}</h4>
+    ${statsHTML}
+    <div class="mygo ${t.status==='live'?'primary':''}">${goLabel}</div>
+  </button>`}
+async function renderMyList(){
+  const box=$('#mineListBox');if(!box)return;
+  const mine=tournaments.filter(t=>t.mine);
+  if(!mine.length){
+    box.innerHTML=`<div class="mycenter">
+      <p class="sub" style="margin-bottom:16px">아직 운영 중인 대회가 없습니다</p>
+      <button class="btn full big" onclick="goTab('opCreate')">새 대회 개설하기</button></div>`;
+    return}
+  if(mine.length===1){await enterMyTournament(mine[0].id);return}
+  box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">불러오는 중…</p>';
+  const cards=await Promise.all(mine.map(async t=>myTournamentCardHTML(t,await myTournamentStats(t))));
+  box.innerHTML=cards.join('')}
+async function loadMyTournament(tournamentId){
+  await loadBoardData(tournamentId);
+  if(!config.id)return false;
+  config.created=true;
+  const stages=await loadAllStages(tournamentId);
+  config.stageCount=stages.length||1;
+  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end').eq('id',tournamentId).single();
+  if(tRow){config.tie=tRow.tie_rule||config.tie;config.fields=tRow.fields||config.fields;
+    config.awards=tRow.awards||config.awards;config.type=tRow.type||config.type;
+    config.dateS=tRow.date_start;config.dateE=tRow.date_end}
+  const{data:wRows}=await sb.from('players').select('*').eq('tournament_id',tournamentId).eq('status','wait');
+  waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
+    club:r.club||'',region:r.region||'',nick:r.nick||''}));
+  const{data:sRows}=await sb.from('staff').select('*').eq('tournament_id',tournamentId);
+  staff=(sRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,duty:r.duty,canScore:r.can_score,token:r.token,link_opened_at:r.link_opened_at}));
+  curStaff=0;jRound=0;curHole=0;curGroup=0;judgeTokenMode=false;
+  renderPlayers();await renderTools();drawQR();
+  return true}
+async function enterMyTournament(id){
+  const ok=await loadMyTournament(id);
+  if(!ok)return;
+  const t=tournaments.find(x=>x.id===id);
+  goTab(t&&t.status==='done'?'opResult':'opManage')}
+function renderMyPage(){
+  const box=$('#myBox');if(!box)return;
+  if(!user.loggedIn){
+    box.innerHTML=`<div class="mycenter">
+      <p class="sub" style="margin-bottom:16px">로그인이 필요합니다</p>
+      <button class="btn full big" onclick="goTab('opCreate')">로그인하기</button></div>`;
+    return}
+  box.innerHTML=`<div class="card">
+    <label class="fl" style="margin-top:0">이름</label><p>${user.name}</p>
+    <label class="fl">전화번호</label><p>${maskPhone(user.phone)}</p>
+  </div>
+  <button class="btn ghost full" onclick="logout()">로그아웃</button>`}
+async function logout(){
+  user.loggedIn=false;user.id=null;user.name='';user.phone='';
+  config.created=false;config.id=null;
+  players=[];groups=[];staff=[];waitlist=[];
+  $('#authStep1').style.display='block';$('#authStep2').style.display='none';$('#authStep3').style.display='none';
+  $('#wizBox').style.display='none';
+  $('#loginPhone').value='';$('#loginCode').value='';
+  whoRender();
+  goTab('opHome');
+  await loadTournaments();
+  toast('로그아웃되었습니다')}
 
 /* ================= 대회요강 (?notice=) ================= */
 async function loadNotice(tournamentId){
@@ -1701,7 +1819,6 @@ async function createTournament(){
   config.tie=$('#fTie').value;
   config.cap=Math.max(8,+$('#fCap').value||120);
   boardMode=-1;jRound=0;
-  document.querySelectorAll('.bnav button').forEach(t=>t.classList.remove('lock'));
 
   let stageVenues,stageCoursePars,stageKind,stageUseGroups;
   if(config.type==='screen'){
