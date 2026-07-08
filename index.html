@@ -796,7 +796,7 @@ tr:last-child td{border-bottom:none}
             <div style="flex:1;min-width:170px">
               <div class="urlchip" id="boardUrl">nuga1.kr/t/1024/board</div>
               <div style="display:flex;gap:8px;margin-top:10px">
-                <button class="btn sm ghost" onclick="toast('주소가 복사되었습니다')">주소 복사</button>
+                <button class="btn sm ghost" onclick="copyBoardLink()">주소 복사</button>
                 <button class="btn sm" onclick="openBoard()">열기</button>
               </div>
             </div>
@@ -810,7 +810,7 @@ tr:last-child td{border-bottom:none}
         <div class="tooldetail" id="toolDetailApply">
           <div class="urlchip">nuga1.kr/t/1024/apply</div>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn sm ghost" onclick="toast('신청 링크가 복사되었습니다')">주소 복사</button>
+            <button class="btn sm ghost" onclick="copyApplyShareLink()">주소 복사</button>
             <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
           </div>
         </div>
@@ -1006,11 +1006,17 @@ tr:last-child td{border-bottom:none}
 <div class="mobile wide" id="viewBoard" style="display:none">
   <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="backToOwner()">← 뒤로</button><span>실서비스: 이 주소를 대회장 TV 노트북에서 엽니다 — nuga1.kr/t/1024/board</span></div>
   <div class="boardwrap">
-    <div class="boardctl">
+    <div class="boardctl" id="boardCtl">
       <button class="btn" id="simBtn" onclick="toggleSim()">▶ 데모 경기 시작</button>
       <button class="btn ghost" onclick="resetScores()">↺ 초기화</button>
       <button class="btn ghost" onclick="fullBoard()">⛶ 전체 화면</button>
       <div id="boardModeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto"></div>
+    </div>
+    <div class="boardshell" id="boardGate" style="display:none;text-align:center;padding:60px 24px">
+      <h2 style="color:#fff;margin-bottom:8px">🔒 비공개 대회</h2>
+      <p style="color:#9FBEDC;margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
+      <input type="tel" id="boardGateCode" maxlength="6" placeholder="비밀번호" style="text-align:center;margin-bottom:12px;max-width:220px">
+      <button class="btn full big" style="max-width:220px;margin:0 auto" onclick="submitBoardGate()">입장하기</button>
     </div>
     <div class="boardshell" id="boardShell">
       <div class="boardtop">
@@ -1029,7 +1035,8 @@ tr:last-child td{border-bottom:none}
 <div class="mobile" id="viewApply" style="display:none">
   <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span id="applyUrlHint">실서비스: 공개 링크로 접속</span></div>
   <section class="page on" style="padding-top:16px">
-    <div class="poster">
+    <div id="applyGate" style="display:none"></div>
+    <div class="poster" id="applyPoster">
       <div class="pdate" id="apDate">—</div>
       <h3 id="apName">—</h3>
       <div class="pmeta" id="apMeta">—</div>
@@ -1474,7 +1481,9 @@ async function copyAdvanceResult(){
   try{await navigator.clipboard.writeText(lastAdvanceResult)}catch(e){}
   toast('진출 안내 문구가 복사되었습니다 — 카톡방·문자로 붙여넣으세요')}
 async function loadTournaments(){
-  const{data,error}=await sb.from('tournaments').select('*').order('created_at',{ascending:false});
+  const myId=user.id||'00000000-0000-0000-0000-000000000000';
+  const{data,error}=await sb.from('tournaments').select('*')
+    .or(`visibility.eq.public,owner_id.eq.${myId}`).order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
   const withCounts=await Promise.all(data.map(async row=>{
     const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
@@ -1485,6 +1494,34 @@ async function loadTournaments(){
     return t}));
   tournaments=withCounts;
   renderHome()}
+
+/* ================= 비공개 대회 게이트 ================= */
+async function fetchGatedTournament(id,code){
+  const{data,error}=await sb.rpc('get_tournament_gated',{t_id:id,p_code:code||null});
+  if(error){console.error(error);return null}
+  return data}
+function savedCode(id){try{return localStorage.getItem('nuga1_code_'+id)||''}catch(e){return ''}}
+function saveCode(id,code){try{localStorage.setItem('nuga1_code_'+id,code)}catch(e){}}
+function myCodeFor(id){return(config.id===id&&config.created?config.accessCode:'')||savedCode(id)}
+function gateFormHTML(){
+  return`<div class="card" style="text-align:center;padding:40px 24px">
+    <h2 style="margin-bottom:6px">🔒 비공개 대회</h2>
+    <p class="sub" style="margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
+    <input type="tel" id="gateCodeInput" maxlength="6" placeholder="비밀번호" style="text-align:center;margin-bottom:12px">
+    <button class="btn full big" onclick="submitGateCode()">입장하기</button>
+  </div>`}
+let gateState=null;
+function showGate(containerId,id,onSuccess){
+  $('#'+containerId).innerHTML=gateFormHTML();
+  gateState={id,onSuccess}}
+async function submitGateCode(){
+  if(!gateState)return;
+  const{id,onSuccess}=gateState;
+  const code=$('#gateCodeInput').value.trim();
+  const data=await fetchGatedTournament(id,code);
+  if(!data||data.gated){toast('비밀번호가 올바르지 않습니다');return}
+  saveCode(id,code);gateState=null;
+  onSuccess(data)}
 
 /* ================= 내 대회 / MY ================= */
 async function myTournamentStats(t){
@@ -1524,15 +1561,16 @@ async function renderMyList(){
   const cards=await Promise.all(mine.map(async t=>myTournamentCardHTML(t,await myTournamentStats(t))));
   box.innerHTML=cards.join('')}
 async function loadMyTournament(tournamentId){
-  await loadBoardData(tournamentId);
+  await loadBoardData(tournamentId,true);
   if(!config.id)return false;
   config.created=true;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
-  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end').eq('id',tournamentId).single();
+  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,access_code').eq('id',tournamentId).single();
   if(tRow){config.tie=tRow.tie_rule||config.tie;config.fields=tRow.fields||config.fields;
     config.awards=tRow.awards||config.awards;config.type=tRow.type||config.type;
-    config.dateS=tRow.date_start;config.dateE=tRow.date_end}
+    config.dateS=tRow.date_start;config.dateE=tRow.date_end;
+    config.visibility=tRow.visibility||'public';config.accessCode=tRow.access_code||''}
   const{data:wRows}=await sb.from('players').select('*').eq('tournament_id',tournamentId).eq('status','wait');
   waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
     club:r.club||'',region:r.region||'',nick:r.nick||''}));
@@ -1562,7 +1600,10 @@ function renderMyPage(){
   <button class="btn ghost full" onclick="logout()">로그아웃</button>`}
 async function logout(){
   user.loggedIn=false;user.id=null;user.name='';user.phone='';
-  config.created=false;config.id=null;
+  config.created=false;config.id=null;config.name='';config.hostOrg='';config.place='';
+  config.visibility='public';config.accessCode='';
+  config.eligibility={type:'open',text:''};config.prizeTotal='';config.prizes=[];
+  config.noticeExtra={contact:'',fee:'',rules:''};
   players=[];groups=[];staff=[];waitlist=[];
   $('#authStep1').style.display='block';$('#authStep2').style.display='none';$('#authStep3').style.display='none';
   $('#wizBox').style.display='none';
@@ -1574,15 +1615,21 @@ async function logout(){
 
 /* ================= 대회요강 (?notice=) ================= */
 async function loadNotice(tournamentId){
-  const{data:t,error}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
-  if(error||!t){
+  const t=await fetchGatedTournament(tournamentId,myCodeFor(tournamentId));
+  if(!t){
     $('#noticeBody').innerHTML='<p class="sub" style="text-align:center;padding:30px 0">대회 정보를 찾을 수 없습니다</p>';
+    return}
+  if(t.gated){
+    showGate('noticeBody',tournamentId,async(full)=>{
+      const stage=await loadPrimaryStage(tournamentId);renderNotice(full,stage)});
     return}
   const stage=await loadPrimaryStage(tournamentId);
   renderNotice(t,stage)}
 function noticeStatusLabel(s){
   return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
+let noticeT=null;
 function renderNotice(t,stage){
+  noticeT=t;
   const period=t.date_start===t.date_end?(t.date_start||'—').replaceAll('-','.')
     :`${(t.date_start||'').replaceAll('-','.')} ~ ${(t.date_end||'').replaceAll('-','.')}`;
   const venuesArr=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
@@ -1632,10 +1679,25 @@ function renderNotice(t,stage){
       <button class="btn full" onclick="copyNoticeLink('${t.id}')">요강 링크 복사</button>
       ${t.status==='open'?`<button class="btn full ghost" style="margin-top:10px" onclick="location.href='?apply=${t.id}'">참가 신청하기</button>`:''}
     </div>`}
+function shareLine(kind,src){
+  const labels={board:'전광판',apply:'참가 신청',notice:'대회 요강'};
+  const link=`${location.origin}${location.pathname}?${kind}=${src.id}`;
+  const code=src.access_code||src.accessCode;
+  const lock=src.visibility==='private'&&code?`\n🔒 입장 비밀번호: ${code}`:'';
+  return `[${src.name||''}] ${labels[kind]}\n${link}${lock}`}
+async function copyShareLine(kind,src,toastMsg){
+  const msg=shareLine(kind,src);
+  try{await navigator.clipboard.writeText(msg)}catch(e){}
+  toast(toastMsg+(src.visibility==='private'?' (비밀번호 포함)':''))}
 function copyNoticeLink(id){
-  const link=`${location.origin}${location.pathname}?notice=${id}`;
-  navigator.clipboard?.writeText(link).catch(()=>{});
-  toast('요강 링크가 복사되었습니다')}
+  const src=(noticeT&&noticeT.id===id)
+    ?{id:noticeT.id,name:noticeT.name,visibility:noticeT.visibility,access_code:noticeT.access_code}
+    :{id:config.id,name:config.name,visibility:config.visibility,access_code:config.accessCode};
+  copyShareLine('notice',src,'요강 공유 문구가 복사되었습니다')}
+function copyBoardLink(){
+  copyShareLine('board',{id:config.id,name:config.name,visibility:config.visibility,access_code:config.accessCode},'전광판 주소가 복사되었습니다')}
+function copyApplyShareLink(){
+  copyShareLine('apply',{id:config.id,name:config.name,visibility:config.visibility,access_code:config.accessCode},'신청 링크 공유 문구가 복사되었습니다')}
 
 /* ================= auth ================= */
 function whoRender(){
@@ -1936,8 +1998,22 @@ function resend(i){copyJudgeLink(i)}
 let applyT=null,applyMode='single',apPending=[];
 function applyFields(t){
   return t&&t.mine?config.fields:{name:true,nick:false,sex:true,age:true,club:true,region:false}}
-function openApply(id){
-  applyT=tournaments.find(x=>x.id===id);if(!applyT)return;
+async function openApply(id){
+  applyT=tournaments.find(x=>x.id===id);
+  if(!applyT){
+    const row=await fetchGatedTournament(id,myCodeFor(id));
+    if(!row){toast('대회 정보를 찾을 수 없습니다');return}
+    if(row.gated){
+      navTo('Apply');window.scrollTo(0,0);
+      $('#applyPoster').style.display='none';$('#applyForm').style.display='none';$('#applyDone').style.display='none';
+      $('#applyGate').style.display='block';
+      showGate('applyGate',id,async()=>{
+        $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
+        await openApply(id)});
+      return}
+    const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',id).eq('status','ok');
+    applyT=dbToTournament(row,count||0)}
+  $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
   const t=applyT;
   $('#applyUrlHint').textContent=`실서비스: nuga1.kr/t/${1000+t.id}/apply — 카톡방에 공유하는 공개 링크`;
   const period=t.dateE&&t.dateE!==t.date
@@ -2578,10 +2654,29 @@ function standings(mode=-1){
 
 /* ================= 전광판 ================= */
 let boardStageKind='round',boardActiveStage=null,boardStages=[];
-async function loadBoardData(tournamentId){
+let boardGateId=null;
+async function submitBoardGate(){
+  if(!boardGateId)return;
+  const code=$('#boardGateCode').value.trim();
+  const data=await fetchGatedTournament(boardGateId,code);
+  if(!data||data.gated){toast('비밀번호가 올바르지 않습니다');return}
+  saveCode(boardGateId,code);
+  await loadBoardData(boardGateId)}
+async function loadBoardData(tournamentId,trusted){
   if(!tournamentId)return;
-  const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
-  if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return}
+  let t;
+  if(trusted){
+    const{data,error}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
+    if(error||!data){toast('대회 정보를 불러오지 못했습니다');return}
+    t=data
+  }else{
+    t=await fetchGatedTournament(tournamentId,myCodeFor(tournamentId));
+    if(!t){toast('대회 정보를 불러오지 못했습니다');return}
+    if(t.gated){
+      boardGateId=tournamentId;
+      $('#boardShell').style.display='none';$('#boardCtl').style.display='none';$('#boardGate').style.display='block';
+      return}}
+  $('#boardShell').style.display='block';$('#boardCtl').style.display='flex';$('#boardGate').style.display='none';
   boardStages=await loadAllStages(tournamentId);
   const stage=await loadPrimaryStage(tournamentId);
   boardActiveStage=stage;
