@@ -308,6 +308,11 @@ tr:last-child td{border-bottom:none}
 .mtab.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
 .mgpane{display:none}
 .mgpane.on{display:block}
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.psegpane{display:none}
+.psegpane.on{display:block}
 
 /* ===== 대회 도구 ===== */
 .toolrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line)}
@@ -714,7 +719,7 @@ tr:last-child td{border-bottom:none}
     <div class="mtabs">
       <button class="mtab on" data-mg="mgHome" onclick="mgShow('mgHome')">관리홈</button>
       <button class="mtab" data-mg="mgNotice" onclick="mgShow('mgNotice')">요강</button>
-      <button class="mtab" data-mg="mgPlayers" onclick="mgShow('mgPlayers')">참가자</button>
+      <button class="mtab" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')">참가자</button>
       <button class="mtab" data-mg="mgStaff" onclick="mgShow('mgStaff')">운영진</button>
       <button class="mtab" data-mg="mgScore" onclick="mgShow('mgScore')">스코어입력</button>
       <button class="mtab" data-mg="mgBoard" onclick="mgShow('mgBoard')">리더보드</button>
@@ -778,41 +783,62 @@ tr:last-child td{border-bottom:none}
 
     <!-- 참가자 -->
     <div class="mgpane" id="mgPlayers">
-      <p class="sub">카톡 명단을 그대로 붙여넣으면 자동 인식합니다.</p>
-      <div class="card">
-        <label class="fl" style="margin-top:0">이 명단의 소속 클럽</label>
-        <select id="pasteClub"><option>솔터공원회</option><option>한강은빛회</option><option>청솔클럽</option><option>미사리파크</option><option>무소속</option></select>
-        <label class="fl">명단 붙여넣기</label>
-        <textarea id="pasteBox" rows="6"></textarea>
-        <button class="btn full" style="margin-top:12px" onclick="parsePaste()">명단 인식</button>
-        <button class="btn sm ghost full" style="margin-top:8px" onclick="loadDemo()">데모 32명 불러오기</button>
+      <div class="seg" id="playersSeg">
+        <div class="on" data-seg="pList" onclick="playersSegShow('pList')">명단</div>
+        <div data-seg="pGroups" onclick="playersSegShow('pGroups')">조편성</div>
+        <div data-seg="pWait" onclick="playersSegShow('pWait')">대기 <span id="segWaitCount">0</span></div>
       </div>
-      <div class="card" id="previewCard" style="display:none">
-        <label class="fl" style="margin-top:0">인식 결과</label>
-        <div id="prevList"></div>
-        <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
-      </div>
-      <div class="card" id="waitCard" style="display:none">
-        <label class="fl" style="margin-top:0">대기자 <span class="pill amber" id="waitCnt">0명</span></label>
-        <div id="waitBox"></div>
-      </div>
-      <p class="sub" style="margin-bottom:8px">참가자를 누르면 수정·기권·삭제할 수 있습니다.</p>
-      <button class="btn ghost full" style="margin-bottom:12px" onclick="mgShow('mgGroups')">조편성 보기·관리 →</button>
-      <div class="card" style="padding:0 18px">
-        <div id="ptable"></div>
-      </div>
-    </div>
 
-    <!-- 조편성 (참가자 탭에서 진입) -->
-    <div class="mgpane" id="mgGroups">
-      <button class="btn ghost sm" style="margin-bottom:12px" onclick="mgShow('mgPlayers')">← 참가자로</button>
-      <h2 class="sec">조편성</h2>
-      <p class="sub">이름을 누르고 바꿀 상대를 누르면 조가 맞바뀝니다.</p>
-      <div id="groupsDisabledNote" class="card" style="display:none;text-align:center;padding:30px 20px">
-        <p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
+      <!-- 명단 -->
+      <div class="psegpane on" id="pList">
+        <p class="sub">카톡 명단을 그대로 붙여넣으면 자동 인식합니다.</p>
+        <div class="card">
+          <label class="fl" style="margin-top:0">이 명단의 소속 클럽</label>
+          <select id="pasteClub"><option>솔터공원회</option><option>한강은빛회</option><option>청솔클럽</option><option>미사리파크</option><option>무소속</option></select>
+          <label class="fl">명단 붙여넣기</label>
+          <textarea id="pasteBox" rows="6"></textarea>
+          <button class="btn full" style="margin-top:12px" onclick="parsePaste()">명단 인식</button>
+          <button class="btn sm ghost full" style="margin-top:8px" onclick="loadDemo()">데모 32명 불러오기</button>
+        </div>
+        <div class="card" id="previewCard" style="display:none">
+          <label class="fl" style="margin-top:0">인식 결과</label>
+          <div id="prevList"></div>
+          <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
+        </div>
+        <p class="sub" style="margin-bottom:8px">참가자를 누르면 수정·기권·삭제할 수 있습니다.</p>
+        <div class="card" style="padding:0 18px">
+          <div id="ptable"></div>
+        </div>
       </div>
-      <div id="groupsActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"><button class="btn" onclick="makeGroups(true)">자동 조편성</button><button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button></div>
-      <div id="groupsBox"></div>
+
+      <!-- 조편성 -->
+      <div class="psegpane" id="pGroups">
+        <p class="sub">이름을 누르고 바꿀 상대를 누르면 조가 맞바뀝니다.</p>
+        <div id="groupsDisabledNote" class="card" style="display:none;text-align:center;padding:30px 20px">
+          <p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
+        </div>
+        <div id="groupsEmpty" class="card" style="display:none;text-align:center;padding:44px 26px">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#B9CCE0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg>
+          <h4 style="font-size:19px;font-weight:700;margin-bottom:8px">아직 조가 없습니다</h4>
+          <p class="sub" style="margin-bottom:22px" id="groupsEmptyDesc"></p>
+          <button class="btn full big" onclick="makeGroups(true)">조편성하기</button>
+        </div>
+        <div id="groupsFormed" style="display:none">
+          <div id="groupsBox"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button class="btn ghost" onclick="makeGroups(true)">다시 편성하기</button>
+            <button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 대기 -->
+      <div class="psegpane" id="pWait">
+        <div class="card" id="waitCard">
+          <label class="fl" style="margin-top:0">대기자 <span class="pill amber" id="waitCnt">0명</span></label>
+          <div id="waitBox"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 운영진 -->
@@ -827,12 +853,16 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <!-- 스코어입력 (차수 4에서 본문 구축 예정) -->
+    <!-- 스코어입력 -->
     <div class="mgpane" id="mgScore">
-      <div class="card" style="text-align:center;padding:40px 20px">
-        <p class="sub" style="margin-bottom:16px">전용 스코어 입력 화면은 다음 업데이트에서 제공됩니다.<br>지금은 심판 화면에서 입력해 주세요.</p>
-        <button class="btn full big" onclick="openJudge(0)">심판 입력 화면 열기</button>
+      <div class="tools" style="margin-bottom:14px">
+        <div class="trow" style="cursor:pointer" onclick="openJudge(0)">
+          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+          <span class="tt"><b>스코어카드 사진 입력</b><span>촬영 → 보조 증빙으로 첨부</span></span>
+          <span class="chev">›</span>
+        </div>
       </div>
+      <div id="mgScoreBody"></div>
     </div>
 
     <!-- 리더보드 -->
@@ -1168,14 +1198,67 @@ function mgShow(id){
   curMgTab=id;
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
-  const navMg=id==='mgGroups'?'mgPlayers':id;
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.mg===navMg));
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
   if(id==='mgHome'){renderStageStepper();renderOpsStats()}
-  if(id==='mgPlayers')renderPlayers();
-  if(id==='mgGroups')renderGroupsTabState();
+  if(id==='mgPlayers')playersSegShow(curPlayersSeg);
   if(id==='mgStaff')renderTools();
+  if(id==='mgScore')renderScoreTab();
   if(id==='mgResult')renderResult();
   window.scrollTo(0,0)}
+let curPlayersSeg='pList';
+function playersSegShow(seg){
+  curPlayersSeg=seg;
+  document.querySelectorAll('#playersSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.seg===seg));
+  document.querySelectorAll('.psegpane').forEach(p=>p.classList.remove('on'));
+  const pane=$('#'+seg);if(pane)pane.classList.add('on');
+  if(seg==='pList')renderPlayers();
+  if(seg==='pGroups')renderGroupsSeg();
+  if(seg==='pWait')renderWait()}
+function enterPlayersSeg(seg){enterMgmt('mgPlayers');playersSegShow(seg)}
+function renderGroupsSeg(){
+  const disabled=judgeStageKind==='period';
+  $('#groupsDisabledNote').style.display=disabled?'block':'none';
+  $('#groupsEmpty').style.display=(!disabled&&!groups.length)?'block':'none';
+  $('#groupsFormed').style.display=(!disabled&&groups.length>0)?'block':'none';
+  if(disabled)return;
+  if(!groups.length){
+    $('#groupsEmptyDesc').innerHTML=`확정 참가자 <b class="num">${players.length}명</b>을<br>4인 1조로 자동 편성합니다.<br>같은 클럽은 서로 다른 조로 분산돼요.`;
+    return}
+  renderGroups()}
+function groupProgress(gi){
+  const g=(groups[gi]||[]).filter(pi=>!isOut(players[pi]));
+  if(!g.length)return{done:0,total:HOLES||0};
+  let done=0;
+  for(let h=0;h<HOLES;h++)if(g.every(pi=>players[pi].scores[h]!=null))done++;
+  return{done,total:HOLES}}
+function openJudgeForGroup(gi){curGroup=gi;openJudge(0)}
+function renderScoreTab(){
+  const box=$('#mgScoreBody');if(!box)return;
+  if(judgeStageKind==='period'){
+    box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
+      <p class="sub" style="margin-bottom:16px">기간형 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
+      <button class="btn full big" onclick="openJudge(0)">기록 입력 화면 열기</button>
+    </div>`;
+    return}
+  if(!groups.length){
+    box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
+      <p class="sub" style="margin-bottom:16px">참가자 탭에서 조편성을 먼저 완료해 주세요.</p>
+      <button class="btn ghost full" onclick="enterPlayersSeg('pGroups')">조편성으로 이동</button>
+    </div>`;
+    return}
+  box.innerHTML=`<p class="sub" style="font-weight:700;margin-bottom:10px">조별 직접 입력 — 조를 누르면 홀별 입력</p>
+    <div class="tools">`+groups.map((g,i)=>{
+    const prog=groupProgress(i);
+    const cls=prog.done===prog.total?'color:var(--mint)':prog.done===0?'color:var(--coral)':'';
+    const names=g.map(pi=>players[pi].name);
+    const label=names.length>1?`${names[0]} 외 ${names.length-1}명`:(names[0]||'—');
+    const start=config.venues.length?config.venues[i%config.venues.length].replace(' 파크골프장',''):'';
+    return`<div class="trow" style="cursor:pointer" onclick="openJudgeForGroup(${i})">
+      <span class="tic" style="font-family:'Oswald',sans-serif;font-weight:700;color:var(--main-deep);font-size:14px">${i+1}조</span>
+      <span class="tt"><b>${label}</b><span>${start?start+' 출발':''}</span></span>
+      <span class="num" style="font-weight:700;${cls}">${prog.done}/${prog.total}</span><span class="chev">›</span>
+    </div>`}).join('')+`</div>
+    <p class="sub" style="margin-top:10px">심판 링크로 들어온 입력도 여기 실시간 반영 · 링크 발송은 운영진 탭</p>`}
 function renderMgmtHeader(){
   const period=config.dateS===config.dateE?(config.dateS||'').replaceAll('-','.')
     :`${(config.dateS||'').replaceAll('-','.')} ~ ${(config.dateE||'').slice(5).replace('-','.')}`;
@@ -1183,13 +1266,6 @@ function renderMgmtHeader(){
   $('#mgSub').textContent=config.type==='screen'
     ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(기간형)`
     :`${period} · ${config.place||''} · ${HOLES}홀(${ROUNDS}개 코스)`}
-function renderGroupsTabState(){
-  const box=$('#groupsDisabledNote');if(!box)return;
-  const disabled=judgeStageKind==='period';
-  box.style.display=disabled?'block':'none';
-  $('#groupsActions').style.display=disabled?'none':'grid';
-  if(disabled)$('#groupsBox').innerHTML='';
-  else renderGroups()}
 document.querySelectorAll('.bnav button').forEach(b=>b.onclick=()=>goTab(b.dataset.page));
 
 /* ================= 홈: 대회 리스트 ================= */
@@ -2027,7 +2103,7 @@ async function loadDemo(){
   players=DEMO.map((n,i)=>({name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
     club:CLUBS[i%4],region:'하남',nick:'',id:idByPhone[genPhone(i)],scores:Array(HOLES).fill(null),group:-1}));
   syncMine();renderPlayers();await makeGroups(false);refreshAll();
-  enterMgmt('mgGroups');toast('데모 32명 등록 + 자동 조편성 완료')}
+  enterPlayersSeg('pGroups');toast('데모 32명 등록 + 자동 조편성 완료')}
 function syncMine(){const t=tournaments.find(x=>x.mine);if(t){t.players=players.length;renderHome();updateApplyStat()}}
 function renderPlayers(){
   const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
@@ -2067,15 +2143,16 @@ function promoteHint(){if(waitlist.length&&players.length<config.cap)toast('빈�
 
 /* ===== 대기자 ===== */
 function renderWait(){
+  const segCount=$('#segWaitCount');if(segCount)segCount.textContent=waitlist.length;
   const card=$('#waitCard');if(!card)return;
-  card.style.display=waitlist.length?'block':'none';
   $('#waitCnt').textContent=waitlist.length+'명';
   const space=players.length<config.cap;
-  $('#waitBox').innerHTML=waitlist.map((p,i)=>
+  $('#waitBox').innerHTML=waitlist.length?waitlist.map((p,i)=>
     `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
      <div class="info"><b>대기 ${i+1}번 · ${p.name}</b><span class="num">${maskPhone(p.phone)} · ${p.club||'무소속'}</span></div>
      <button class="btn sm ${space?'':'ghost'}" ${space?'':'disabled'} onclick="promoteWait(${i})">승격</button>
-     <button class="btn sm ghost" onclick="waitlist.splice(${i},1);renderWait();toast('대기 취소 처리')">취소</button></div>`).join('')}
+     <button class="btn sm ghost" onclick="waitlist.splice(${i},1);renderWait();toast('대기 취소 처리')">취소</button></div>`).join('')
+    :'<p class="sub" style="text-align:center;padding:20px 0">대기자가 없습니다</p>'}
 function promoteWait(i){
   if(players.length>=config.cap){toast('정원이 가득 찼습니다');return}
   const p=waitlist.splice(i,1)[0];players.push(p);
@@ -2092,13 +2169,13 @@ async function persistGroups(){
   await Promise.all(updates)}
 async function makeGroups(announce){
   swapSel=null;
-  if(!players.length){groups=[];$('#groupsBox').innerHTML='<p class="sub">참가자를 먼저 등록하세요.</p>';return}
+  if(!players.length){groups=[];renderGroupsSeg();return}
   const n=Math.ceil(players.length/4);
   groups=Array.from({length:n},()=>[]);
   const byClub={};players.forEach((p,i)=>{(byClub[p.club]=byClub[p.club]||[]).push(i)});
   Object.values(byClub).forEach(a=>a.sort(()=>Math.random()-.5));
   let gi=0;Object.values(byClub).flat().forEach(pi=>{groups[gi%n].push(pi);players[pi].group=gi%n;gi++});
-  renderGroups();renderPlayers();
+  renderGroupsSeg();renderPlayers();
   if(announce)toast('조편성 완료');
   await persistGroups()}
 function renderGroups(){
