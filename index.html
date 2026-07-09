@@ -336,6 +336,17 @@ tr:last-child td{border-bottom:none}
 .stagechips::-webkit-scrollbar{display:none}
 .stagechip{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 15px;font-size:13.5px;font-weight:500;color:var(--muted)}
 .stagechip.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
+.jbar{display:flex;align-items:center;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.js{flex:1;text-align:center;position:relative}
+.js b{display:block;font-size:13.5px;font-weight:700;color:#9AAAB9}
+.js span{font-size:10.5px;color:#B4C2D0;font-weight:500}
+.js.done b{color:var(--muted)}
+.js.done span{color:var(--mint)}
+.js.cur b{color:var(--main-deep);font-size:14.5px}
+.js.cur span{color:var(--mint);font-weight:700}
+.js .bd{display:inline-block;font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:#E7F5EE;color:#2E8B63;margin-top:3px}
+.js .bd.closed{background:#EDF1F6;color:#8CA0B4}
+.jarr{color:#D3DEE9;font-size:14px;padding:0 2px;flex:0 0 auto}
 .holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
 .hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center;cursor:pointer}
 .hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
@@ -846,6 +857,8 @@ tr:last-child td{border-bottom:none}
     <!-- 관리홈 -->
     <div class="mgpane on" id="mgHome">
       <div id="scoreTodo" class="todo" style="display:none" onclick="enterMgmt('mgScore')">📋 <span><b id="scoreTodoText">검수 대기 0건</b> — 스코어 탭에서 처리</span><span class="chev">›</span></div>
+      <div id="journeyBar"></div>
+      <div id="regCard"></div>
       <div id="stageInfoCard"></div>
       <div class="stats" id="opStats"></div>
       <div id="advanceResultBox"></div>
@@ -1130,6 +1143,10 @@ tr:last-child td{border-bottom:none}
       <div class="capnote"><span id="apCap">—</span><span id="apDday">—</span></div>
     </div>
 
+    <div class="card" id="apClosedCard" style="display:none;text-align:center;padding:30px 20px">
+      <p class="sub" style="margin:0">이 대회는 <b>접수 마감</b>되었습니다.<br>참가 신청이 더 이상 접수되지 않습니다.</p>
+    </div>
+
     <div id="applyForm">
       <div class="card" id="apEligCard" style="display:none;background:var(--main-soft);border:none">
         <label class="fl" style="margin-top:0">참가 조건</label>
@@ -1294,6 +1311,31 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- 단계 시작 확인 -->
+<div class="overlay" id="stageStartOv" onclick="if(event.target===this)closeStageStart()">
+  <div class="pad">
+    <h3 id="stageStartTitle">단계를 시작할까요?</h3>
+    <div id="stageStartList" style="margin:10px 0 18px"></div>
+    <button class="btn full" style="margin-bottom:8px" onclick="confirmStageStart()">시작하기</button>
+    <button class="btn ghost full" onclick="closeStageStart()">취소</button>
+  </div>
+</div>
+
+<!-- 접수 마감 확인 -->
+<div class="overlay" id="regCloseOv" onclick="if(event.target===this)closeRegCloseSheet()">
+  <div class="pad">
+    <h3>접수를 마감할까요?</h3>
+    <div style="margin:10px 0 18px">
+      <p class="sheetli"><b>✓</b><span>신청 페이지가 "접수 마감"으로 표시됩니다</span></p>
+      <p class="sheetli"><b>✓</b><span id="regCloseCountLine">—</span></p>
+      <p class="sheetli"><b>✓</b><span>운영자 직접 추가는 계속 가능합니다(당일 현장 등록)</span></p>
+      <p class="sheetli warn"><b>!</b><span>실수로 마감했다면 [접수 재개]로 되돌릴 수 있어요</span></p>
+    </div>
+    <button class="btn full" style="background:#C4523A;margin-bottom:8px" onclick="confirmRegClose()">접수 마감</button>
+    <button class="btn ghost full" onclick="closeRegCloseSheet()">취소</button>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -1320,7 +1362,7 @@ const config={created:false,type:'field',stageCount:1,name:'',hostOrg:'',dateS:'
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
-  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''},recordModes:{1:'hole',2:'hole',3:'hole'}};
+  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''},recordModes:{1:'hole',2:'hole',3:'hole'},regClosed:false};
 const user={loggedIn:false,name:'',phone:'',id:null};
 let staff=[
   {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
@@ -1667,7 +1709,7 @@ function dbToTournament(row,playerCount){
   const venues=row.venues||[];
   return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,
-    host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),
+    host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),regClosed:!!row.reg_closed,
     visibility:row.visibility||'public',noticeExtra:row.notice_extra||{}}}
 async function countStatus(tournamentId,status){
   const{count}=await sb.from('players').select('*',{count:'exact',head:true})
@@ -1699,6 +1741,21 @@ async function renderStageHome(){
   const stages=await loadAllStages(config.id);
   const stage=curActiveStage(stages);
   if(!stage){box.innerHTML='';return}
+  const{data:tRow}=await sb.from('tournaments').select('status,reg_closed,cap').eq('id',config.id).single();
+  config.regClosed=!!(tRow&&tRow.reg_closed);
+  const started=!!tRow&&(tRow.status==='live'||tRow.status==='done');
+  const btn=$('#stageAdvanceBtn');
+
+  renderJourneyBar(stages,tRow,started);
+  renderRegCard(tRow);
+
+  if(!started){
+    box.innerHTML=`<div class="card" style="text-align:center;padding:22px 20px">
+      <p class="sub">아직 시작 전입니다. 참가자·${stage.kind==='round'?'조편성을':'접수 현황을'} 확인하고 시작하세요.</p>
+    </div>`;
+    if(btn){btn.textContent=`${stage.name} 시작하기`;btn.onclick=()=>openStageStartSheet(stage)}
+    return}
+
   if(stage.kind==='period'){
     const total=(stage.course_pars||[]).length||ROUNDS;
     const{data:plRows}=await sb.from('plays').select('player_id,course_no').eq('stage_id',stage.id);
@@ -1719,8 +1776,66 @@ async function renderStageHome(){
     </div>`}
   const openIdx=stages.findIndex(s=>s.status==='open');
   const hasNext=openIdx>=0&&openIdx+1<stages.length;
-  const btn=$('#stageAdvanceBtn');
-  if(btn)btn.textContent=hasNext?`${stage.name} 마감하고 ${stages[openIdx+1].name} 시작`:'결과 · 시상 확정하기'}
+  if(btn){btn.onclick=()=>openStageSheet();btn.textContent=hasNext?`${stage.name} 마감하고 ${stages[openIdx+1].name} 시작`:'결과 · 시상 확정하기'}}
+function journeyStepHTML(label,sub,badge,badgeClosed,cur,done){
+  return`<div class="js ${cur?'cur':done?'done':''}"><b>${label}</b>${badge?`<span class="bd ${badgeClosed?'closed':''}">${badge}</span>`:`<span>${sub||''}</span>`}</div>`}
+function renderJourneyBar(stages,tRow,started){
+  const box=$('#journeyBar');if(!box)return;
+  const finished=!!tRow&&tRow.status==='done';
+  const parts=[journeyStepHTML('접수',null,config.regClosed?'마감':'접수중',config.regClosed,!started,started)];
+  stages.forEach(s=>{
+    const sub=s.status==='done'?'완료':(s.status==='open'&&started)?'진행 중':'대기';
+    parts.push(journeyStepHTML(s.name,sub,null,false,started&&s.status==='open',s.status==='done'))});
+  parts.push(journeyStepHTML('종료',finished?'완료':'—',null,false,false,finished));
+  box.innerHTML=`<div class="jbar">${parts.join('<span class="jarr">›</span>')}</div>`}
+function renderRegCard(tRow){
+  const box=$('#regCard');if(!box)return;
+  const cap=(tRow&&tRow.cap)||config.cap;
+  box.innerHTML=`<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><b style="font-size:15.5px">참가 접수</b></div>
+    <div style="display:flex;gap:18px;margin-bottom:14px">
+      <div><b class="num" style="font-size:22px;color:var(--main-deep)">${players.length}<small style="font-size:13px;font-weight:600;color:var(--muted)">/${cap}</small></b><span style="font-size:11.5px;color:var(--muted);display:block">신청 / 정원</span></div>
+      <div><b class="num" style="font-size:22px;color:var(--main-deep)">${waitlist.length}</b><span style="font-size:11.5px;color:var(--muted);display:block">대기</span></div>
+    </div>
+    <button class="btn full" style="background:${config.regClosed?'var(--main-soft)':'#FBE9E4'};color:${config.regClosed?'var(--main-deep)':'#C4523A'}" onclick="${config.regClosed?'reopenRegistration()':'openRegCloseSheet()'}">${config.regClosed?'접수 재개':'접수 마감하기'}</button>
+  </div>`}
+function openStageStartSheet(stage){
+  let html=`<p class="sheetli"><b>✓</b><span>참가자 ${players.length}명 등록됨</span></p>`;
+  if(stage.kind==='round'){
+    const doneG=groups.length&&groups.every(g=>g.length>0);
+    html+=doneG
+      ?`<p class="sheetli"><b>✓</b><span>조편성 완료(${groups.length}개 조)</span></p>`
+      :`<p class="sheetli warn"><b>!</b><span>조편성이 아직 안 됐어요 — 참가자 탭에서 먼저 조편성하는 것을 권장합니다</span></p>`}
+  html+=`<p class="sheetli"><b>✓</b><span>시작 후 스코어 탭에서 점수를 입력하면 대회가 진행 상태로 전환됩니다</span></p>`;
+  $('#stageStartTitle').textContent=`${stage.name}을 시작할까요?`;
+  $('#stageStartList').innerHTML=html;
+  $('#stageStartOv').classList.add('on')}
+function closeStageStart(){$('#stageStartOv').classList.remove('on')}
+function confirmStageStart(){
+  closeStageStart();
+  enterMgmt('mgScore');
+  toast('스코어 탭에서 점수를 입력하면 대회가 시작됩니다')}
+function openRegCloseSheet(){
+  $('#regCloseCountLine').textContent=`현재 신청 ${players.length}명 · 대기 ${waitlist.length}명이 확정 명단이 됩니다`;
+  $('#regCloseOv').classList.add('on')}
+function closeRegCloseSheet(){$('#regCloseOv').classList.remove('on')}
+async function confirmRegClose(){
+  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:true});
+  if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}
+  config.regClosed=true;
+  const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=true;
+  closeRegCloseSheet();
+  await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:'접수 마감'});
+  renderStageHome();
+  toast('접수를 마감했습니다')}
+async function reopenRegistration(){
+  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:false});
+  if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}
+  config.regClosed=false;
+  const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=false;
+  await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:'접수 재개'});
+  renderStageHome();
+  toast('접수를 재개했습니다')}
 function cutCompetitors(doneArr,cut,margin){
   if(!cut||!doneArr.length)return null;
   let n=0;
@@ -2067,11 +2182,12 @@ async function loadMyTournament(tournamentId){
   judgeStageKind=boardStageKind;stageRecordMode=boardStageRecordMode;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
-  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,access_code').eq('id',tournamentId).single();
+  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,access_code,reg_closed,status').eq('id',tournamentId).single();
   if(tRow){config.tie=tRow.tie_rule||config.tie;config.fields=tRow.fields||config.fields;
     config.awards=tRow.awards||config.awards;config.type=tRow.type||config.type;
     config.dateS=tRow.date_start;config.dateE=tRow.date_end;
-    config.visibility=tRow.visibility||'public';config.accessCode=tRow.access_code||''}
+    config.visibility=tRow.visibility||'public';config.accessCode=tRow.access_code||'';
+    config.regClosed=!!tRow.reg_closed;config.tStatus=tRow.status}
   const{data:wRows}=await sb.from('players').select('*').eq('tournament_id',tournamentId).eq('status','wait');
   waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
     club:r.club||'',region:r.region||'',nick:r.nick||''}));
@@ -2925,9 +3041,14 @@ async function openApply(id){
   $('#apEligText').textContent=restricted?(elig.text||'참가 조건이 있습니다'):'';
   $('#apEligCheck').checked=false;
   renderSingleFields();
-  $('#applyForm').style.display='block';$('#applyDone').style.display='none';
-  $('#apPaste').value='';$('#apPreview').style.display='none';$('#apClub').value='';
-  setApplyMode('single');
+  if(t.regClosed){
+    $('#applyForm').style.display='none';$('#applyDone').style.display='none';
+    $('#apClosedCard').style.display='block'
+  }else{
+    $('#apClosedCard').style.display='none';
+    $('#applyForm').style.display='block';$('#applyDone').style.display='none';
+    $('#apPaste').value='';$('#apPreview').style.display='none';$('#apClub').value='';
+    setApplyMode('single')}
   navTo('Apply');window.scrollTo(0,0)}
 function eligibilityOk(){
   if(!$('#apEligCard')||$('#apEligCard').style.display==='none')return true;
