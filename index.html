@@ -605,6 +605,12 @@ tr:last-child td{border-bottom:none}
             </select>
             <label class="fl">골프장 (코스별 · 최대 4개) </label>
             <div id="venueBox"></div>
+            <label class="fl">기록 방식</label>
+            <div class="optrow" id="recordModeRow1">
+              <div class="opt on" onclick="setRecordMode(1,'hole')">홀별 기록</div>
+              <div class="opt" onclick="setRecordMode(1,'total')">총점만</div>
+            </div>
+            <p class="sub" id="recordModeNote1" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
           </div>
           <div id="screenFields" style="display:none">
             <label class="fl">진행 코스 수 · 최대 6개</label>
@@ -653,6 +659,12 @@ tr:last-child td{border-bottom:none}
             </select>
             <label class="fl">골프장 (코스별)</label>
             <div id="venueBox2"></div>
+            <label class="fl">기록 방식</label>
+            <div class="optrow" id="recordModeRow2">
+              <div class="opt on" onclick="setRecordMode(2,'hole')">홀별 기록</div>
+              <div class="opt" onclick="setRecordMode(2,'total')">총점만</div>
+            </div>
+            <p class="sub" id="recordModeNote2" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
           </div>
           <div id="screenFields2" style="display:none">
             <label class="fl">진행 코스 수</label>
@@ -697,6 +709,12 @@ tr:last-child td{border-bottom:none}
             </select>
             <label class="fl">골프장 (코스별)</label>
             <div id="venueBox3"></div>
+            <label class="fl">기록 방식</label>
+            <div class="optrow" id="recordModeRow3">
+              <div class="opt on" onclick="setRecordMode(3,'hole')">홀별 기록</div>
+              <div class="opt" onclick="setRecordMode(3,'total')">총점만</div>
+            </div>
+            <p class="sub" id="recordModeNote3" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
           </div>
           <div id="screenFields3" style="display:none">
             <label class="fl">진행 코스 수</label>
@@ -718,6 +736,7 @@ tr:last-child td{border-bottom:none}
           <label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120">
           <label class="fl">동점 처리</label>
           <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select>
+          <p class="sub" id="tieNote" style="display:none;margin-top:6px">'총점만' 단계에는 홀 단위 기록이 없어 코스 카운트백을 쓸 수 없어요 — 이 대회는 연장전/연장자/별도선정 중에서 골라주세요.</p>
         </div>
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
@@ -1291,13 +1310,14 @@ let coursePars=[];
 let coursePars2=[];
 let coursePars3=[];
 const parAt=gi=>{const r=Math.floor(gi/18);return (coursePars[r]||PRESET66)[gi%18]};
+const courseParTotal=c=>Array.isArray(c)?c.reduce((a,b)=>a+b,0):(+c||0);
 const isOut=p=>p.st==='wd'||p.st==='dq';
 let jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
 const config={created:false,type:'field',stageCount:1,name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:120,
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
-  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''}};
+  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''},recordModes:{1:'hole',2:'hole',3:'hole'}};
 const user={loggedIn:false,name:'',phone:'',id:null};
 let staff=[
   {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
@@ -1363,7 +1383,8 @@ window.addEventListener('popstate',()=>{
 function navBack(){if(navStack.length)history.back()}
 function backToOwner(){navBack()}
 function openJudge(i){
-  if(!groups.length){toast('참가자 등록·조편성 후 이용할 수 있습니다');return}
+  const needsGroups=judgeStageKind==='round'&&stageRecordMode!=='total';
+  if(needsGroups&&!groups.length){toast('참가자 등록·조편성 후 이용할 수 있습니다');return}
   curStaff=Math.min(i,judges().length-1);
   navTo('Judge')}
 async function openBoard(){navTo('Board');await loadBoardData(config.id);subscribeBoardRealtime(config.id)}
@@ -1383,7 +1404,7 @@ let curMgTab='mgHome';
 function mgShow(id){
   curMgTab=id;
   if(id!=='mgResult'&&pastStageSnap){
-    ({players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind}=pastStageSnap);
+    ({players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind,stageRecordMode,boardStageRecordMode}=pastStageSnap);
     pastStageSnap=null}
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
@@ -1428,8 +1449,11 @@ function playersSegShow(seg){
   if(seg==='pWait')renderWait()}
 function enterPlayersSeg(seg){enterMgmt('mgPlayers');playersSegShow(seg)}
 function renderGroupsSeg(){
-  const disabled=judgeStageKind==='period';
+  const disabled=judgeStageKind==='period'||stageRecordMode==='total';
   $('#groupsDisabledNote').style.display=disabled?'block':'none';
+  if(disabled)$('#groupsDisabledNote').innerHTML=judgeStageKind==='period'
+    ?'<p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>'
+    :'<p class="sub" style="margin:0">이 단계는 <b>총점만(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>';
   $('#groupsEmpty').style.display=(!disabled&&!groups.length)?'block':'none';
   $('#groupsFormed').style.display=(!disabled&&groups.length>0)?'block':'none';
   if(disabled)return;
@@ -1466,10 +1490,10 @@ async function renderScoreTab(){
     return}
 
   const box=$('#mgScoreBody');if(!box)return;
-  if(judgeStageKind==='period'){
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
     $('#scoreModeSeg').style.display='none';
     box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
-      <p class="sub" style="margin-bottom:16px">기간형 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
+      <p class="sub" style="margin-bottom:16px">${judgeStageKind==='period'?'기간형':'총점만'} 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
       <button class="btn full big" onclick="openJudge(0)">기록 입력 화면 열기</button>
     </div>`;
     return}
@@ -1718,7 +1742,7 @@ async function renderOpsStats(){
   const stages=await loadAllStages(config.id);
   const stage=curActiveStage(stages);
   const cut=stage&&stage.advance_cut;
-  if(judgeStageKind==='period'){
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
     const done=periodStandings().filter(s=>!s.out&&s.tot!=null);
     const competing=cutCompetitors(done,cut,2);
     box.innerHTML=`
@@ -1756,7 +1780,7 @@ async function openStageSheet(){
   const nextStage=stages[openIdx+1];
   const cut=curStage.advance_cut;
   let done,advanced=[];
-  if(judgeStageKind==='period'){
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
     done=periodStandings().filter(s=>!s.out&&s.tot!=null);
     if(cut&&cut.total)advanced=done.slice(0,cut.total).map(s=>s.p);
     else if(cut&&(cut.m||cut.f)){
@@ -1811,24 +1835,25 @@ async function viewStageResult(stageId){
   const stages=await loadAllStages(config.id);
   const stage=stages.find(s=>s.id===stageId);
   if(!stage)return;
-  const snap={players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind};
+  const snap={players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind,stageRecordMode,boardStageRecordMode};
 
-  if(stage.kind==='period'){
+  if(stage.kind==='period'||stage.record_mode==='total'){
     const{data:plRows}=await sb.from('plays').select('player_id,course_no,strokes_total').eq('stage_id',stageId);
     const ids=[...new Set((plRows||[]).map(r=>r.player_id))];
     const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
     const bestMap={};
     (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     ROUNDS=(stage.course_pars||[]).length||1;coursePars=stage.course_pars||[];
-    PAR_TOT=coursePars.reduce((a,b)=>a+(+b||0),0);
+    PAR_TOT=coursePars.reduce((a,b)=>a+courseParTotal(b),0);
     players=(pRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
       region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,best:bestMap[r.id]||{}}));
-    groups=[];judgeStageKind='period';boardStageKind='period'
+    groups=[];judgeStageKind=stage.kind;boardStageKind=stage.kind;
+    stageRecordMode=stage.record_mode||'hole';boardStageRecordMode=stage.record_mode||'hole'
   }else{
     const{data:sRows}=await sb.from('scores').select('player_id,hole_index,strokes').eq('stage_id',stageId);
     const ids=[...new Set((sRows||[]).map(r=>r.player_id))];
     const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
-    judgeStageKind='round';boardStageKind='round';
+    judgeStageKind='round';boardStageKind='round';stageRecordMode='hole';boardStageRecordMode='hole';
     ROUNDS=(stage.course_pars||[]).length||1;HOLES=ROUNDS*18;coursePars=stage.course_pars||[];
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
     const scoreMap={};(sRows||[]).forEach(r=>{(scoreMap[r.player_id]=scoreMap[r.player_id]||{})[r.hole_index]=r.strokes});
@@ -1936,6 +1961,7 @@ async function loadMyTournament(tournamentId){
   await loadBoardData(tournamentId,true);
   if(!config.id)return false;
   config.created=true;
+  judgeStageKind=boardStageKind;stageRecordMode=boardStageRecordMode;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
   const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,access_code').eq('id',tournamentId).single();
@@ -1975,7 +2001,7 @@ async function logout(){
   config.created=false;config.id=null;config.name='';config.hostOrg='';config.place='';
   config.visibility='public';config.accessCode='';
   config.eligibility={type:'open',text:''};config.prizeTotal='';config.prizes=[];
-  config.noticeExtra={contact:'',fee:'',rules:''};
+  config.noticeExtra={contact:'',fee:'',rules:''};config.recordModes={1:'hole',2:'hole',3:'hole'};
   players=[];groups=[];staff=[];waitlist=[];
   $('#authStep1').style.display='block';$('#authStep2').style.display='none';$('#authStep3').style.display='none';
   $('#wizBox').style.display='none';
@@ -2371,12 +2397,21 @@ async function renderEditCourse(){
       </div>`;
     return}
   editCoursePars=JSON.parse(JSON.stringify(editStage.course_pars&&editStage.course_pars.length?editStage.course_pars:coursePars));
+  editRecordMode=null;
   const stages=await loadAllStages(config.id);
   const hasNext=stages.some(s=>s.seq===editStage.seq+1);
   const cut=editStage.advance_cut||{total:24};
+  const isRound=editStage.kind==='round';
   box.innerHTML=`
     <button class="btn ghost sm" onclick="editInfoBack()">← 목록으로</button>
     <p class="sub" style="margin:10px 0">'${editStage.name}' 단계 — 코스 개수·코스명은 여기서 바꿀 수 없어요(코스명은 [장소] 메뉴에서).</p>
+    ${isRound?`<div class="card">
+      <label class="fl" style="margin-top:0">기록 방식</label>
+      <div class="optrow" id="eiRecordModeRow">
+        <div class="opt ${editStage.record_mode!=='total'?'on':''}" onclick="setEditRecordMode('hole')">홀별 기록</div>
+        <div class="opt ${editStage.record_mode==='total'?'on':''}" onclick="setEditRecordMode('total')">총점만</div>
+      </div>
+    </div>`:''}
     <div class="card">
       ${editCoursePars.map((c,i)=>`
         <label class="fl" style="margin-top:${i===0?0:'14px'}">${i+1}코스 파 (합계 <span class="num" id="eiParSum${i}">${c.reduce((a,b)=>a+b,0)}</span>)</label>
@@ -2403,6 +2438,10 @@ function drawEditParGrid(i){
   $('#eiParSum'+i).textContent=editCoursePars[i].reduce((a,b)=>a+b,0)}
 function cycleEditPar(i,h){
   editCoursePars[i][h]=editCoursePars[i][h]>=5?3:editCoursePars[i][h]+1;drawEditParGrid(i)}
+let editRecordMode=null;
+function setEditRecordMode(mode){
+  editRecordMode=mode;
+  document.querySelectorAll('#eiRecordModeRow .opt').forEach(o=>o.classList.toggle('on',(o.textContent==='홀별 기록'?'hole':'total')===mode))}
 async function saveEditCourse(){
   const stages=await loadAllStages(config.id);
   const hasNext=stages.some(s=>s.seq===editStage.seq+1);
@@ -2412,13 +2451,18 @@ async function saveEditCourse(){
     cut=mode==='gender'
       ?{m:Math.max(1,+$('#eiCutM').value||12),f:Math.max(1,+$('#eiCutF').value||12)}
       :{total:Math.max(2,+$('#eiCutTotal').value||24)}}
-  openWarnEdit(`'${editStage.name}' 단계의 코스 파${hasNext?'·진출 컷':''}가 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
-    const{error}=await sb.from('stages').update({course_pars:editCoursePars,advance_cut:cut}).eq('id',editStage.id);
+  const newRecordMode=editStage.kind==='round'?(editRecordMode||editStage.record_mode||'hole'):editStage.record_mode;
+  const modeChanged=newRecordMode!==(editStage.record_mode||'hole');
+  openWarnEdit(`'${editStage.name}' 단계의 코스 파${hasNext?'·진출 컷':''}${modeChanged?'·기록 방식':''}이(가) 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
+    const{error}=await sb.from('stages').update({course_pars:editCoursePars,advance_cut:cut,record_mode:newRecordMode}).eq('id',editStage.id);
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
-    editStage.course_pars=editCoursePars;editStage.advance_cut=cut;
+    editStage.course_pars=editCoursePars;editStage.advance_cut=cut;editStage.record_mode=newRecordMode;
     const active=curActiveStage(stages);
-    if(active&&editStage.id===active.id){coursePars=editCoursePars;PAR_TOT=editCoursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
-    await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`'${editStage.name}' 단계 코스 파${hasNext?'·진출 컷':''} 수정`});
+    if(active&&editStage.id===active.id){
+      coursePars=editCoursePars;PAR_TOT=editCoursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
+      judgeStageKind=editStage.kind;boardStageKind=editStage.kind;
+      stageRecordMode=newRecordMode;boardStageRecordMode=newRecordMode}
+    await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`'${editStage.name}' 단계 코스 파${hasNext?'·진출 컷':''}${modeChanged?'·기록 방식':''} 수정`});
     editInfoBack();toast('코스 구성을 저장했습니다')})}
 
 /* ================= auth ================= */
@@ -2509,6 +2553,20 @@ function toggleCutMode(which){
   const m=$('#fCutMode'+suf).value;
   $('#cutTotalBox'+suf).style.display=m==='total'?'block':'none';
   $('#cutGenderBox'+suf).style.display=m==='gender'?'flex':'none'}
+function setRecordMode(seq,mode){
+  config.recordModes[seq]=mode;
+  document.querySelectorAll(`#recordModeRow${seq} .opt`).forEach(o=>o.classList.toggle('on',(o.textContent==='홀별 기록'?'hole':'total')===mode));
+  $('#recordModeNote'+seq).style.display=mode==='total'?'block':'none';
+  updateTieOptions()}
+function updateTieOptions(){
+  const sel=$('#fTie');if(!sel)return;
+  const anyTotal=Object.values(config.recordModes).some(m=>m==='total');
+  const cbOpt=[...sel.options].find(o=>o.textContent.includes('카운트백'));
+  if(!cbOpt)return;
+  cbOpt.disabled=anyTotal;
+  cbOpt.hidden=anyTotal;
+  if(anyTotal&&sel.value===cbOpt.value)sel.value='연장전 (서든데스)';
+  $('#tieNote').style.display=anyTotal?'block':'none'}
 const SCREEN_VENUE_DEFAULTS=['1코스','2코스','3코스','4코스','5코스','6코스'];
 function renderScreenVenues(){
   const n=+$('#fScreenCourses').value;
@@ -2897,7 +2955,7 @@ async function createTournament(){
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
     stageVenues=[...document.querySelectorAll('.venueIn')].map((v,i)=>v.value.trim()||`${i+1}코스`);
     stageCoursePars=coursePars;stageKind='round';stageUseGroups=true}
-  judgeStageKind=stageKind;
+  judgeStageKind=stageKind;stageRecordMode=config.recordModes[1];
   config.rounds=ROUNDS;config.venues=stageVenues;
   const uv=[...new Set(stageVenues)];
   config.place=uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:'');
@@ -2925,7 +2983,7 @@ async function createTournament(){
     tournament_id:tournamentId,seq:1,name:config.stageCount>=2?'예선':'본선',kind:stageKind,
     date_start:config.dateS,date_end:config.dateE,venues:stageVenues,
     course_pars:stageCoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-    advance_cut:stage1Cut,status:'open'});
+    advance_cut:stage1Cut,status:'open',record_mode:config.recordModes[1]});
   if(stErr)console.error(stErr);
 
   if(config.stageCount>=2){
@@ -2942,7 +3000,7 @@ async function createTournament(){
       tournament_id:tournamentId,seq:2,name:config.stageCount===3?'본선':'결승',kind:stageKind,
       date_start:dateS2,date_end:dateE2,venues:stage2Venues,
       course_pars:stage2CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-      advance_cut:stage2Cut,status:'waiting'});
+      advance_cut:stage2Cut,status:'waiting',record_mode:config.recordModes[2]});
     if(st2Err)console.error(st2Err)}
 
   if(config.stageCount===3){
@@ -2958,7 +3016,7 @@ async function createTournament(){
       tournament_id:tournamentId,seq:3,name:'결승',kind:stageKind,
       date_start:dateS3,date_end:dateE3,venues:stage3Venues,
       course_pars:stage3CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-      advance_cut:null,status:'waiting'});
+      advance_cut:null,status:'waiting',record_mode:config.recordModes[3]});
     if(st3Err)console.error(st3Err)}
 
   if(staff.length){
@@ -3208,7 +3266,7 @@ const gcardStyle=document.createElement('style');
 gcardStyle.textContent='';document.head.appendChild(gcardStyle);
 
 /* ================= 심판 토큰 링크 (?j=token) ================= */
-let judgeTokenMode=false,judgeStageKind='round',peSelectedPlayer=null;
+let judgeTokenMode=false,judgeStageKind='round',stageRecordMode='hole',peSelectedPlayer=null;
 async function enterViaJudgeToken(token){
   const{data:s,error:sErr}=await sb.from('staff').select('*').eq('token',token).single();
   if(sErr||!s){toast('유효하지 않은 링크입니다');return false}
@@ -3223,9 +3281,10 @@ async function enterViaJudgeToken(token){
   config.created=true;
   const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
   judgeStageKind=(stage&&stage.kind)||'round';
-  if(judgeStageKind==='period'){
+  stageRecordMode=(stage&&stage.record_mode)||'hole';
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
     ROUNDS=stageCoursePars.length||1;HOLES=0;coursePars=stageCoursePars;
-    PAR_TOT=stageCoursePars.reduce((a,b)=>a+(+b||0),0)}
+    PAR_TOT=stageCoursePars.reduce((a,b)=>a+courseParTotal(b),0)}
   else{
     ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
@@ -3234,12 +3293,23 @@ async function enterViaJudgeToken(token){
     .eq('current_stage',stage?stage.seq:1)
     .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return false}
-  players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
-    region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
-    group:r.group_no!=null?r.group_no:-1,scores:Array(HOLES).fill(null)}));
-  const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
-  groups=Array.from({length:maxG+1},()=>[]);
-  players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
+    let plQuery=sb.from('plays').select('player_id,course_no,strokes_total').eq('tournament_id',t.id);
+    if(judgeStageKind==='round')plQuery=plQuery.eq('stage_id',stage.id);
+    const{data:plRows}=await plQuery;
+    const bestMap={};
+    (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
+    players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+      region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+      group:r.group_no!=null?r.group_no:-1,best:bestMap[r.id]||{}}));
+    groups=[]
+  }else{
+    players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+      region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+      group:r.group_no!=null?r.group_no:-1,scores:Array(HOLES).fill(null)}));
+    const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
+    groups=Array.from({length:maxG+1},()=>[]);
+    players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)})}
 
   staff=[{id:s.id,name:s.name,phone:s.phone,duty:s.duty,canScore:s.can_score,token:s.token,link_opened_at:s.link_opened_at}];
   curStaff=0;jRound=0;curHole=0;curGroup=0;
@@ -3274,7 +3344,7 @@ function renderJudge(){
   $('#jRoundChips').innerHTML=Array.from({length:ROUNDS},(_,r)=>
     `<button class="chip ${r===jRound?'on':''}" onclick="jRound=${r};curHole=0;renderJudge()">${r+1}코스 · ${(config.venues[r]||'').replace(' 파크골프장','')}</button>`).join('');
 
-  if(judgeStageKind==='period'){
+  if(judgeStageKind==='period'||stageRecordMode==='total'){
     $('#jGroupLabel').style.display='none';$('#jGroupChips').style.display='none';
     $('#jHoleCard').style.display='none';$('#holeNextBtn').style.display='none';$('#scPhotoCard').style.display='none';
     $('#periodEntryCard').style.display='block';
@@ -3322,6 +3392,8 @@ async function submitPlayEntry(){
   const store=$('#peStore').value.trim()||null;
   const token=currentJudgeToken();
   if(!token){toast('심판 인증 정보가 없습니다');return}
+  const p=players.find(x=>x.id===peSelectedPlayer);
+  const prevBest=p&&p.best?p.best[jRound]:null;
   let evidenceUrl=null;
   if(peSelectedPhotoFile){
     toast('사진 업로드 중…');
@@ -3331,10 +3403,16 @@ async function submitPlayEntry(){
     else{const{data:pub}=sb.storage.from('scorecards').getPublicUrl(path);evidenceUrl=pub.publicUrl}}
   const{error}=await sb.rpc('submit_play',{p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store,p_evidence_url:evidenceUrl});
   if(error){toast('저장 실패: '+error.message);console.error(error);return}
-  const p=players.find(x=>x.id===peSelectedPlayer);
   addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}${evidenceUrl?' · 사진 첨부':''}`);
   $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
-  toast('기록이 저장되었습니다');
+  if(judgeStageKind==='period'){
+    if(p){p.best=p.best||{};if(prevBest==null||strokes<prevBest)p.best[jRound]=strokes}
+    if(prevBest==null)toast('기록이 저장되었습니다');
+    else if(strokes<prevBest)toast(`베스트 경신! ${prevBest}→${strokes}`);
+    else toast(`기존 베스트(${prevBest}) 유지 — 이번 기록도 보관`)
+  }else{
+    if(p){p.best=p.best||{};p.best[jRound]=strokes}
+    toast('기록이 저장되었습니다')}
   await refreshMyTournamentStatus()}
 async function loadScorecardPhoto(){
   const box=$('#scPhotoPreview');if(!box)return;
@@ -3461,7 +3539,7 @@ function standings(pool=players){
   return act.concat(outs)}
 
 /* ================= 전광판 ================= */
-let boardStageKind='round',boardActiveStage=null,boardStages=[];
+let boardStageKind='round',boardStageRecordMode='hole',boardActiveStage=null,boardStages=[];
 let boardGateId=null;
 async function submitBoardGate(){
   if(!boardGateId)return;
@@ -3489,6 +3567,7 @@ async function loadBoardData(tournamentId,trusted){
   const stage=await loadPrimaryStage(tournamentId);
   boardActiveStage=stage;
   boardStageKind=(stage&&stage.kind)||'round';
+  boardStageRecordMode=(stage&&stage.record_mode)||'hole';
   config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;
   config.venues=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
   config.cap=t.cap;config.created=true;
@@ -3500,11 +3579,15 @@ async function loadBoardData(tournamentId,trusted){
     .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return}
 
-  if(boardStageKind==='period'){
+  if(boardStageKind==='period'||boardStageRecordMode==='total'){
     ROUNDS=stageCoursePars.length||1;HOLES=0;coursePars=stageCoursePars;
-    PAR_TOT=stageCoursePars.reduce((a,b)=>a+(+b||0),0);
-    $('#boardSub').textContent=`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`;
-    const{data:plRows}=await sb.from('plays').select('player_id,course_no,strokes_total').eq('tournament_id',tournamentId);
+    PAR_TOT=stageCoursePars.reduce((a,b)=>a+courseParTotal(b),0);
+    $('#boardSub').textContent=boardStageKind==='period'
+      ?`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`
+      :`총점만 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`;
+    let plQuery=sb.from('plays').select('player_id,course_no,strokes_total').eq('tournament_id',tournamentId);
+    if(boardStageKind==='round')plQuery=plQuery.eq('stage_id',stage.id);
+    const{data:plRows}=await plQuery;
     const bestMap={};
     (plRows||[]).forEach(r=>{
       bestMap[r.player_id]=bestMap[r.player_id]||{};
@@ -3555,8 +3638,13 @@ function subscribeBoardRealtime(tournamentId){
       const p=players.find(x=>x.id===row.player_id);
       if(!p)return;
       p.best=p.best||{};
-      const cur=p.best[row.course_no];
-      if(cur==null||row.strokes_total<cur)p.best[row.course_no]=row.strokes_total;
+      if(boardStageKind==='round'){
+        // 총점만 라운드 단계는 코스당 1행만 유지(삭제 후 재삽입) — 최신 값을 그대로 반영
+        if(payload.eventType==='DELETE')delete p.best[row.course_no];
+        else p.best[row.course_no]=row.strokes_total
+      }else{
+        const cur=p.best[row.course_no];
+        if(cur==null||row.strokes_total<cur)p.best[row.course_no]=row.strokes_total}
       renderBoard();renderResult()})
     .subscribe()}
 function vShort(r){return (config.venues[r]||`${r+1}코스`).replace(' 파크골프장','').slice(0,5)}
@@ -3590,7 +3678,7 @@ function periodStandings(pool=players){
     const bestArr=Array.from({length:ROUNDS},(_,c)=>p.best&&p.best[c]!=null?p.best[c]:null);
     const completed=bestArr.filter(v=>v!=null).length;
     const sumSoFar=bestArr.reduce((a,b)=>a+(b||0),0);
-    const parSoFar=bestArr.reduce((a,b,c)=>a+(b!=null?(coursePars[c]||0):0),0);
+    const parSoFar=bestArr.reduce((a,b,c)=>a+(b!=null?courseParTotal(coursePars[c]):0),0);
     const tot=completed===ROUNDS?sumSoFar:null;
     const topar=completed>0?sumSoFar-parSoFar:null;
     return{p,bestArr,completed,tot,sumSoFar,topar}});
@@ -3631,7 +3719,7 @@ function renderPeriodBoard(){
       <div class="thru ${done?'done':''}">${thruCell}</div>
       <div class="total">${s.completed?s.sumSoFar:'—'}</div></div>`}).join('')}
 function renderBoard(){
-  if(boardStageKind==='period'){renderPeriodBoard();return}
+  if(boardStageKind==='period'||boardStageRecordMode==='total'){renderPeriodBoard();return}
   const box=$('#brows');
   if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
   updateBoardCtl();
@@ -3663,8 +3751,10 @@ function fullBoard(){const el=$('#boardShell');
 
 /* ================= 결과 ================= */
 function renderResult(){
-  if(boardStageKind==='period'){
-    $('#resultSub').textContent='기간형 대회의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.';
+  if(boardStageKind==='period'||boardStageRecordMode==='total'){
+    $('#resultSub').textContent=boardStageKind==='period'
+      ?'기간형 대회의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.'
+      :'총점만 단계의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.';
     $('#podium').innerHTML='';
     return}
   const st=standings();
