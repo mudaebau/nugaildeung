@@ -404,6 +404,7 @@ tr:last-child td{border-bottom:none}
 .brow .thru b{font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;color:#DCE9F5;margin-right:2px}
 .brow .thru.done{color:#8FE0C8;font-weight:700;font-size:16px}
 .brow .total{font-family:'Oswald',sans-serif;font-size:25px;font-weight:700;color:#fff;text-align:right}
+.brow .rsc{font-family:'Oswald',sans-serif;font-size:17px;font-weight:500;color:#B9D0E6;text-align:right}
 .brow.top1{background:linear-gradient(90deg,rgba(247,207,92,.22),transparent 75%);border-left:5px solid var(--sun)}
 .brow.top1 .rank,.brow.top1 .total{color:var(--sun)}
 .brow.top1 .name{font-weight:700}
@@ -1095,6 +1096,7 @@ tr:last-child td{border-bottom:none}
       <button class="btn ghost" id="autoRotateBtn" onclick="toggleAutoRotate()" style="display:none">🔁 자동 순환</button>
       <div id="boardModeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto"></div>
     </div>
+    <div id="boardScopeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
     <div class="boardshell" id="boardGate" style="display:none;text-align:center;padding:60px 24px">
       <h2 style="color:#fff;margin-bottom:8px">🔒 비공개 대회</h2>
       <p style="color:#9FBEDC;margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
@@ -3524,9 +3526,10 @@ function sums(p){
   p.scores.forEach((s,i)=>{if(s!=null){const r=Math.floor(i/18);rt[r]+=s;rc[r]++;rp[r]+=parAt(i)}});
   const tot=rt.reduce((a,b)=>a+b,0),thru=rc.reduce((a,b)=>a+b,0),par=rp.reduce((a,b)=>a+b,0);
   return{rt,rc,rp,tot,thru,topar:tot-par}}
-function standings(pool=players){
+function standings(pool=players,courseIdx=-1){
   const arr=pool.map(p=>{
     const s=sums(p);
+    if(courseIdx>=0)return{p,rt:s.rt,rc:s.rc,tot:s.rt[courseIdx],thru:s.rc[courseIdx],topar:s.rt[courseIdx]-s.rp[courseIdx],all:s};
     return{p,rt:s.rt,rc:s.rc,tot:s.tot,thru:s.thru,topar:s.topar,all:s}});
   const act=arr.filter(x=>!isOut(x.p)),outs=arr.filter(x=>isOut(x.p)).map(x=>({...x,out:true}));
   act.sort((x,y)=>{
@@ -3649,14 +3652,28 @@ function subscribeBoardRealtime(tournamentId){
     .subscribe()}
 function vShort(r){return (config.venues[r]||`${r+1}코스`).replace(' 파크골프장','').slice(0,5)}
 const BOARD_COLS='0.6fr 3fr 1fr 1fr 1fr';
-let boardGenderFilter='all',boardAutoRotate=false,boardAutoTimer=null;
+let boardGenderFilter='all',boardScopeFilter=-1,boardAutoRotate=false,boardAutoTimer=null;
 function boardGenderChipsHTML(){
   if(!config.fields.sex)return'';
   return[['all','전체'],['남','남자부'],['여','여자부']].map(([g,label])=>
     `<button class="bchip ${boardGenderFilter===g?'on':''}" onclick="setBoardGenderFilter('${g}')">${label}</button>`).join('')}
 function setBoardGenderFilter(g){boardGenderFilter=g;renderBoard()}
+function boardScopeChipsHTML(){
+  if(ROUNDS<2)return'';
+  let h=`<button class="bchip ${boardScopeFilter===-1?'on':''}" onclick="setBoardScopeFilter(-1)">종합</button>`;
+  for(let r=0;r<ROUNDS;r++)h+=`<button class="bchip ${boardScopeFilter===r?'on':''}" onclick="setBoardScopeFilter(${r})">${r+1}코스 ${vShort(r)}</button>`;
+  return h}
+function setBoardScopeFilter(r){boardScopeFilter=r;renderBoard()}
+function boardCols(showSubtotal){
+  return showSubtotal?`0.5fr 2.2fr ${Array(ROUNDS).fill('0.7fr').join(' ')} 1fr 1fr 1fr`:BOARD_COLS}
+function boardHeadHTML(showSubtotal){
+  return showSubtotal
+    ?`<div>순위</div><div>선수</div>${Array.from({length:ROUNDS},(_,r)=>`<div style="text-align:right">${r+1}C</div>`).join('')}<div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`
+    :`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`}
 function updateBoardCtl(){
+  if(boardScopeFilter>=ROUNDS)boardScopeFilter=-1;
   $('#boardModeChips').innerHTML=boardGenderChipsHTML();
+  $('#boardScopeChips').innerHTML=boardScopeChipsHTML();
   const rb=$('#autoRotateBtn');if(rb)rb.style.display=config.fields.sex?'inline-flex':'none'}
 function stopAutoRotate(){clearTimeout(boardAutoTimer);boardAutoTimer=null}
 function toggleAutoRotate(){
@@ -3673,7 +3690,7 @@ function startAutoRotate(){
     boardGenderFilter=seq[i][0];renderBoard();
     boardAutoTimer=setTimeout(()=>{i=(i+1)%seq.length;step()},seq[i][1])};
   step()}
-function periodStandings(pool=players){
+function periodStandings(pool=players,courseIdx=-1){
   const arr=pool.map(p=>{
     const bestArr=Array.from({length:ROUNDS},(_,c)=>p.best&&p.best[c]!=null?p.best[c]:null);
     const completed=bestArr.filter(v=>v!=null).length;
@@ -3681,63 +3698,93 @@ function periodStandings(pool=players){
     const parSoFar=bestArr.reduce((a,b,c)=>a+(b!=null?courseParTotal(coursePars[c]):0),0);
     const tot=completed===ROUNDS?sumSoFar:null;
     const topar=completed>0?sumSoFar-parSoFar:null;
+    if(courseIdx>=0){
+      const v=bestArr[courseIdx],cp=courseParTotal(coursePars[courseIdx]);
+      return{p,bestArr,completed,tot,sumSoFar,courseVal:v,courseTopar:v!=null?v-cp:null}}
     return{p,bestArr,completed,tot,sumSoFar,topar}});
   const act=arr.filter(x=>!isOut(x.p)),outs=arr.filter(x=>isOut(x.p)).map(x=>({...x,out:true}));
-  act.sort((x,y)=>{
-    if(x.completed===0&&y.completed===0)return 0;
-    if(x.completed===0)return 1;if(y.completed===0)return -1;
-    if(x.topar!==y.topar)return x.topar-y.topar;
-    if(x.sumSoFar!==y.sumSoFar)return x.sumSoFar-y.sumSoFar;
-    return y.p.age-x.p.age});
+  if(courseIdx>=0){
+    act.sort((x,y)=>{
+      if(x.courseVal==null&&y.courseVal==null)return 0;
+      if(x.courseVal==null)return 1;if(y.courseVal==null)return -1;
+      return x.courseVal-y.courseVal})
+  }else{
+    act.sort((x,y)=>{
+      if(x.completed===0&&y.completed===0)return 0;
+      if(x.completed===0)return 1;if(y.completed===0)return -1;
+      if(x.topar!==y.topar)return x.topar-y.topar;
+      if(x.sumSoFar!==y.sumSoFar)return x.sumSoFar-y.sumSoFar;
+      return y.p.age-x.p.age})}
   return act.concat(outs)}
 function renderPeriodBoard(){
   const box=$('#brows');
-  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
+  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';$('#boardScopeChips').innerHTML='';return}
   updateBoardCtl();
-  const bh=$('#bhead');bh.style.gridTemplateColumns=BOARD_COLS;
-  bh.innerHTML=`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`;
+  const showSubtotal=boardScopeFilter===-1&&ROUNDS>=2;
+  const cols=boardCols(showSubtotal);
+  const bh=$('#bhead');bh.style.gridTemplateColumns=cols;
+  bh.innerHTML=boardHeadHTML(showSubtotal);
   const pool=boardGenderFilter==='all'?players:players.filter(p=>p.sex===boardGenderFilter);
-  const st=periodStandings(pool);
+  const st=periodStandings(pool,boardScopeFilter);
+  let rankN=0;
+  if(boardScopeFilter>=0){
+    box.innerHTML=st.map((s,i)=>{
+      const tp=s.courseVal!=null?(s.courseTopar===0?'E':(s.courseTopar>0?'+':'')+s.courseTopar):'—';
+      const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FFB49E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
+        :`<div class="rank num">${s.courseVal!=null?++rankN:'·'}</div>`;
+      return`<div class="brow ${i===0&&s.courseVal!=null&&!s.out?'top1':''}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
+        ${rankCell}
+        <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
+        <div class="topar ${s.courseTopar<0?'minus':''}">${s.out?'—':tp}</div>
+        <div class="thru ${s.courseVal!=null?'done':''}">${s.out?'—':(s.courseVal!=null?'완료':'—')}</div>
+        <div class="total">${s.courseVal!=null?s.courseVal:'—'}</div></div>`}).join('');
+    return}
   const cut=boardActiveStage&&boardActiveStage.advance_cut;
   let cutAfter=-1;
   if(cut){
     if(boardGenderFilter==='all'&&cut.total!=null)cutAfter=cut.total;
     else if(boardGenderFilter==='남'&&cut.m!=null)cutAfter=cut.m;
     else if(boardGenderFilter==='여'&&cut.f!=null)cutAfter=cut.f}
-  let rankN=0;
   box.innerHTML=st.map((s,i)=>{
     const tp=s.completed?(s.topar===0?'E':(s.topar>0?'+':'')+s.topar):'—';
     const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FFB49E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
       :`<div class="rank num">${s.completed?++rankN:'·'}</div>`;
     const done=s.completed>=ROUNDS;
     const thruCell=s.out?'—':(done?'완료':`<b>${s.completed}</b>/${ROUNDS}`);
+    const subtotalCells=showSubtotal?s.bestArr.map(v=>`<div class="rsc">${v!=null?v:'·'}</div>`).join(''):'';
     const cutLine=cutAfter>0&&i===cutAfter?'<div class="cutline"><span>진출선 ('+cutAfter+'명)</span></div>':'';
-    return cutLine+`<div class="brow ${i===0&&s.completed&&!s.out?'top1':''}" style="grid-template-columns:${BOARD_COLS};${s.out?'opacity:.45':''}">
+    return cutLine+`<div class="brow ${i===0&&s.completed&&!s.out?'top1':''}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
+      ${subtotalCells}
       <div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>
       <div class="thru ${done?'done':''}">${thruCell}</div>
       <div class="total">${s.completed?s.sumSoFar:'—'}</div></div>`}).join('')}
 function renderBoard(){
   if(boardStageKind==='period'||boardStageRecordMode==='total'){renderPeriodBoard();return}
   const box=$('#brows');
-  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
+  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';$('#boardScopeChips').innerHTML='';return}
   updateBoardCtl();
-  const bh=$('#bhead');bh.style.gridTemplateColumns=BOARD_COLS;
-  bh.innerHTML=`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`;
+  const showSubtotal=boardScopeFilter===-1&&ROUNDS>=2;
+  const cols=boardCols(showSubtotal);
+  const bh=$('#bhead');bh.style.gridTemplateColumns=cols;
+  bh.innerHTML=boardHeadHTML(showSubtotal);
   const pool=boardGenderFilter==='all'?players:players.filter(p=>p.sex===boardGenderFilter);
-  const st=standings(pool);
+  const st=standings(pool,boardScopeFilter);
   const prev={};box.querySelectorAll('.brow').forEach(r=>{prev[r.dataset.ph]=r.getBoundingClientRect().top});
   let rankN=0;
   box.innerHTML=st.map((s,i)=>{
     const tp=s.thru?(s.topar===0?'E':(s.topar>0?'+':'')+s.topar):'—';
     const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FFB49E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
       :`<div class="rank num">${s.thru?++rankN:'·'}</div>`;
-    const done=s.thru>=HOLES;
+    const doneThreshold=boardScopeFilter>=0?18:HOLES;
+    const done=s.thru>=doneThreshold;
     const thruCell=s.out?'—':(done?'완료':`<b>${s.thru}</b>홀`);
-    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-ph="${s.p.phone}" style="grid-template-columns:${BOARD_COLS};${s.out?'opacity:.45':''}">
+    const subtotalCells=showSubtotal?s.rt.map((v,r)=>`<div class="rsc">${s.rc[r]?v:'·'}</div>`).join(''):'';
+    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-ph="${s.p.phone}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
+      ${subtotalCells}
       <div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>
       <div class="thru ${done?'done':''}">${thruCell}</div>
       <div class="total">${s.thru?s.tot:'—'}</div></div>`}).join('');
