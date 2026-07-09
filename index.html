@@ -51,8 +51,8 @@ button{font-family:inherit;cursor:pointer}
 /* ===== 하단 내비 ===== */
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:var(--navh);background:var(--paper);border-top:1px solid var(--line);display:flex;z-index:60;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(43,58,74,.06)}
 .bnav button{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:500;color:var(--muted)}
-.bnav button .ic{display:flex;align-items:center;justify-content:center;padding:5px 16px;border-radius:14px}
-.bnav button .ic svg{width:25px;height:25px}
+.bnav button .ic{display:flex;align-items:center;justify-content:center;width:56px;height:34px;border-radius:12px}
+.bnav button .ic svg{width:23px;height:23px;display:block;flex:0 0 auto}
 .bnav button.on{color:var(--main-deep);font-weight:700}
 .bnav button.on .ic{background:var(--main-soft)}
 
@@ -90,9 +90,12 @@ label.fl{display:block;font-weight:600;font-size:16px;margin:16px 0 8px}
 label.fl:first-child{margin-top:0}
 input[type=text],input[type=tel],input[type=date],input[type=time],select,textarea{
   width:100%;padding:15px 16px;border:2px solid var(--line);border-radius:14px;font-family:inherit;font-size:19px;background:var(--paper);color:var(--ink)}
+input[type=date]{-webkit-appearance:none;appearance:none;min-height:56px;box-sizing:border-box}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--main)}
 textarea{resize:vertical;line-height:1.65;font-size:17px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dfrow input[type=date]{width:100%}
 
 /* 선택 토글 */
 .optrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
@@ -603,7 +606,7 @@ tr:last-child td{border-bottom:none}
         <h2 class="wq" id="stage1QTitle">코스와 기간을 정해주세요</h2>
         <p class="wsub">선택한 유형에 맞는 코스 정보를 입력하세요</p>
         <div class="card">
-          <div class="frow">
+          <div class="dfrow">
             <div><label class="fl" style="margin-top:0" id="fDateSLabel">시작일</label><input type="date" id="fDateS" value="2026-07-25"></div>
             <div><label class="fl" style="margin-top:0" id="fDateELabel">종료일</label><input type="date" id="fDateE" value="2026-07-26"></div>
           </div>
@@ -657,7 +660,7 @@ tr:last-child td{border-bottom:none}
       <div class="wpane" id="wpStage2">
         <h2 class="wq" id="stage2QTitle">2단계(결승) 코스와 기간을 정해주세요</h2>
         <div class="card">
-          <div class="frow">
+          <div class="dfrow">
             <div><input type="date" id="fDateS2" value="2026-07-27"></div>
             <div><input type="date" id="fDateE2" value="2026-07-27"></div>
           </div>
@@ -707,7 +710,7 @@ tr:last-child td{border-bottom:none}
       <div class="wpane" id="wpStage3">
         <h2 class="wq">3단계(결승) 코스와 기간을 정해주세요</h2>
         <div class="card">
-          <div class="frow">
+          <div class="dfrow">
             <div><input type="date" id="fDateS3" value="2026-07-28"></div>
             <div><input type="date" id="fDateE3" value="2026-07-28"></div>
           </div>
@@ -2455,7 +2458,7 @@ function renderEditSchedule(){
   box.innerHTML=`
     <button class="btn ghost sm" onclick="editInfoBack()">← 목록으로</button>
     <div class="card" style="margin-top:12px">
-      <div class="frow">
+      <div class="dfrow">
         <div><label class="fl" style="margin-top:0">시작일</label><input type="date" id="eiDateS"></div>
         <div><label class="fl" style="margin-top:0">종료일</label><input type="date" id="eiDateE"></div>
       </div>
