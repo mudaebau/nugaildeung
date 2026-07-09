@@ -283,6 +283,11 @@ tr:last-child td{border-bottom:none}
 .padbtn:active{background:var(--main-soft)}
 .padbtn.parhint{border:3px solid var(--main);color:var(--main-deep)}
 .padbtn.clear{font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:600;color:var(--muted)}
+.sheetli{display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14.5px;color:var(--ink);line-height:1.5}
+.sheetli:last-child{border-bottom:none}
+.sheetli b{font-weight:700;color:var(--main-deep);flex:0 0 auto}
+.sheetli.warn b{color:var(--coral)}
+.stagesub b{cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
 
 /* ===== 상단 안내 바 ===== */
 .backbar{background:var(--main-deep);color:#D8E7F6;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
@@ -799,12 +804,9 @@ tr:last-child td{border-bottom:none}
     <!-- 관리홈 -->
     <div class="mgpane on" id="mgHome">
       <div id="scoreTodo" class="todo" style="display:none" onclick="enterMgmt('mgScore')">📋 <span><b id="scoreTodoText">검수 대기 0건</b> — 스코어 탭에서 처리</span><span class="chev">›</span></div>
-      <div id="stageStepperCard" style="display:none">
-        <div class="stepper" id="stageStepper"></div>
-        <button class="btn full" id="advanceBtn" style="display:none;margin-bottom:14px" onclick="advanceStage()">다음 단계 시작</button>
-        <div id="advanceResultBox"></div>
-      </div>
+      <div id="stageInfoCard"></div>
       <div class="stats" id="opStats"></div>
+      <div id="advanceResultBox"></div>
       <div class="tools">
         <div class="trow" id="trowBoard" onclick="toggleTool('Board')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
@@ -837,7 +839,7 @@ tr:last-child td{border-bottom:none}
           </div>
         </div>
       </div>
-      <button class="btn full big" style="margin-top:4px" onclick="finalizeTournament()">결과 · 시상 확정하기</button>
+      <button class="btn full big" id="stageAdvanceBtn" style="margin-top:4px" onclick="openStageSheet()">결과 · 시상 확정하기</button>
     </div>
 
     <!-- 요강 -->
@@ -1176,6 +1178,16 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- 단계 마감 확인 -->
+<div class="overlay" id="stageAdvOv" onclick="if(event.target===this)closeStageAdv()">
+  <div class="pad">
+    <h3 id="stageAdvTitle">단계를 마감할까요?</h3>
+    <div id="stageAdvList" style="margin:10px 0 18px"></div>
+    <button class="btn full" id="stageAdvConfirmBtn" style="margin-bottom:8px" onclick="confirmStageSheet()">마감하기</button>
+    <button class="btn ghost full" onclick="closeStageAdv()">취소</button>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -1281,14 +1293,17 @@ function goTab(id){
   if(id==='opMine')renderMyList()
   if(id==='opMy')renderMyPage()
   if(id==='opMgmt')mgShow(curMgTab)}
-function enterMgmt(mgId){goTab('opMgmt');mgShow(mgId)}
+function enterMgmt(mgId){curMgTab=mgId;goTab('opMgmt');mgShow(mgId)}
 let curMgTab='mgHome';
 function mgShow(id){
   curMgTab=id;
+  if(id!=='mgResult'&&pastStageSnap){
+    ({players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind}=pastStageSnap);
+    pastStageSnap=null}
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
-  if(id==='mgHome'){renderStageStepper();renderOpsStats();renderScoreBadge()}
+  if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge()}
   if(id==='mgPlayers')playersSegShow(curPlayersSeg);
   if(id==='mgStaff')renderTools();
   if(id==='mgScore'){renderScoreTab();$('#scoreBadge').style.display='none'}
@@ -1458,54 +1473,142 @@ async function loadAllStages(tournamentId){
   const{data,error}=await sb.from('stages').select('*').eq('tournament_id',tournamentId).order('seq',{ascending:true});
   if(error){console.error(error);return[]}
   return data||[]}
-async function renderStageStepper(){
-  const box=$('#stageStepper'),card=$('#stageStepperCard');
-  if(!box||!card||!config.id)return;
+function curActiveStage(stages){return stages.find(s=>s.status==='open')||stages[stages.length-1]}
+async function renderStageSub(){
   const stages=await loadAllStages(config.id);
-  if(stages.length<2){card.style.display='none';return}
-  card.style.display='block';
-  box.innerHTML=stages.map((s,i)=>{
-    const cls=s.status==='open'?'cur':s.status==='done'?'done':'wait';
-    const label=s.status==='open'?'진행 중':s.status==='done'?'완료 ✓':'대기';
-    const arrow=i<stages.length-1?'<span class="starr">›</span>':'';
-    return `<div class="st ${cls}"><b>${s.name}</b><span>${label}</span></div>${arrow}`}).join('');
+  if(stages.length<2){
+    const period=config.dateS===config.dateE?(config.dateS||'').replaceAll('-','.')
+      :`${(config.dateS||'').replaceAll('-','.')} ~ ${(config.dateE||'').slice(5).replace('-','.')}`;
+    $('#mgSub').textContent=config.type==='screen'
+      ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(기간형)`
+      :`${period} · ${config.place||''} · ${HOLES}홀(${ROUNDS}개 코스)`;
+    return}
+  $('#mgSub').innerHTML=`<span class="stagesub">${stages.map(s=>{
+    const label=s.status==='open'?'진행 중':s.status==='done'?'완료':'대기';
+    return s.status==='done'?`<b onclick="viewStageResult('${s.id}')">${s.name}(${label})</b>`:`${s.name}(${label})`}).join(' → ')}</span>`}
+async function renderStageHome(){
+  const box=$('#stageInfoCard');if(!box||!config.id)return;
+  const stages=await loadAllStages(config.id);
+  const stage=curActiveStage(stages);
+  if(!stage){box.innerHTML='';return}
+  if(stage.kind==='period'){
+    const total=(stage.course_pars||[]).length||ROUNDS;
+    const{data:plRows}=await sb.from('plays').select('player_id,course_no').eq('stage_id',stage.id);
+    const byPlayer={};(plRows||[]).forEach(r=>{(byPlayer[r.player_id]=byPlayer[r.player_id]||new Set()).add(r.course_no)});
+    const finished=Object.values(byPlayer).filter(s=>s.size>=total).length;
+    const periodTxt=stage.date_start===stage.date_end?(stage.date_start||'').replaceAll('-','.')
+      :`${(stage.date_start||'').replaceAll('-','.')} ~ ${(stage.date_end||'').replaceAll('-','.')}`;
+    box.innerHTML=`<div class="card" style="display:flex;align-items:center;gap:14px">
+      <div class="dday"><b class="num">${dday(stage.date_end)||'—'}</b><span>${stage.name} 마감까지</span></div>
+      <div class="sub" style="font-size:13.5px;line-height:1.6;margin:0">${stage.name} 기간 ${periodTxt}<br>코스 ${total}개 · 전 코스 완주 ${finished}명</div>
+    </div>`
+  }else{
+    let doneG=0;
+    groups.forEach((g,i)=>{const p=groupProgress(i);if(p.total&&p.done===p.total)doneG++});
+    box.innerHTML=`<div class="card" style="display:flex;align-items:center;gap:14px">
+      <div class="dday"><b class="num">${doneG}/${groups.length||0}</b><span>조 완료</span></div>
+      <div class="sub" style="font-size:13.5px;line-height:1.6;margin:0">${stage.name} · ${groups.length}개 조 진행 중</div>
+    </div>`}
   const openIdx=stages.findIndex(s=>s.status==='open');
   const hasNext=openIdx>=0&&openIdx+1<stages.length;
-  $('#advanceBtn').style.display=hasNext?'block':'none';
-  if(hasNext)$('#advanceBtn').textContent=`다음 단계 시작 (${stages[openIdx+1].name} 진출자 자동 선발)`}
+  const btn=$('#stageAdvanceBtn');
+  if(btn)btn.textContent=hasNext?`${stage.name} 마감하고 ${stages[openIdx+1].name} 시작`:'결과 · 시상 확정하기'}
+function cutCompetitors(doneArr,cut,margin){
+  if(!cut||!doneArr.length)return null;
+  let n=0;
+  if(cut.total){
+    if(cut.total>=doneArr.length)return 0;
+    const cs=doneArr[cut.total-1].tot;
+    n=doneArr.filter(s=>Math.abs(s.tot-cs)<=margin).length
+  }else if(cut.m||cut.f){
+    const men=doneArr.filter(s=>s.p.sex==='남'),women=doneArr.filter(s=>s.p.sex==='여');
+    if(cut.m&&cut.m<men.length){const cs=men[cut.m-1].tot;n+=men.filter(s=>Math.abs(s.tot-cs)<=margin).length}
+    if(cut.f&&cut.f<women.length){const cs=women[cut.f-1].tot;n+=women.filter(s=>Math.abs(s.tot-cs)<=margin).length}}
+  return n}
+function detectTie(doneArr,cut){
+  if(!cut||!cut.total||cut.total>=doneArr.length)return null;
+  const boundary=doneArr[cut.total-1].tot,next=doneArr[cut.total].tot;
+  if(boundary!==next)return null;
+  return doneArr.filter(s=>s.tot===boundary).length}
 async function renderOpsStats(){
   const box=$('#opStats');if(!box)return;
   await refreshStaffStatus();
   const opened=judges().filter(s=>s.link_opened_at).length,total=judges().length;
-  box.innerHTML=`
-    <div class="stat hot"><b>${players.length}</b><span>참가자</span></div>
-    <div class="stat"><b>${waitlist.length}</b><span>대기자</span></div>
-    <div class="stat"><b>${opened}<small>/${total}</small></b><span>심판 접속</span></div>`}
-async function advanceStage(){
+  const stages=await loadAllStages(config.id);
+  const stage=curActiveStage(stages);
+  const cut=stage&&stage.advance_cut;
+  if(judgeStageKind==='period'){
+    const done=periodStandings().filter(s=>!s.out&&s.tot!=null);
+    const competing=cutCompetitors(done,cut,2);
+    box.innerHTML=`
+      <div class="stat hot"><b>${players.length}</b><span>${stage?stage.name+' 참가':'참가자'}</span></div>
+      <div class="stat"><b>${waitlist.length}</b><span>대기자</span></div>
+      <div class="stat"><b>${competing==null?'—':competing}</b><span>컷 ±2타 경쟁</span></div>`
+  }else{
+    const done=standings().filter(s=>!s.out&&s.thru>0);
+    const competing=cutCompetitors(done,cut,2);
+    const doneG=groups.filter((g,i)=>{const p=groupProgress(i);return p.total&&p.done===p.total}).length;
+    box.innerHTML=`
+      <div class="stat hot"><b>${doneG}<small>/${groups.length}</small></b><span>조 완료</span></div>
+      <div class="stat"><b>${opened}<small>/${total}</small></b><span>심판 접속</span></div>
+      <div class="stat"><b>${competing==null?'—':competing}</b><span>컷 ±2타 경쟁</span></div>`}}
+let stageSheetCtx=null;
+async function openStageSheet(){
+  if(!config.id)return;
   const stages=await loadAllStages(config.id);
   const openIdx=stages.findIndex(s=>s.status==='open');
-  if(openIdx<0||openIdx+1>=stages.length){toast('다음 단계가 없습니다');return}
-  const curStage=stages[openIdx],nextStage=stages[openIdx+1];
-  if(!confirm(`${curStage.name} 순위를 확정하고 ${nextStage.name} 진출자를 자동 선발할까요?\n이 작업은 되돌릴 수 없습니다.`))return;
+  if(openIdx<0){toast('진행 중인 단계가 없습니다');return}
+  const curStage=stages[openIdx];
+  const hasNext=openIdx+1<stages.length;
+  await loadBoardData(config.id,true);
 
-  await loadBoardData(config.id);
+  if(!hasNext){
+    $('#stageAdvTitle').textContent='결과를 확정할까요?';
+    $('#stageAdvList').innerHTML=`
+      <p class="sheetli"><b>✓</b><span>최종 순위가 확정되고 요강·참가자 화면에 반영됩니다</span></p>
+      <p class="sheetli warn"><b>!</b><span>확정 후에는 기록을 수정할 수 없습니다</span></p>`;
+    $('#stageAdvConfirmBtn').textContent='확정하기';
+    stageSheetCtx={type:'finalize'};
+    $('#stageAdvOv').classList.add('on');
+    return}
+
+  const nextStage=stages[openIdx+1];
   const cut=curStage.advance_cut;
-  let advanced=[];
-  if(boardStageKind==='period'){
-    const st=periodStandings().filter(s=>!s.out&&s.tot!=null);
-    if(cut&&cut.total)advanced=st.slice(0,cut.total).map(s=>s.p);
+  let done,advanced=[];
+  if(judgeStageKind==='period'){
+    done=periodStandings().filter(s=>!s.out&&s.tot!=null);
+    if(cut&&cut.total)advanced=done.slice(0,cut.total).map(s=>s.p);
     else if(cut&&(cut.m||cut.f)){
-      const men=st.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
-      const women=st.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
+      const men=done.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
+      const women=done.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
       advanced=men.concat(women)}
   }else{
-    const st=standings().filter(s=>!s.out&&s.thru>0);
-    if(cut&&cut.total)advanced=st.slice(0,cut.total).map(s=>s.p);
+    done=standings().filter(s=>!s.out&&s.thru>0);
+    if(cut&&cut.total)advanced=done.slice(0,cut.total).map(s=>s.p);
     else if(cut&&(cut.m||cut.f)){
-      const men=st.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
-      const women=st.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
+      const men=done.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
+      const women=done.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
       advanced=men.concat(women)}}
 
+  let html=`<p class="sheetli"><b>✓</b><span>${curStage.name} 순위가 확정됩니다 (완주 ${done.length}명 기준)</span></p>`;
+  if(cut&&cut.total)html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 ${advanced.length}명이 자동 선발됩니다</span></p>`;
+  else if(cut&&(cut.m||cut.f))html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 남 ${cut.m||0}명 · 여 ${cut.f||0}명이 자동 선발됩니다</span></p>`;
+  const tie=detectTie(done,cut);
+  if(tie)html+=`<p class="sheetli"><b>✓</b><span>${cut.total}위 동점 ${tie}명 → 동점 규칙(${config.tie||'카운트백'})으로 결정</span></p>`;
+  html+=`<p class="sheetli warn"><b>!</b><span>마감 후에는 ${curStage.name} 기록을 입력·수정할 수 없습니다</span></p>`;
+  $('#stageAdvTitle').textContent=`${curStage.name}을 마감할까요?`;
+  $('#stageAdvList').innerHTML=html;
+  $('#stageAdvConfirmBtn').textContent=`마감하고 ${nextStage.name} 시작`;
+  stageSheetCtx={type:'advance',curStage,nextStage,advanced};
+  $('#stageAdvOv').classList.add('on')}
+function closeStageAdv(){$('#stageAdvOv').classList.remove('on');stageSheetCtx=null}
+async function confirmStageSheet(){
+  if(!stageSheetCtx)return;
+  const ctx=stageSheetCtx;
+  closeStageAdv();
+  if(ctx.type==='finalize'){await finalizeTournament();return}
+  await doAdvanceStage(ctx.curStage,ctx.nextStage,ctx.advanced)}
+async function doAdvanceStage(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return}
   const ids=advanced.map(p=>p.id);
   const{error:upErr}=await sb.from('players').update({current_stage:nextStage.seq}).in('id',ids);
@@ -1519,9 +1622,51 @@ async function advanceStage(){
     <p class="sub" style="margin-top:6px">${advanced.map(p=>p.name).join(', ')}</p>
     <button class="btn ghost full" style="margin-top:10px" onclick="copyAdvanceResult()">진출 안내 문구 복사 (카톡·문자 발송용)</button></div>`;
   toast(`${nextStage.name} 진출자 ${advanced.length}명이 선발되었습니다`);
-  renderStageStepper();renderOpsStats();
-  await loadBoardData(config.id)}
+  await loadBoardData(config.id,true);
+  renderStageSub();renderStageHome();renderOpsStats()}
 let lastAdvanceResult='';
+let pastStageSnap=null;
+async function viewStageResult(stageId){
+  const stages=await loadAllStages(config.id);
+  const stage=stages.find(s=>s.id===stageId);
+  if(!stage)return;
+  const snap={players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind};
+
+  if(stage.kind==='period'){
+    const{data:plRows}=await sb.from('plays').select('player_id,course_no,strokes_total').eq('stage_id',stageId);
+    const ids=[...new Set((plRows||[]).map(r=>r.player_id))];
+    const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    const bestMap={};
+    (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
+    ROUNDS=(stage.course_pars||[]).length||1;coursePars=stage.course_pars||[];
+    PAR_TOT=coursePars.reduce((a,b)=>a+(+b||0),0);
+    players=(pRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+      region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,best:bestMap[r.id]||{}}));
+    groups=[];judgeStageKind='period';boardStageKind='period'
+  }else{
+    const{data:sRows}=await sb.from('scores').select('player_id,hole_index,strokes').eq('stage_id',stageId);
+    const ids=[...new Set((sRows||[]).map(r=>r.player_id))];
+    const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    judgeStageKind='round';boardStageKind='round';
+    ROUNDS=(stage.course_pars||[]).length||1;HOLES=ROUNDS*18;coursePars=stage.course_pars||[];
+    PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
+    const scoreMap={};(sRows||[]).forEach(r=>{(scoreMap[r.player_id]=scoreMap[r.player_id]||{})[r.hole_index]=r.strokes});
+    players=(pRows||[]).map(r=>{
+      const arr=Array(HOLES).fill(null);
+      const sm=scoreMap[r.id];if(sm)Object.keys(sm).forEach(h=>arr[+h]=sm[h]);
+      return{id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
+        region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,group:-1,scores:arr}});
+    groups=[]}
+
+  pastStageSnap=snap;
+  enterMgmt('mgResult');
+  renderResult();
+  const box=$('#mgResult');
+  const banner=document.createElement('div');
+  banner.className='card';
+  banner.style.cssText='background:var(--main-soft);border:none;text-align:center;margin-bottom:12px';
+  banner.innerHTML=`<b>${stage.name} 결과 · 읽기 전용</b><p class="sub" style="margin-top:4px;margin-bottom:0">확정된 단계의 최종 순위입니다</p>`;
+  box.insertBefore(banner,box.firstChild)}
 async function copyAdvanceResult(){
   if(!lastAdvanceResult)return;
   try{await navigator.clipboard.writeText(lastAdvanceResult)}catch(e){}
