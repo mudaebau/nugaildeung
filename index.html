@@ -505,6 +505,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="mineSection"></div>
     <div id="listSection"></div>
+    <p class="sub" style="text-align:center;margin-top:18px"><a href="?privacy=1" target="_blank" style="color:var(--muted)">개인정보 처리방침</a></p>
   </section>
 
   <!-- 내 대회 -->
@@ -1158,6 +1159,14 @@ tr:last-child td{border-bottom:none}
           <input type="checkbox" id="apEligCheck" style="width:20px;height:20px">참가 조건을 확인했습니다
         </label>
       </div>
+      <div class="card" id="apPrivacyCard" style="background:var(--main-soft);border:none">
+        <label class="fl" style="margin-top:0">개인정보 수집·이용 동의</label>
+        <p class="sub" id="apPrivacyText" style="margin-bottom:10px">—</p>
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">
+          <input type="checkbox" id="apPrivacyCheck" style="width:20px;height:20px">개인정보 수집·이용에 동의합니다
+        </label>
+        <p class="sub" style="margin-top:8px"><a href="?privacy=1" target="_blank" style="color:var(--main-deep);font-weight:600">처리방침 전문 보기 ›</a></p>
+      </div>
       <div class="modew">
         <button class="on" id="mSingle" onclick="setApplyMode('single')">개인 신청</button>
         <button id="mGroup" onclick="setApplyMode('group')">단체 신청<br><small style="font-weight:400;font-size:.72rem">클럽 총무용</small></button>
@@ -1206,6 +1215,29 @@ tr:last-child td{border-bottom:none}
   <div class="backbar"><button onclick="editInfoBack()">← 뒤로</button><span>대회 정보 수정</span></div>
   <section class="page on" style="padding-top:16px">
     <div id="editInfoBody"></div>
+  </section>
+</div>
+
+<div class="mobile" id="viewPrivacy" style="display:none">
+  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>개인정보 처리방침</span></div>
+  <section class="page on" style="padding-top:16px">
+    <div class="card">
+      <h3 style="font-size:19px;margin-bottom:14px">개인정보 처리방침</h3>
+      <label class="fl" style="margin-top:0">1. 수집 항목</label>
+      <p class="sub">이름, 전화번호(필수) 및 대회별로 선택된 성별·나이·소속 클럽·닉네임·지역</p>
+      <label class="fl">2. 수집 목적</label>
+      <p class="sub">대회 참가 신청 접수, 참가자 명단·조편성 관리, 경기 기록·순위 집계, 참가 확인 및 결과 안내</p>
+      <label class="fl">3. 보유 및 이용 기간</label>
+      <p class="sub">대회 종료일로부터 1년간 보관 후 파기합니다. 단, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.</p>
+      <label class="fl">4. 제3자 제공</label>
+      <p class="sub">수집된 정보는 대회 운영 목적 외에 제3자에게 제공하지 않습니다.</p>
+      <label class="fl">5. 처리 위탁</label>
+      <p class="sub">대회 운영자(주최 측)가 신청 정보를 직접 확인·관리하며, 서비스 제공을 위해 별도 위탁 처리는 하지 않습니다.</p>
+      <label class="fl">6. 정보주체의 권리</label>
+      <p class="sub">참가자는 대회 운영자에게 본인의 개인정보 열람·정정·삭제를 요청할 수 있습니다.</p>
+      <label class="fl">7. 문의처</label>
+      <p class="sub">대회 운영자(주최·주관) 문의처를 통해 문의해 주세요. 요강 페이지에서 확인할 수 있습니다.</p>
+    </div>
   </section>
 </div>
 
@@ -1410,7 +1442,7 @@ function navGroupFor(page){
   if(page==='opMy')return 'opMy';
   return 'opHome'}
 function renderLoc(){
-  ['Owner','Judge','Board','Apply','Notice','EditInfo'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
+  ['Owner','Judge','Board','Apply','Notice','EditInfo','Privacy'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
   if(curView==='Owner'){
     const grp=navGroupFor(curPage);
     document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===grp));
@@ -3043,6 +3075,11 @@ async function openApply(id){
   $('#apEligCard').style.display=restricted?'block':'none';
   $('#apEligText').textContent=restricted?(elig.text||'참가 조건이 있습니다'):'';
   $('#apEligCheck').checked=false;
+  const f=applyFields(t);
+  const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
+  const items=['전화번호',...Object.keys(fieldLabels).filter(k=>f[k]).map(k=>fieldLabels[k])];
+  $('#apPrivacyText').textContent=`수집 항목: ${items.join(', ')} · 목적: 대회 운영·참가자 관리·순위 집계 · 보유기간: 대회 종료 후 1년(이후 파기)`;
+  $('#apPrivacyCheck').checked=false;
   renderSingleFields();
   if(t.regClosed){
     $('#applyForm').style.display='none';$('#applyDone').style.display='none';
@@ -3056,6 +3093,9 @@ async function openApply(id){
 function eligibilityOk(){
   if(!$('#apEligCard')||$('#apEligCard').style.display==='none')return true;
   if(!$('#apEligCheck').checked){toast('참가 조건 확인 체크가 필요합니다');return false}
+  return true}
+function privacyOk(){
+  if(!$('#apPrivacyCheck').checked){toast('개인정보 수집·이용 동의가 필요합니다');return false}
   return true}
 function renderCap(){const t=applyT;
   $('#apBar').style.width=Math.min(100,Math.round(t.players/t.cap*100))+'%';
@@ -3082,7 +3122,7 @@ function rcptShow(no,msg){
   $('#rcptMsg').innerHTML=msg;window.scrollTo(0,0)}
 function rcptNo(){return '2607-'+String(Math.floor(Math.random()*900)+100)}
 async function submitSingle(){
-  if(!eligibilityOk())return;
+  if(!eligibilityOk()||!privacyOk())return;
   const f=applyFields(applyT);
   const name=$('#apiName').value.trim(),phone=$('#apiPhone').value.trim();
   if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
@@ -3117,12 +3157,12 @@ function apParse(){
   if(!apPending.length){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
   $('#apPrevList').innerHTML=apPending.map(p=>
     `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
-     <div class="info"><b>${p.name}</b><span class="num">${p.phone}${p.sex||p.age?' · '+[p.sex,p.age?p.age+'세':''].filter(Boolean).join(' '):''}</span></div></div>`).join('');
+     <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${p.sex||p.age?' · '+[p.sex,p.age?p.age+'세':''].filter(Boolean).join(' '):''}</span></div></div>`).join('');
   $('#apConfirmBtn').textContent=`${apPending.length}명 단체 신청하기`;
   $('#apPreview').style.display='block';
   toast(`${apPending.length}명 인식 — 확인 후 신청하세요`)}
 async function submitGroup(){
-  if(!eligibilityOk())return;
+  if(!eligibilityOk()||!privacyOk())return;
   const club=$('#apClub').value.trim()||'무소속';
   let added=0,dup=0,waited=0;
   let okCount=await countStatus(applyT.id,'ok');
@@ -3293,7 +3333,7 @@ function parsePaste(){
   const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
   $('#prevList').innerHTML=pending.map(p=>
     `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
-     <div class="info"><b>${p.name}</b><span class="num">${p.phone}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div></div>`).join('');
+     <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div></div>`).join('');
   $('#confirmBtn').textContent=`${pending.length}명 등록 확정`;
   $('#previewCard').style.display='block';
   toast(`${pending.length}명 인식 — 확인 후 등록하세요`)}
@@ -3997,7 +4037,7 @@ function renderBoard(){
   bh.innerHTML=boardHeadHTML(showSubtotal);
   const pool=boardGenderFilter==='all'?players:players.filter(p=>p.sex===boardGenderFilter);
   const st=standings(pool,boardScopeFilter);
-  const prev={};box.querySelectorAll('.brow').forEach(r=>{prev[r.dataset.ph]=r.getBoundingClientRect().top});
+  const prev={};box.querySelectorAll('.brow').forEach(r=>{prev[r.dataset.pid]=r.getBoundingClientRect().top});
   let rankN=0;
   box.innerHTML=st.map((s,i)=>{
     const tp=s.thru?(s.topar===0?'E':(s.topar>0?'+':'')+s.topar):'—';
@@ -4007,14 +4047,14 @@ function renderBoard(){
     const done=s.thru>=doneThreshold;
     const thruCell=s.out?'—':(done?'완료':`<b>${s.thru}</b>홀`);
     const subtotalCells=showSubtotal?s.rt.map((v,r)=>`<div class="rsc">${s.rc[r]?v:'·'}</div>`).join(''):'';
-    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-ph="${s.p.phone}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
+    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-pid="${s.p.id}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
       ${subtotalCells}
       <div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>
       <div class="thru ${done?'done':''}">${thruCell}</div>
       <div class="total">${s.thru?s.tot:'—'}</div></div>`}).join('');
-  box.querySelectorAll('.brow').forEach(r=>{const old=prev[r.dataset.ph];
+  box.querySelectorAll('.brow').forEach(r=>{const old=prev[r.dataset.pid];
     if(old!=null){const d=old-r.getBoundingClientRect().top;
       if(Math.abs(d)>4){r.style.transform=`translateY(${d}px)`;r.classList.add('flash');
         requestAnimationFrame(()=>{r.style.transform='';setTimeout(()=>r.classList.remove('flash'),500)})}}})}
@@ -4140,7 +4180,7 @@ function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.disp
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
   const qs=new URLSearchParams(location.search);
-  const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply'),noticeId=qs.get('notice');
+  const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply'),noticeId=qs.get('notice'),privacyFlag=qs.get('privacy');
   if(jToken&&await enterViaJudgeToken(jToken)){
     const bb=document.querySelector('.backbar');if(bb)bb.style.display='none';
     curView='Judge';renderLoc();return}
@@ -4150,6 +4190,7 @@ setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-K
   if(noticeId){
     curView='Notice';renderLoc();
     await loadNotice(noticeId);return}
+  if(privacyFlag){curView='Privacy';renderLoc();return}
   renderStaff();renderPlayers();renderVenues();renderPrizeRows();
   await loadTournaments();
   if(applyId)openApply(applyId)})();
