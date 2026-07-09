@@ -332,6 +332,19 @@ tr:last-child td{border-bottom:none}
 .seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
 .psegpane{display:none}
 .psegpane.on{display:block}
+.stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.stagechips::-webkit-scrollbar{display:none}
+.stagechip{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 15px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.stagechip.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center;cursor:pointer}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:var(--red)}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--main-deep)}
 
 /* ===== 대회 도구 ===== */
 .toolrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line)}
@@ -928,22 +941,32 @@ tr:last-child td{border-bottom:none}
 
     <!-- 스코어입력 -->
     <div class="mgpane" id="mgScore">
-      <div class="tools" style="margin-bottom:14px">
-        <div class="trow" style="cursor:pointer" onclick="openJudge(0)">
-          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-          <span class="tt"><b>스코어카드 사진 입력</b><span>촬영 → 보조 증빙으로 첨부</span></span>
-          <span class="chev">›</span>
+      <div class="stagechips" id="scoreStageChips"></div>
+      <div id="scorePastNotice" class="card" style="display:none;text-align:center;padding:40px 20px"></div>
+      <div id="scoreLiveArea">
+        <div class="tools" style="margin-bottom:14px">
+          <div class="trow" style="cursor:pointer" onclick="openJudge(0)">
+            <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+            <span class="tt"><b>스코어카드 사진 입력</b><span>촬영 → 보조 증빙으로 첨부</span></span>
+            <span class="chev">›</span>
+          </div>
         </div>
+        <div class="seg" id="scoreModeSeg" style="display:none">
+          <div class="on" data-m="player" onclick="setScoreMode('player')">선수별</div>
+          <div data-m="group" onclick="setScoreMode('group')">조별</div>
+        </div>
+        <div id="mgScoreBody"></div>
       </div>
-      <div id="mgScoreBody"></div>
     </div>
 
     <!-- 리더보드 -->
     <div class="mgpane" id="mgBoard">
+      <div class="stagechips" id="boardStageChips"></div>
       <div class="card" style="text-align:center;padding:40px 20px">
         <p class="sub" style="margin-bottom:16px">참가자·관중이 보는 실시간 순위표입니다.<br>대회장 TV·노트북에서는 전체화면으로 여세요.</p>
         <button class="btn full big" onclick="openBoard()">리더보드 열기</button>
       </div>
+      <button class="btn ghost full" id="boardFinalizeBtn" style="margin-top:10px" onclick="openStageSheet()">최종순위 확정</button>
     </div>
 
     <!-- 결과 -->
@@ -1307,6 +1330,7 @@ function mgShow(id){
   if(id==='mgPlayers')playersSegShow(curPlayersSeg);
   if(id==='mgStaff')renderTools();
   if(id==='mgScore'){renderScoreTab();$('#scoreBadge').style.display='none'}
+  if(id==='mgBoard')renderBoardTab();
   if(id==='mgResult')renderResult();
   window.scrollTo(0,0)}
 async function pendingReviewCount(){
@@ -1358,20 +1382,47 @@ function groupProgress(gi){
   for(let h=0;h<HOLES;h++)if(g.every(pi=>players[pi].scores[h]!=null))done++;
   return{done,total:HOLES}}
 function openJudgeForGroup(gi){curGroup=gi;openJudge(0)}
-function renderScoreTab(){
+function stageChipsHTML(stages,selId,onclickFn){
+  return stages.map(s=>{
+    const label=s.status==='done'?`${s.name} (확정)`:s.name;
+    return`<button class="stagechip ${s.id===selId?'on':''}" onclick="${onclickFn}('${s.id}')">${label}</button>`}).join('')}
+let scoreStageId=null,scoreMode='player',gridPlayerIdx=null;
+function selectScoreStage(id){scoreStageId=id;renderScoreTab()}
+function setScoreMode(m){scoreMode=m;renderScoreTab()}
+async function renderScoreTab(){
+  const stages=await loadAllStages(config.id);
+  if(!stages.length)return;
+  if(!scoreStageId||!stages.find(s=>s.id===scoreStageId))scoreStageId=(curActiveStage(stages)||stages[0]).id;
+  $('#scoreStageChips').innerHTML=stageChipsHTML(stages,scoreStageId,'selectScoreStage');
+  const sel=stages.find(s=>s.id===scoreStageId);
+  const isCurrent=sel.status==='open';
+  $('#scoreLiveArea').style.display=isCurrent?'block':'none';
+  $('#scorePastNotice').style.display=isCurrent?'none':'block';
+  if(!isCurrent){
+    $('#scorePastNotice').innerHTML=`<p class="sub" style="margin-bottom:16px"><b>${sel.name}</b>은(는) 확정된 단계입니다 — 조회만 가능합니다.</p>
+      <button class="btn full big" onclick="viewStageResult('${sel.id}')">${sel.name} 결과 보기</button>`;
+    return}
+
   const box=$('#mgScoreBody');if(!box)return;
   if(judgeStageKind==='period'){
+    $('#scoreModeSeg').style.display='none';
     box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
       <p class="sub" style="margin-bottom:16px">기간형 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
       <button class="btn full big" onclick="openJudge(0)">기록 입력 화면 열기</button>
     </div>`;
     return}
   if(!groups.length){
+    $('#scoreModeSeg').style.display='none';
     box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
       <p class="sub" style="margin-bottom:16px">참가자 탭에서 조편성을 먼저 완료해 주세요.</p>
       <button class="btn ghost full" onclick="enterPlayersSeg('pGroups')">조편성으로 이동</button>
     </div>`;
     return}
+  $('#scoreModeSeg').style.display='flex';
+  document.querySelectorAll('#scoreModeSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.m===scoreMode));
+  if(scoreMode==='player')renderPlayerGrid();else renderGroupScoreList()}
+function renderGroupScoreList(){
+  const box=$('#mgScoreBody');
   box.innerHTML=`<p class="sub" style="font-weight:700;margin-bottom:10px">조별 직접 입력 — 조를 누르면 홀별 입력</p>
     <div class="tools">`+groups.map((g,i)=>{
     const prog=groupProgress(i);
@@ -1385,6 +1436,74 @@ function renderScoreTab(){
       <span class="num" style="font-weight:700;${cls}">${prog.done}/${prog.total}</span><span class="chev">›</span>
     </div>`}).join('')+`</div>
     <p class="sub" style="margin-top:10px">심판 링크로 들어온 입력도 여기 실시간 반영 · 링크 발송은 운영진 탭</p>`}
+function renderPlayerGrid(){
+  const box=$('#mgScoreBody');
+  const active=players.map((p,i)=>i).filter(i=>!isOut(players[i]));
+  if(gridPlayerIdx==null||!active.includes(gridPlayerIdx))gridPlayerIdx=active[0];
+  if(gridPlayerIdx==null){box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>';return}
+  box.innerHTML=`
+    <input type="text" id="gridPlayerSearch" placeholder="선수 검색 (이름)" style="margin-bottom:10px" oninput="renderPlayerSearchList()">
+    <div id="gridPlayerList" style="display:none;margin-bottom:10px"></div>
+    <div class="card" id="gridCard"></div>`;
+  renderGridCard()}
+function renderPlayerSearchList(){
+  const q=$('#gridPlayerSearch').value.trim();
+  const list=$('#gridPlayerList');
+  if(!q){list.style.display='none';return}
+  const matches=players.map((p,i)=>({p,i})).filter(x=>!isOut(x.p)&&x.p.name.includes(q));
+  list.style.display='block';
+  list.innerHTML=matches.length?matches.map(({p,i})=>
+    `<div class="toolrow" style="cursor:pointer" onclick="selectGridPlayer(${i})"><div class="avatar">${p.name[0]}</div><div class="info"><b>${p.name}</b><span class="num">${p.club||''}</span></div></div>`).join('')
+    :'<p class="sub" style="padding:10px 0">일치하는 선수가 없습니다</p>'}
+function selectGridPlayer(pi){gridPlayerIdx=pi;$('#gridPlayerSearch').value='';$('#gridPlayerList').style.display='none';renderGridCard()}
+function focusGridSearch(){const el=$('#gridPlayerSearch');if(el)el.focus()}
+function openGridPad(pi,gi){
+  if(!judges().length){toast('입력 권한이 있는 스탭이 없습니다 — 운영진 탭에서 추가하세요');return}
+  if(curStaff>=judges().length)curStaff=0;
+  openPad(pi,gi)}
+function renderGridCard(){
+  const card=$('#gridCard');if(!card)return;
+  const pi=gridPlayerIdx,p=players[pi];
+  if(!p){card.innerHTML='';return}
+  const gIdx=groups.findIndex(gr=>gr.includes(pi));
+  const venue=(config.venues[0]||'').replace(' 파크골프장','');
+  let filled=0,total=0,parSum=0;
+  const cells=Array.from({length:HOLES},(_,gi)=>{
+    const v=p.scores[gi],par=parAt(gi);
+    if(v!=null){filled++;total+=v;parSum+=par}
+    return{gi,par,v,course:Math.floor(gi/18)+1,hole:gi%18+1}});
+  const firstEmpty=cells.find(c=>c.v==null);
+  const topar=total-parSum;
+  const gridHTML=cells.map(c=>{
+    let cls=c.v==null?'empty':(c.v<c.par?'birdie':'');
+    if(firstEmpty&&c.gi===firstEmpty.gi)cls+=' cur';
+    return`<div class="hc ${cls}" onclick="openGridPad(${pi},${c.gi})"><small>${c.hole}홀·P${c.par}</small><b>${c.v==null?'—':c.v}</b></div>`}).join('');
+  card.innerHTML=`
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:4px">
+      <span class="gav" style="width:40px;height:40px;font-size:15px">${p.name[0]}</span>
+      <div><b style="font-size:17px">${p.name}</b><div class="meta" style="font-size:12px;color:var(--muted)">${gIdx>=0?(gIdx+1)+'조 · ':''}${venue}</div></div>
+      <span style="margin-left:auto;color:var(--muted);font-size:12.5px;cursor:pointer" onclick="focusGridSearch()">선수 변경 ›</span>
+    </div>
+    <div class="holegrid">${gridHTML}</div>
+    <div class="sumrow"><span style="color:var(--muted)">${filled}홀 입력 · 파 대비 <b style="color:${filled===0?'var(--muted)':topar>0?'var(--red)':topar<0?'var(--main-deep)':'var(--ink)'}">${filled===0?'—':topar===0?'E':(topar>0?'+':'')+topar}</b></span><span>합계 <b>${total||0}</b></span></div>
+    <p class="sub" style="margin-top:10px;text-align:center">칸을 누르면 숫자판 · 입력하면 다음 홀로 자동 이동 · 기존 값 변경 시 정정 사유 기록</p>`}
+let boardStageSel=null;
+async function renderBoardTab(){
+  const stages=await loadAllStages(config.id);
+  if(!stages.length){$('#boardStageChips').innerHTML='';return}
+  if(!boardStageSel||!stages.find(s=>s.id===boardStageSel))boardStageSel=(curActiveStage(stages)||stages[0]).id;
+  $('#boardStageChips').innerHTML=stageChipsHTML(stages,boardStageSel,'selectBoardStage');
+  const sel=stages.find(s=>s.id===boardStageSel);
+  $('#boardFinalizeBtn').style.display=sel.status==='open'?'block':'none';
+  if(sel.status==='open'){
+    const openIdx=stages.findIndex(s=>s.status==='open');
+    const hasNext=openIdx>=0&&openIdx+1<stages.length;
+    $('#boardFinalizeBtn').textContent=hasNext?`${sel.name} 최종순위 확정`:'결과 · 시상 확정하기'}}
+function selectBoardStage(id){
+  boardStageSel=id;
+  loadAllStages(config.id).then(stages=>{
+    const sel=stages.find(s=>s.id===id);
+    if(sel&&sel.status==='done')viewStageResult(id);else renderBoardTab()})}
 function renderMgmtHeader(){
   const period=config.dateS===config.dateE?(config.dateS||'').replaceAll('-','.')
     :`${(config.dateS||'').replaceAll('-','.')} ~ ${(config.dateE||'').slice(5).replace('-','.')}`;
@@ -3138,7 +3257,8 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
   $('#boardLive').style.visibility='hidden';
   refreshAll();toast('점수 초기화 완료')}
 
-function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole()}
+function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole();
+  if($('#mgScore').classList.contains('on')&&scoreMode==='player')renderGridCard()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
   const qs=new URLSearchParams(location.search);
