@@ -46,6 +46,9 @@ button{font-family:inherit;cursor:pointer}
 .appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+.queueBadge{background:#F2E3B4;color:#6f5a13;font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px;display:none;align-items:center;gap:6px}
+.reconnectBadge{background:rgba(239,131,104,.9);color:#fff;font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;display:none;align-items:center;gap:6px;margin-bottom:10px}
+.reconnectBadge .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
 @keyframes blink{50%{opacity:.25}}
 
 /* ===== 하단 내비 ===== */
@@ -995,6 +998,7 @@ tr:last-child td{border-bottom:none}
     <!-- 스코어입력 -->
     <div class="mgpane" id="mgScore">
       <div class="stagechips" id="scoreStageChips"></div>
+      <span class="queueBadge" id="mgQueueBadge" style="margin-bottom:10px">0건 전송 대기</span>
       <div id="scorePastNotice" class="card" style="display:none;text-align:center;padding:40px 20px"></div>
       <div id="scoreLiveArea">
         <div class="tools" style="margin-bottom:14px">
@@ -1050,7 +1054,7 @@ tr:last-child td{border-bottom:none}
   <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>실서비스: 심판은 문자 링크로 이 화면만 봅니다</span></div>
   <header class="appbar">
     <div class="logo"><span class="flag"></span>점수 입력</div>
-    <div class="who"><span class="livepill" id="jLive" style="display:none"><span class="dot"></span>LIVE 반영 중</span></div>
+    <div class="who"><span class="livepill" id="jLive" style="display:none"><span class="dot"></span>LIVE 반영 중</span><span class="queueBadge" id="jQueueBadge">0건 전송 대기</span></div>
   </header>
   <section class="page on" style="padding-top:14px">
     <div class="judgehead">
@@ -1126,6 +1130,7 @@ tr:last-child td{border-bottom:none}
         <div class="bsub" id="boardSub"></div>
         <div class="live" id="boardLive"><span class="dot"></span>LIVE</div>
       </div>
+      <div class="reconnectBadge" id="boardReconnectBadge" style="margin:10px 24px 0"><span class="dot"></span>재접속 중…</div>
       <div class="bhead" id="bhead"></div>
       <div class="brows" id="brows"><div class="bempty">참가자를 등록하면 명단이 표시됩니다</div></div>
       <div class="boardfoot"><span style="display:flex;align-items:center;gap:6px"><img src="brand/logo-symbol.svg" alt="" style="width:16px;height:16px">누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
@@ -3669,8 +3674,15 @@ async function submitPlayEntry(){
     const{error:upErr}=await sb.storage.from('scorecards').upload(path,peSelectedPhotoFile,{contentType:peSelectedPhotoFile.type||'image/jpeg'});
     if(upErr){toast('사진 업로드 실패: '+upErr.message);console.error(upErr)}
     else{const{data:pub}=sb.storage.from('scorecards').getPublicUrl(path);evidenceUrl=pub.publicUrl}}
-  const{error}=await sb.rpc('submit_play',{p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store,p_evidence_url:evidenceUrl});
-  if(error){toast('저장 실패: '+error.message);console.error(error);return}
+  const playParams={p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store,p_evidence_url:evidenceUrl};
+  try{
+    const{error}=await sb.rpc('submit_play',playParams);
+    if(error){toast('저장 실패: '+error.message);console.error(error);return}
+  }catch(e){
+    queuePush({type:'play',params:playParams,label:`${p?p.name:''} ${jRound+1}코스 ${strokes}타`});
+    toast(`네트워크 연결이 안 돼 로컬에 저장했습니다 — 연결되면 자동 전송됩니다 (대기 ${loadQueue().length}건)`);
+    $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
+    return}
   addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}${evidenceUrl?' · 사진 첨부':''}`);
   $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
   if(judgeStageKind==='period'){
@@ -3753,12 +3765,50 @@ async function finalizeTournament(){
   toast('대회 결과 · 시상이 확정되었습니다');
   await refreshMyTournamentStatus();
   mgShow('mgResult')}
+/* ================= 오프라인 전송 큐 ================= */
+const OFFLINE_QUEUE_KEY='nuga1_offline_queue';
+function loadQueue(){try{return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY)||'[]')}catch(e){return[]}}
+function saveQueue(q){try{localStorage.setItem(OFFLINE_QUEUE_KEY,JSON.stringify(q))}catch(e){}}
+function queuePush(item){
+  const q=loadQueue();
+  q.push({...item,qid:Date.now()+'_'+Math.random().toString(36).slice(2)});
+  saveQueue(q);updateQueueBadge()}
+function updateQueueBadge(){
+  const n=loadQueue().length;
+  document.querySelectorAll('.queueBadge').forEach(el=>{
+    el.style.display=n>0?'inline-flex':'none';
+    el.textContent=`${n}건 전송 대기`})}
+let queueFlushing=false;
+async function flushQueue(){
+  if(queueFlushing)return;
+  const q=loadQueue();
+  if(!q.length)return;
+  queueFlushing=true;
+  const remaining=[];
+  let sent=0;
+  for(let i=0;i<q.length;i++){
+    try{
+      const{error}=await sb.rpc(q[i].type==='play'?'submit_play':'submit_score',q[i].params);
+      if(error){console.error(error)}else sent++
+    }catch(e){remaining.push(...q.slice(i));break}}
+  saveQueue(remaining);
+  updateQueueBadge();
+  queueFlushing=false;
+  if(sent>0){toast(`대기 중이던 기록 ${sent}건을 전송했습니다`);await refreshMyTournamentStatus()}}
+window.addEventListener('online',flushQueue);
+setInterval(flushQueue,15000);
+updateQueueBadge();
 async function submitScoreToServer(pi,gi,v,reason){
   const token=currentJudgeToken(),playerId=players[pi].id;
   if(!token||!playerId)return;
-  const{error}=await sb.rpc('submit_score',{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null});
-  if(error){toast('서버 저장 실패: '+error.message);console.error(error);return}
-  await refreshMyTournamentStatus()}
+  const params={p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null};
+  try{
+    const{error}=await sb.rpc('submit_score',params);
+    if(error){toast('서버 저장 실패: '+error.message);console.error(error);return}
+    await refreshMyTournamentStatus()
+  }catch(e){
+    queuePush({type:'score',params,label:`${players[pi].name} ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 ${v}타`});
+    toast(`네트워크 연결이 안 돼 로컬에 저장했습니다 — 연결되면 자동 전송됩니다 (대기 ${loadQueue().length}건)`)}}
 async function setScore(v){if(!padTarget)return;
   const{pi,gi}=padTarget;const old=players[pi].scores[gi];
   if(old!=null&&v!=null&&v!==old){
@@ -3888,10 +3938,14 @@ async function loadBoardData(tournamentId,trusted){
   groups=Array.from({length:maxG+1},()=>[]);
   players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
   renderBoard();renderResult()}
-let boardChannel=null;
+let boardChannel=null,boardWasDown=false,boardReconnectId=null,boardReconnectTimer=null;
+function setReconnectBadge(show){
+  document.querySelectorAll('.reconnectBadge').forEach(el=>{el.style.display=show?'inline-flex':'none'})}
 function subscribeBoardRealtime(tournamentId){
+  clearTimeout(boardReconnectTimer);
   if(boardChannel){sb.removeChannel(boardChannel);boardChannel=null}
   if(!tournamentId)return;
+  boardReconnectId=tournamentId;
   boardChannel=sb.channel('scores-'+tournamentId)
     .on('postgres_changes',{event:'*',schema:'public',table:'scores',filter:'tournament_id=eq.'+tournamentId},payload=>{
       const row=(payload.eventType==='DELETE')?payload.old:payload.new;
@@ -3915,7 +3969,18 @@ function subscribeBoardRealtime(tournamentId){
         const cur=p.best[row.course_no];
         if(cur==null||row.strokes_total<cur)p.best[row.course_no]=row.strokes_total}
       renderBoard();renderResult()})
-    .subscribe()}
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){
+        setReconnectBadge(false);
+        if(boardWasDown){
+          boardWasDown=false;
+          loadBoardData(tournamentId,true);
+          toast('전광판이 다시 연결되었습니다')}
+      }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        boardWasDown=true;
+        setReconnectBadge(true);
+        clearTimeout(boardReconnectTimer);
+        boardReconnectTimer=setTimeout(()=>{if(boardReconnectId===tournamentId)subscribeBoardRealtime(tournamentId)},3000)}})}
 function vShort(r){return (config.venues[r]||`${r+1}코스`).replace(' 파크골프장','').slice(0,5)}
 const BOARD_COLS='0.6fr 3fr 1fr 1fr 1fr';
 let boardGenderFilter='all',boardScopeFilter=-1,boardAutoRotate=false,boardAutoTimer=null;
