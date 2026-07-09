@@ -352,6 +352,11 @@ tr:last-child td{border-bottom:none}
 .toolrow .info{flex:1;min-width:110px}
 .toolrow .info b{display:block;font-size:18px}
 .toolrow .info span{color:var(--muted);font-size:14px}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;cursor:pointer}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px;flex:0 0 auto;cursor:pointer}
+.pill2.pay{background:#E3F6F0;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:var(--coral)}
 .qrbox{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .qrbox canvas{width:130px;height:130px;image-rendering:pixelated;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px;flex:0 0 auto}
 .urlchip{background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:12px 14px;font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:.03em;word-break:break-all}
@@ -891,7 +896,8 @@ tr:last-child td{border-bottom:none}
           <div id="prevList"></div>
           <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
         </div>
-        <p class="sub" style="margin-bottom:8px">참가자를 누르면 수정·기권·삭제할 수 있습니다.</p>
+        <button class="btn full" style="margin-bottom:12px" onclick="openAddPlayer()">+ 참가자 추가</button>
+        <p class="sub" style="margin-bottom:8px">동그라미 탭 = 출석 체크 · 이름 탭 = 수정(입금 표시·기권·삭제)</p>
         <div class="card" style="padding:0 18px">
           <div id="ptable"></div>
         </div>
@@ -1172,11 +1178,37 @@ tr:last-child td{border-bottom:none}
       <div><label class="fl" style="margin-top:0">소속 클럽</label><input type="text" id="pevClub"></div>
     </div>
     <button class="btn full" style="margin-top:16px" onclick="savePEdit()">저장</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:12px 14px;background:var(--bg);border-radius:12px">
+      <span style="font-weight:600">입금 상태</span>
+      <button class="pill2 nopay" id="pevPaidBtn" onclick="togglePaid()">미입금</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
       <button class="btn sm ghost" id="pevWd" onclick="setPStatus('wd')">기권 처리</button>
       <button class="btn sm ghost" onclick="setPStatus('dq')">실격 처리</button>
       <button class="btn sm warn" onclick="delPlayer()">삭제</button>
     </div>
+  </div>
+</div>
+
+<!-- 참가자 추가 -->
+<div class="overlay" id="padd" onclick="if(event.target===this)closeAddPlayer()">
+  <div class="pad">
+    <h3>참가자 추가</h3>
+    <p class="sub" style="margin-bottom:14px">접수 마감 여부와 관계없이 바로 등록됩니다</p>
+    <label class="fl" style="margin-top:0">이름</label><input type="text" id="apdName">
+    <label class="fl">전화번호</label><input type="tel" id="apdPhone" placeholder="본인 연락이 어려우면 가족 번호 가능">
+    <div id="apdFields"></div>
+    <button class="btn full" style="margin-top:16px" onclick="submitAddPlayer()">추가</button>
+  </div>
+</div>
+
+<!-- 정원 초과 선택 -->
+<div class="overlay" id="capChoiceOv" onclick="if(event.target===this)closeCapChoice()">
+  <div class="pad">
+    <h3>정원이 가득 찼습니다</h3>
+    <p class="sub" id="capChoiceDesc" style="margin:8px 0 18px">—</p>
+    <button class="btn full" style="margin-bottom:8px" onclick="addAsWaitlist()">대기자로 추가</button>
+    <button class="btn ghost full" onclick="expandCapAndAdd()">정원 늘려서 확정 등록</button>
   </div>
 </div>
 
@@ -2617,15 +2649,30 @@ function syncMine(){const t=tournaments.find(x=>x.mine);if(t){t.players=players.
 function renderPlayers(){
   const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
   $('#ptable').innerHTML=players.length?players.map((p,i)=>
-    `<div class="toolrow" style="cursor:pointer;${isOut(p)?'opacity:.5':''}" onclick="openPEdit(${i})">
-      <div class="avatar">${p.name[0]}</div>
-      <div class="info"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
-      <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div>
-      ${p.group>=0?`<span class="pill">${p.group+1}조</span>`:'<span class="pill gray">—</span>'}
-      <span style="color:var(--muted);font-size:20px">›</span>
+    `<div class="toolrow" style="${isOut(p)?'opacity:.5':''}">
+      <span class="ckc ${p.ci?'on':''}" onclick="toggleCheckin(${i})">${p.ci?'✓':''}</span>
+      <div class="info" style="cursor:pointer" onclick="openPEdit(${i})"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
+      <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}${p.group>=0?' · '+(p.group+1)+'조':''}</span></div>
+      <span class="pill2 ${p.paid?'pay':'nopay'}" style="margin-left:auto" onclick="openPEdit(${i})">${p.paid?'입금':'미입금'}</span>
     </div>`).join('')
     :'<p class="sub" style="text-align:center;padding:26px 0">등록된 참가자가 없습니다</p>';
-  renderWait()}
+  renderPlayersSub();renderWait()}
+function renderPlayersSub(){
+  if(curMgTab!=='mgPlayers')return;
+  const ci=players.filter(p=>p.ci).length,paid=players.filter(p=>p.paid).length;
+  $('#mgSub').textContent=`참가자 ${players.length}명 · 출석 ${ci} · 입금 ${paid}`}
+async function toggleCheckin(i){
+  const p=players[i];if(!p.id)return;const next=!p.ci;
+  const{error}=await sb.from('players').update({checked_in_at:next?new Date().toISOString():null}).eq('id',p.id);
+  if(error){toast('출석 처리 중 오류가 발생했습니다');console.error(error);return}
+  p.ci=next;renderPlayers()}
+async function togglePaid(){
+  if(editIdx<0)return;const p=players[editIdx];if(!p.id)return;const next=!p.paid;
+  const{error}=await sb.from('players').update({paid:next}).eq('id',p.id);
+  if(error){toast('입금 처리 중 오류가 발생했습니다');console.error(error);return}
+  p.paid=next;
+  const btn=$('#pevPaidBtn');btn.textContent=next?'입금':'미입금';btn.className='pill2 '+(next?'pay':'nopay');
+  renderPlayers()}
 
 /* ===== 참가자 수정 · 기권/실격 · 삭제 ===== */
 function openPEdit(i){editIdx=i;const p=players[i];
@@ -2634,6 +2681,7 @@ function openPEdit(i){editIdx=i;const p=players[i];
   $('#pevName').value=p.name;$('#pevSex').value=p.sex||'남';
   $('#pevAge').value=p.age||'';$('#pevClub').value=p.club||'';
   $('#pevWd').textContent=isOut(p)?'복귀 처리':'기권 처리';
+  const paidBtn=$('#pevPaidBtn');paidBtn.textContent=p.paid?'입금':'미입금';paidBtn.className='pill2 '+(p.paid?'pay':'nopay');
   $('#pev').classList.add('on')}
 function closePEdit(){$('#pev').classList.remove('on');editIdx=-1}
 function savePEdit(){if(editIdx<0)return;const p=players[editIdx];
@@ -2667,6 +2715,68 @@ function promoteWait(i){
   const p=waitlist.splice(i,1)[0];players.push(p);
   makeGroups(false);syncMine();renderPlayers();refreshAll();
   toast(`${p.name} 님을 참가자로 승격했습니다 — 확정 문자 발송(실서비스)`)}
+
+/* ===== 참가자 직접 추가 ===== */
+function addPlayerFieldsHTML(){
+  const f=config.fields||{};let h='';
+  if(f.sex||f.age){
+    h+='<div class="frow" style="margin-top:8px">';
+    h+=f.sex?'<div><label class="fl" style="margin-top:0">성별</label><select id="apdSex"><option>남</option><option>여</option></select></div>':'<div></div>';
+    h+=f.age?'<div><label class="fl" style="margin-top:0">나이</label><input type="tel" id="apdAge"></div>':'<div></div>';
+    h+='</div>'}
+  if(f.club||f.region){
+    h+='<div class="frow" style="margin-top:8px">';
+    h+=f.club?'<div><label class="fl" style="margin-top:0">소속 클럽</label><input type="text" id="apdClub"></div>':'<div></div>';
+    h+=f.region?'<div><label class="fl" style="margin-top:0">지역</label><input type="text" id="apdRegion"></div>':'<div></div>';
+    h+='</div>'}
+  return h}
+function openAddPlayer(){
+  $('#apdName').value='';$('#apdPhone').value='';
+  $('#apdFields').innerHTML=addPlayerFieldsHTML();
+  $('#padd').classList.add('on')}
+function closeAddPlayer(){$('#padd').classList.remove('on')}
+async function submitAddPlayer(){
+  const name=$('#apdName').value.trim();
+  const phone=$('#apdPhone').value.trim().replace(/[\s.]/g,'').replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
+  if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
+  const f=config.fields||{};
+  const p={name,phone,
+    sex:f.sex?$('#apdSex').value:'',age:f.age?+($('#apdAge').value||0)||'':'',
+    club:f.club?($('#apdClub').value.trim()||'무소속'):'',region:f.region?$('#apdRegion').value.trim():''};
+  if(players.length>=config.cap){
+    closeAddPlayer();
+    $('#capChoiceDesc').textContent=`현재 정원 ${config.cap}명이 모두 찼습니다. 어떻게 추가할까요?`;
+    pendingAdd=p;$('#capChoiceOv').classList.add('on');return}
+  await doAddPlayer(p,'ok')}
+let pendingAdd=null;
+function closeCapChoice(){$('#capChoiceOv').classList.remove('on');pendingAdd=null}
+async function addAsWaitlist(){
+  if(!pendingAdd)return;
+  await doAddPlayer(pendingAdd,'wait');
+  closeCapChoice()}
+async function expandCapAndAdd(){
+  if(!pendingAdd)return;
+  const{data:appliedCap,error}=await sb.rpc('increase_tournament_cap',{t_id:config.id,new_cap:config.cap+1});
+  if(error){toast('정원 변경 중 오류가 발생했습니다');console.error(error);return}
+  config.cap=appliedCap;
+  await doAddPlayer(pendingAdd,'ok');
+  closeCapChoice();
+  toast(`정원을 ${appliedCap}명으로 늘리고 확정 등록했습니다`)}
+async function doAddPlayer(p,status){
+  const{data,error}=await sb.from('players').insert({
+    tournament_id:config.id,name:p.name,phone:p.phone,
+    sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,
+    status}).select('id').single();
+  if(error){
+    if(error.code==='23505'){toast('이미 등록된 전화번호입니다');return}
+    toast('등록 중 오류가 발생했습니다');console.error(error);return}
+  const local={...p,id:data.id,scores:Array(HOLES).fill(null),group:-1,ci:false,paid:false};
+  if(status==='wait')waitlist.push(local);else players.push(local);
+  closeAddPlayer();
+  syncMine();renderPlayers();renderWait();
+  if(status==='ok')await makeGroups(false);
+  refreshAll();
+  toast(status==='wait'?`${p.name} 님을 대기자로 등록했습니다`:`${p.name} 님을 참가자로 등록했습니다`)}
 
 /* ================= 조편성 ================= */
 async function persistGroups(){
@@ -3015,6 +3125,7 @@ async function loadBoardData(tournamentId,trusted){
       if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
       region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+      ci:!!r.checked_in_at,paid:!!r.paid,
       best:bestMap[r.id]||{}}));
     groups=[];
     renderBoard();renderResult();return}
@@ -3032,6 +3143,7 @@ async function loadBoardData(tournamentId,trusted){
     const sm=scoreMap[r.id];if(sm)Object.keys(sm).forEach(h=>arr[+h]=sm[h]);
     return{id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
       region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
+      ci:!!r.checked_in_at,paid:!!r.paid,
       group:r.group_no!=null?r.group_no:-1,scores:arr}});
   const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
   groups=Array.from({length:maxG+1},()=>[]);
