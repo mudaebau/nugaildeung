@@ -603,7 +603,7 @@ tr:last-child td{border-bottom:none}
             <div id="venueBox"></div>
           </div>
           <div id="screenFields" style="display:none">
-            <label class="fl">진행 코스(매장) 수 · 최대 6개</label>
+            <label class="fl">진행 코스 수 · 최대 6개</label>
             <select id="fScreenCourses" onchange="renderScreenVenues()">
               <option value="1">1개 코스</option>
               <option value="2" selected>2개 코스</option>
@@ -612,7 +612,7 @@ tr:last-child td{border-bottom:none}
               <option value="5">5개 코스</option>
               <option value="6">6개 코스</option>
             </select>
-            <label class="fl">코스(매장)명 · 총파</label>
+            <label class="fl">코스명 · 총파</label>
             <div id="screenVenueBox"></div>
             <p class="sub" style="margin-top:8px">참가자가 기간 중 자유롭게 방문해 기록을 제출하는 방식입니다 — 조편성 없이 진행돼요.</p>
           </div>
@@ -651,13 +651,13 @@ tr:last-child td{border-bottom:none}
             <div id="venueBox2"></div>
           </div>
           <div id="screenFields2" style="display:none">
-            <label class="fl">진행 코스(매장) 수</label>
+            <label class="fl">진행 코스 수</label>
             <select id="fScreenCourses2" onchange="renderScreenVenues2()">
               <option value="1" selected>1개 코스</option>
               <option value="2">2개 코스</option>
               <option value="3">3개 코스</option>
             </select>
-            <label class="fl">코스(매장)명 · 총파</label>
+            <label class="fl">코스명 · 총파</label>
             <div id="screenVenueBox2"></div>
           </div>
         </div>
@@ -695,13 +695,13 @@ tr:last-child td{border-bottom:none}
             <div id="venueBox3"></div>
           </div>
           <div id="screenFields3" style="display:none">
-            <label class="fl">진행 코스(매장) 수</label>
+            <label class="fl">진행 코스 수</label>
             <select id="fScreenCourses3" onchange="renderScreenVenues3()">
               <option value="1" selected>1개 코스</option>
               <option value="2">2개 코스</option>
               <option value="3">3개 코스</option>
             </select>
-            <label class="fl">코스(매장)명 · 총파</label>
+            <label class="fl">코스명 · 총파</label>
             <div id="screenVenueBox3"></div>
           </div>
         </div>
@@ -732,7 +732,13 @@ tr:last-child td{border-bottom:none}
             <div class="opt" data-f="region">지역</div>
           </div>
         </div>
-        <label class="fl">시상 부문 (중복 수상 제외 자동 집계)</label>
+        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
+      </div>
+
+      <div class="wpane" id="wpAwards">
+        <h2 class="wq">시상 내역을 알려주세요</h2>
+        <p class="wsub">참가자에게 요강으로 공개됩니다</p>
+        <label class="fl" style="margin-top:0">시상 부문 (중복 수상 제외 자동 집계)</label>
         <div class="card">
           <div class="optrow">
             <div class="opt fixed">종합 1·2·3위 <span class="tick">기본</span></div>
@@ -741,12 +747,6 @@ tr:last-child td{border-bottom:none}
             <div class="opt" data-a="club">클럽 대항전</div>
           </div>
         </div>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
-
-      <div class="wpane" id="wpAwards">
-        <h2 class="wq">시상 내역을 알려주세요</h2>
-        <p class="wsub">참가자에게 요강으로 공개됩니다 (전부 선택 사항이에요)</p>
         <div class="card">
           <label class="fl" style="margin-top:0">총상금 규모 (선택)</label>
           <input type="text" id="fPrizeTotal" placeholder="예: 총 500만원 상당">
@@ -2503,26 +2503,26 @@ function toggleCutMode(which){
   const m=$('#fCutMode'+suf).value;
   $('#cutTotalBox'+suf).style.display=m==='total'?'block':'none';
   $('#cutGenderBox'+suf).style.display=m==='gender'?'flex':'none'}
-const SCREEN_VENUE_DEFAULTS=['1번 매장','2번 매장','3번 매장','4번 매장','5번 매장','6번 매장'];
+const SCREEN_VENUE_DEFAULTS=['1코스','2코스','3코스','4코스','5코스','6코스'];
 function renderScreenVenues(){
   const n=+$('#fScreenCourses').value;
   $('#screenVenueBox').innerHTML=Array.from({length:n},(_,i)=>
     `<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="screenVenueIn" style="flex:1;min-width:0" placeholder="${i+1}코스 매장명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="screenVenueIn" style="flex:1;min-width:0" placeholder="${i+1}코스명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
       <input type="tel" class="screenParIn" style="width:90px;flex:0 0 auto" placeholder="총파" value="66">
     </div>`).join('')}
 function renderScreenVenues2(){
   const n=+$('#fScreenCourses2').value;
   $('#screenVenueBox2').innerHTML=Array.from({length:n},(_,i)=>
     `<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="screenVenueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스 매장명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="screenVenueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
       <input type="tel" class="screenParIn2" style="width:90px;flex:0 0 auto" placeholder="총파" value="66">
     </div>`).join('')}
 function renderScreenVenues3(){
   const n=+$('#fScreenCourses3').value;
   $('#screenVenueBox3').innerHTML=Array.from({length:n},(_,i)=>
     `<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="screenVenueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스 매장명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="screenVenueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스명" value="${SCREEN_VENUE_DEFAULTS[i]||''}">
       <input type="tel" class="screenParIn3" style="width:90px;flex:0 0 auto" placeholder="총파" value="66">
     </div>`).join('')}
 const VENUE_DEFAULTS=['솔터공원 파크골프장','미사한강 파크골프장','광나루 파크골프장','여주 파크골프장'];
@@ -2644,16 +2644,25 @@ function renderNoticePreview(){
       <p>${awardList.join(' · ')}</p>
       ${prizeTotal||prizeList.length?`<label class="fl">시상 내역</label><p>${prizeTotal?prizeTotal+'<br>':''}${prizeList.join('<br>')}</p>`:''}
     </div>`}
+const AWARD_FIELD_DEP={gender:{f:'sex',fLabel:'성별',aLabel:'남녀부',aParticle:'를'},age:{f:'age',fLabel:'나이',aLabel:'연령부',aParticle:'를'},club:{f:'club',fLabel:'소속 클럽',aLabel:'클럽 대항전',aParticle:'을'}};
+function setOptOn(o,on){o.classList.toggle('on',on);o.innerHTML=o.textContent.replace('✓','').trim()+(on?' <span class="tick">✓</span>':'')}
 document.querySelectorAll('.opt[data-a]').forEach(o=>{
   o.onclick=()=>{const a=o.dataset.a;
     config.awards[a]=!config.awards[a];
-    o.classList.toggle('on',config.awards[a]);
-    o.innerHTML=o.textContent.replace('✓','').trim()+(config.awards[a]?' <span class="tick">✓</span>':'')}});
+    setOptOn(o,config.awards[a]);
+    const dep=AWARD_FIELD_DEP[a];
+    if(config.awards[a]&&dep&&!config.fields[dep.f]){
+      config.fields[dep.f]=true;
+      const fieldOpt=document.querySelector(`.opt[data-f="${dep.f}"]`);
+      if(fieldOpt)setOptOn(fieldOpt,true);
+      toast(`${dep.aLabel} 집계를 위해 '${dep.fLabel}' 항목이 켜졌어요`)}}});
 document.querySelectorAll('.opt[data-f]').forEach(o=>{
   o.onclick=()=>{const f=o.dataset.f;
+    if(config.fields[f]){
+      const blocking=Object.entries(AWARD_FIELD_DEP).find(([a,dep])=>dep.f===f&&config.awards[a]);
+      if(blocking){toast(`${blocking[1].aLabel} 시상이 켜져 있어 '${blocking[1].fLabel}' 항목을 끌 수 없어요 — 먼저 시상 화면에서 ${blocking[1].aLabel}${blocking[1].aParticle} 꺼주세요`);return}}
     config.fields[f]=!config.fields[f];
-    o.classList.toggle('on',config.fields[f]);
-    o.innerHTML=o.textContent.replace('✓','').trim()+(config.fields[f]?' <span class="tick">✓</span>':'')}});
+    setOptOn(o,config.fields[f])}});
 function renderStaff(){
   $('#staffList').innerHTML=staff.map((s,i)=>`
     <div class="staffrow">
