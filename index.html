@@ -7,7 +7,7 @@
 <link rel="icon" href="brand/favicon-32.png">
 <link rel="apple-touch-icon" href="brand/apple-touch-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   /* 파스텔 블루 시니어 팔레트 */
@@ -381,35 +381,39 @@ tr:last-child td{border-bottom:none}
 .receipt .rn{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:var(--main-deep);letter-spacing:.1em;background:var(--main-soft);display:inline-block;padding:10px 24px;border-radius:14px;margin:12px 0}
 .receipt p{color:var(--muted);font-size:17px;line-height:1.75}
 
-/* ===== 전광판 (TV용 · 딥 네이비) ===== */
+/* ===== 전광판 (TV용 · 소프트 블루 B안) ===== */
 .boardwrap{max-width:1100px;margin:0 auto;padding:20px 16px}
 .boardctl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .boardctl .btn.ghost{background:rgba(255,255,255,.14);color:#fff}
-.boardshell{background:var(--board-bg);border-radius:var(--radius);overflow:hidden;border:1px solid var(--board-line)}
-.boardtop{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:2px solid var(--board-line);flex-wrap:wrap}
-.boardtop h3{font-family:'Black Han Sans',sans-serif;color:#fff;font-size:clamp(22px,3vw,34px);letter-spacing:.02em}
-.boardtop .bsub{color:#9FBEDC;font-size:16px}
+.boardctl .btn.ghost.on{background:#fff;color:var(--main-deep)}
+.boardshell{background:linear-gradient(170deg,#3D71A9,#2E5C8D);border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,.15)}
+.boardtop{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.18);flex-wrap:wrap}
+.boardtop h3{font-family:'Noto Sans KR',sans-serif;font-weight:700;color:#fff;font-size:clamp(20px,3vw,30px)}
+.boardtop .bsub{color:#C6D9EC;font-size:15px}
 .boardtop .live{margin-left:auto;color:#fff;background:var(--coral);font-weight:600;font-size:15px;padding:6px 14px;border-radius:99px;display:flex;gap:7px;align-items:center;visibility:hidden}
 .boardtop .live .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
-.bhead{display:grid;padding:12px 24px;color:#7FA5CB;font-size:14px;font-weight:600;letter-spacing:.12em;border-bottom:1px solid var(--board-line)}
-.brow{display:grid;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid var(--board-line);transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s}
-.brow .rank{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#8FB3D6}
-.brow .name{font-family:'Black Han Sans',sans-serif;color:#fff;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brow .name small{font-family:'Noto Sans KR',sans-serif;font-weight:500;color:#8FB3D6;font-size:13px;margin-left:9px}
-.brow .topar{font-family:'Oswald',sans-serif;font-size:25px;font-weight:700;color:#fff;text-align:right}
-.brow .topar.minus{color:#FF9B7E}
-.brow .thru{color:#9FBEDC;text-align:center;font-size:16px}
-.brow .total{font-family:'Oswald',sans-serif;font-size:27px;font-weight:700;color:#fff;text-align:right}
-.brow .rsc{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:#BDD5EC;text-align:right}
-.brow.top1{background:linear-gradient(90deg,rgba(247,207,92,.18),transparent 70%)}
-.brow.top1 .rank{color:var(--sun)}
+.bhead{display:grid;padding:12px 24px;color:#B9D0E6;font-size:13px;font-weight:600;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,.15)}
+.brow{display:grid;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid rgba(255,255,255,.1);transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s}
+.brow:nth-child(odd){background:rgba(255,255,255,.045)}
+.brow .rank{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;color:#A9C4DE}
+.brow .name{font-family:'Noto Sans KR',sans-serif;font-weight:600;color:#fff;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .name small{font-family:'Noto Sans KR',sans-serif;font-weight:400;color:#A9C4DE;font-size:13px;margin-left:9px}
+.brow .topar{font-family:'Oswald',sans-serif;font-size:24px;font-weight:600;color:#fff;text-align:right}
+.brow .topar.minus{color:#FFB49E}
+.brow .thru{color:#B9D0E6;text-align:center;font-size:15px}
+.brow .thru b{font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;color:#DCE9F5;margin-right:2px}
+.brow .thru.done{color:#8FE0C8;font-weight:700;font-size:16px}
+.brow .total{font-family:'Oswald',sans-serif;font-size:25px;font-weight:700;color:#fff;text-align:right}
+.brow.top1{background:linear-gradient(90deg,rgba(247,207,92,.22),transparent 75%);border-left:5px solid var(--sun)}
+.brow.top1 .rank,.brow.top1 .total{color:var(--sun)}
+.brow.top1 .name{font-weight:700}
 .brow.flash{background:rgba(247,207,92,.24)}
-.bchip{border:2px solid var(--board-line);background:rgba(255,255,255,.06);color:#9FBEDC;border-radius:99px;padding:10px 16px;font-weight:600;font-size:16px}
-.bchip.on{background:#fff;color:#173350;border-color:#fff}
-.boardfoot{padding:14px 24px;color:#6E93BC;font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.bempty{color:#7FA5CB;text-align:center;padding:54px 20px;font-size:19px}
+.bchip{border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:#B9D0E6;border-radius:99px;padding:10px 16px;font-weight:600;font-size:16px}
+.bchip.on{background:#fff;color:var(--main-deep);border-color:#fff}
+.boardfoot{padding:14px 24px;color:#A9C4DE;font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.bempty{color:#B9D0E6;text-align:center;padding:54px 20px;font-size:19px}
 .cutline{display:flex;align-items:center;gap:8px;margin:2px 24px;border-top:2px dashed var(--coral)}
-.cutline span{color:var(--coral);font-size:12px;font-weight:600;white-space:nowrap;transform:translateY(-9px);background:var(--board-bg);padding:0 8px}
+.cutline span{color:var(--coral);font-size:12px;font-weight:600;white-space:nowrap;transform:translateY(-9px);background:#345f8f;padding:0 8px}
 :fullscreen .boardshell{border-radius:0;min-height:100vh}
 
 /* ===== 결과 ===== */
@@ -1063,12 +1067,13 @@ tr:last-child td{border-bottom:none}
 
 <!-- ================= 전광판 ================= -->
 <div class="mobile wide" id="viewBoard" style="display:none">
-  <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="backToOwner()">← 뒤로</button><span>실서비스: 이 주소를 대회장 TV 노트북에서 엽니다 — nuga1.kr/t/1024/board</span></div>
+  <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="leaveBoard()">← 뒤로</button><span>실서비스: 이 주소를 대회장 TV 노트북에서 엽니다 — nuga1.kr/t/1024/board</span></div>
   <div class="boardwrap">
     <div class="boardctl" id="boardCtl">
       <button class="btn" id="simBtn" onclick="toggleSim()">▶ 데모 경기 시작</button>
       <button class="btn ghost" onclick="resetScores()">↺ 초기화</button>
       <button class="btn ghost" onclick="fullBoard()">⛶ 전체 화면</button>
+      <button class="btn ghost" id="autoRotateBtn" onclick="toggleAutoRotate()" style="display:none">🔁 자동 순환</button>
       <div id="boardModeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto"></div>
     </div>
     <div class="boardshell" id="boardGate" style="display:none;text-align:center;padding:60px 24px">
@@ -1287,7 +1292,7 @@ let coursePars2=[];
 let coursePars3=[];
 const parAt=gi=>{const r=Math.floor(gi/18);return (coursePars[r]||PRESET66)[gi%18]};
 const isOut=p=>p.st==='wd'||p.st==='dq';
-let boardMode=-1,jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
+let jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
 const config={created:false,type:'field',stageCount:1,name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:120,
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
@@ -1362,6 +1367,7 @@ function openJudge(i){
   curStaff=Math.min(i,judges().length-1);
   navTo('Judge')}
 async function openBoard(){navTo('Board');await loadBoardData(config.id);subscribeBoardRealtime(config.id)}
+function leaveBoard(){stopAutoRotate();boardAutoRotate=false;backToOwner()}
 async function openNotice(id){navTo('Notice');await loadNotice(id)}
 
 /* ================= nav ================= */
@@ -2875,7 +2881,7 @@ async function createTournament(){
   config.accessCode=$('#fAccessCode').value.trim();
   config.prizeTotal=$('#fPrizeTotal').value.trim();
   config.noticeExtra={contact:$('#fContact').value.trim(),fee:$('#fFee').value.trim(),rules:$('#fRules').value.trim()};
-  boardMode=-1;jRound=0;
+  jRound=0;
 
   let stageVenues,stageCoursePars,stageKind,stageUseGroups;
   if(config.type==='screen'){
@@ -3440,10 +3446,9 @@ function sums(p){
   p.scores.forEach((s,i)=>{if(s!=null){const r=Math.floor(i/18);rt[r]+=s;rc[r]++;rp[r]+=parAt(i)}});
   const tot=rt.reduce((a,b)=>a+b,0),thru=rc.reduce((a,b)=>a+b,0),par=rp.reduce((a,b)=>a+b,0);
   return{rt,rc,rp,tot,thru,topar:tot-par}}
-function standings(mode=-1){
-  const arr=players.map(p=>{
+function standings(pool=players){
+  const arr=pool.map(p=>{
     const s=sums(p);
-    if(mode>=0)return{p,rt:s.rt,rc:s.rc,tot:s.rt[mode],thru:s.rc[mode],topar:s.rt[mode]-s.rp[mode],all:s};
     return{p,rt:s.rt,rc:s.rc,tot:s.tot,thru:s.thru,topar:s.topar,all:s}});
   const act=arr.filter(x=>!isOut(x.p)),outs=arr.filter(x=>isOut(x.p)).map(x=>({...x,out:true}));
   act.sort((x,y)=>{
@@ -3555,82 +3560,98 @@ function subscribeBoardRealtime(tournamentId){
       renderBoard();renderResult()})
     .subscribe()}
 function vShort(r){return (config.venues[r]||`${r+1}코스`).replace(' 파크골프장','').slice(0,5)}
-function renderBoardChips(){
-  if(!config.created){$('#boardModeChips').innerHTML='';return}
-  let h=`<button class="bchip ${boardMode===-1?'on':''}" onclick="boardMode=-1;renderBoard()">종합</button>`;
-  if(ROUNDS>1)for(let r=0;r<ROUNDS;r++)
-    h+=`<button class="bchip ${boardMode===r?'on':''}" onclick="boardMode=${r};renderBoard()">${r+1}C ${vShort(r)}</button>`;
-  $('#boardModeChips').innerHTML=h}
-let periodGenderFilter='all';
-function periodStandings(genderFilter='all'){
-  let pool=players;
-  if(genderFilter!=='all')pool=pool.filter(p=>p.sex===genderFilter);
+const BOARD_COLS='0.6fr 3fr 1fr 1fr 1fr';
+let boardGenderFilter='all',boardAutoRotate=false,boardAutoTimer=null;
+function boardGenderChipsHTML(){
+  if(!config.fields.sex)return'';
+  return[['all','전체'],['남','남자부'],['여','여자부']].map(([g,label])=>
+    `<button class="bchip ${boardGenderFilter===g?'on':''}" onclick="setBoardGenderFilter('${g}')">${label}</button>`).join('')}
+function setBoardGenderFilter(g){boardGenderFilter=g;renderBoard()}
+function updateBoardCtl(){
+  $('#boardModeChips').innerHTML=boardGenderChipsHTML();
+  const rb=$('#autoRotateBtn');if(rb)rb.style.display=config.fields.sex?'inline-flex':'none'}
+function stopAutoRotate(){clearTimeout(boardAutoTimer);boardAutoTimer=null}
+function toggleAutoRotate(){
+  boardAutoRotate=!boardAutoRotate;
+  const btn=$('#autoRotateBtn');
+  btn.classList.toggle('on',boardAutoRotate);
+  btn.textContent=boardAutoRotate?'⏸ 자동 순환 중':'🔁 자동 순환';
+  if(boardAutoRotate)startAutoRotate();else stopAutoRotate()}
+function startAutoRotate(){
+  const seq=[['all',20000],['남',10000],['여',10000]];
+  let i=0;
+  const step=()=>{
+    if(!boardAutoRotate)return;
+    boardGenderFilter=seq[i][0];renderBoard();
+    boardAutoTimer=setTimeout(()=>{i=(i+1)%seq.length;step()},seq[i][1])};
+  step()}
+function periodStandings(pool=players){
   const arr=pool.map(p=>{
     const bestArr=Array.from({length:ROUNDS},(_,c)=>p.best&&p.best[c]!=null?p.best[c]:null);
     const completed=bestArr.filter(v=>v!=null).length;
-    const tot=completed===ROUNDS?bestArr.reduce((a,b)=>a+b,0):null;
-    return{p,bestArr,completed,tot}});
+    const sumSoFar=bestArr.reduce((a,b)=>a+(b||0),0);
+    const parSoFar=bestArr.reduce((a,b,c)=>a+(b!=null?(coursePars[c]||0):0),0);
+    const tot=completed===ROUNDS?sumSoFar:null;
+    const topar=completed>0?sumSoFar-parSoFar:null;
+    return{p,bestArr,completed,tot,sumSoFar,topar}});
   const act=arr.filter(x=>!isOut(x.p)),outs=arr.filter(x=>isOut(x.p)).map(x=>({...x,out:true}));
   act.sort((x,y)=>{
-    if(x.tot==null&&y.tot==null)return y.completed-x.completed;
-    if(x.tot==null)return 1;if(y.tot==null)return -1;
-    return x.tot-y.tot});
+    if(x.completed===0&&y.completed===0)return 0;
+    if(x.completed===0)return 1;if(y.completed===0)return -1;
+    if(x.topar!==y.topar)return x.topar-y.topar;
+    if(x.sumSoFar!==y.sumSoFar)return x.sumSoFar-y.sumSoFar;
+    return y.p.age-x.p.age});
   return act.concat(outs)}
 function renderPeriodBoard(){
   const box=$('#brows');
   if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
-  $('#boardModeChips').innerHTML=[['all','전체'],['남','남자'],['여','여자']].map(([g,label])=>
-    `<button class="bchip ${periodGenderFilter===g?'on':''}" onclick="periodGenderFilter='${g}';renderBoard()">${label}</button>`).join('');
-  const cols=`56px 1fr ${Array(ROUNDS).fill('62px').join(' ')} 90px`;
-  const bh=$('#bhead');bh.style.gridTemplateColumns=cols;
-  bh.innerHTML=`<div>순위</div><div>선수</div>${Array.from({length:ROUNDS},(_,r)=>`<div style="text-align:right">${vShort(r)}</div>`).join('')}<div style="text-align:right">합계</div>`;
-  const st=periodStandings(periodGenderFilter);
+  updateBoardCtl();
+  const bh=$('#bhead');bh.style.gridTemplateColumns=BOARD_COLS;
+  bh.innerHTML=`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`;
+  const pool=boardGenderFilter==='all'?players:players.filter(p=>p.sex===boardGenderFilter);
+  const st=periodStandings(pool);
   const cut=boardActiveStage&&boardActiveStage.advance_cut;
   let cutAfter=-1;
   if(cut){
-    if(periodGenderFilter==='all'&&cut.total!=null)cutAfter=cut.total;
-    else if(periodGenderFilter==='남'&&cut.m!=null)cutAfter=cut.m;
-    else if(periodGenderFilter==='여'&&cut.f!=null)cutAfter=cut.f}
+    if(boardGenderFilter==='all'&&cut.total!=null)cutAfter=cut.total;
+    else if(boardGenderFilter==='남'&&cut.m!=null)cutAfter=cut.m;
+    else if(boardGenderFilter==='여'&&cut.f!=null)cutAfter=cut.f}
   let rankN=0;
   box.innerHTML=st.map((s,i)=>{
-    const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FF9B7E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
-      :`<div class="rank num">${s.tot!=null?++rankN:'·'}</div>`;
-    const mid=s.bestArr.map(v=>`<div class="rsc">${v!=null?v:'·'}</div>`).join('');
-    const totalCell=s.out?'—':(s.tot!=null?s.tot:`${s.completed}/${ROUNDS}`);
+    const tp=s.completed?(s.topar===0?'E':(s.topar>0?'+':'')+s.topar):'—';
+    const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FFB49E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
+      :`<div class="rank num">${s.completed?++rankN:'·'}</div>`;
+    const done=s.completed>=ROUNDS;
+    const thruCell=s.out?'—':(done?'완료':`<b>${s.completed}</b>/${ROUNDS}`);
     const cutLine=cutAfter>0&&i===cutAfter?'<div class="cutline"><span>진출선 ('+cutAfter+'명)</span></div>':'';
-    return cutLine+`<div class="brow ${i===0&&s.tot!=null&&!s.out?'top1':''}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
+    return cutLine+`<div class="brow ${i===0&&s.completed&&!s.out?'top1':''}" style="grid-template-columns:${BOARD_COLS};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
-      ${mid}
-      <div class="total">${totalCell}</div></div>`}).join('')}
+      <div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>
+      <div class="thru ${done?'done':''}">${thruCell}</div>
+      <div class="total">${s.completed?s.sumSoFar:'—'}</div></div>`}).join('')}
 function renderBoard(){
   if(boardStageKind==='period'){renderPeriodBoard();return}
-  renderBoardChips();
   const box=$('#brows');
-  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';return}
-  const total=boardMode===-1;
-  const cols=total
-    ?`56px 1fr ${Array(ROUNDS).fill('62px').join(' ')} 84px 80px`
-    :'56px 1fr 84px 60px 80px';
-  const bh=$('#bhead');bh.style.gridTemplateColumns=cols;
-  bh.innerHTML=total
-    ?`<div>순위</div><div>선수</div>${Array.from({length:ROUNDS},(_,r)=>`<div style="text-align:right">${r+1}C ${vShort(r)}</div>`).join('')}<div style="text-align:right">스코어</div><div style="text-align:right">합계</div>`
-    :`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">홀</div><div style="text-align:right">${vShort(boardMode)} 합계</div>`;
-  const st=standings(boardMode);
+  if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';return}
+  updateBoardCtl();
+  const bh=$('#bhead');bh.style.gridTemplateColumns=BOARD_COLS;
+  bh.innerHTML=`<div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div>`;
+  const pool=boardGenderFilter==='all'?players:players.filter(p=>p.sex===boardGenderFilter);
+  const st=standings(pool);
   const prev={};box.querySelectorAll('.brow').forEach(r=>{prev[r.dataset.ph]=r.getBoundingClientRect().top});
   let rankN=0;
   box.innerHTML=st.map((s,i)=>{
     const tp=s.thru?(s.topar===0?'E':(s.topar>0?'+':'')+s.topar):'—';
-    const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FF9B7E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
+    const rankCell=s.out?`<div class="rank" style="font-size:16px;color:#FFB49E;font-family:'Noto Sans KR'">${s.p.st==='wd'?'기권':'실격'}</div>`
       :`<div class="rank num">${s.thru?++rankN:'·'}</div>`;
-    const mid=total
-      ?s.rt.map((v,r)=>`<div class="rsc">${s.rc[r]?v:'·'}</div>`).join('')
-        +`<div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>`
-      :`<div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div><div class="thru num">${s.thru?s.thru:'—'}</div>`;
-    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-ph="${s.p.phone}" style="grid-template-columns:${cols};${s.out?'opacity:.45':''}">
+    const done=s.thru>=HOLES;
+    const thruCell=s.out?'—':(done?'완료':`<b>${s.thru}</b>홀`);
+    return`<div class="brow ${i===0&&s.thru&&!s.out?'top1':''}" data-ph="${s.p.phone}" style="grid-template-columns:${BOARD_COLS};${s.out?'opacity:.45':''}">
       ${rankCell}
       <div class="name">${s.p.name}<small>${s.p.club||''}</small></div>
-      ${mid}
+      <div class="topar ${s.topar<0?'minus':''}">${s.out?'—':tp}</div>
+      <div class="thru ${done?'done':''}">${thruCell}</div>
       <div class="total">${s.thru?s.tot:'—'}</div></div>`}).join('');
   box.querySelectorAll('.brow').forEach(r=>{const old=prev[r.dataset.ph];
     if(old!=null){const d=old-r.getBoundingClientRect().top;
