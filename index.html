@@ -737,7 +737,7 @@ tr:last-child td{border-bottom:none}
           <label class="fl" style="margin-top:0">모집 정원</label><input type="tel" id="fCap" value="120">
           <label class="fl">동점 처리</label>
           <select id="fTie"><option selected>최종 코스 카운트백</option><option>연장전 (서든데스)</option><option>연장자 우선</option><option>별도선정 (운영위 결정)</option></select>
-          <p class="sub" id="tieNote" style="display:none;margin-top:6px">'총점만' 단계에는 홀 단위 기록이 없어 코스 카운트백을 쓸 수 없어요 — 이 대회는 연장전/연장자/별도선정 중에서 골라주세요.</p>
+          <p class="sub" id="tieNote" style="display:none;margin-top:6px">'총점만' 단계에는 홀 단위 기록이 없어 "최종 코스 카운트백" 대신 "최종 코스 총점 비교"가 적용돼요(코스별 총타수로 비교).</p>
         </div>
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
@@ -1288,6 +1288,7 @@ tr:last-child td{border-bottom:none}
   <div class="pad">
     <h3 id="stageAdvTitle">단계를 마감할까요?</h3>
     <div id="stageAdvList" style="margin:10px 0 18px"></div>
+    <div id="stageAdvTieBox" style="display:none;margin-bottom:14px"></div>
     <button class="btn full" id="stageAdvConfirmBtn" style="margin-bottom:8px" onclick="confirmStageSheet()">마감하기</button>
     <button class="btn ghost full" onclick="closeStageAdv()">취소</button>
   </div>
@@ -1732,11 +1733,43 @@ function cutCompetitors(doneArr,cut,margin){
     if(cut.m&&cut.m<men.length){const cs=men[cut.m-1].tot;n+=men.filter(s=>Math.abs(s.tot-cs)<=margin).length}
     if(cut.f&&cut.f<women.length){const cs=women[cut.f-1].tot;n+=women.filter(s=>Math.abs(s.tot-cs)<=margin).length}}
   return n}
-function detectTie(doneArr,cut){
-  if(!cut||!cut.total||cut.total>=doneArr.length)return null;
-  const boundary=doneArr[cut.total-1].tot,next=doneArr[cut.total].tot;
-  if(boundary!==next)return null;
-  return doneArr.filter(s=>s.tot===boundary).length}
+/* ================= 컷 동점 처리 ================= */
+function courseSeries(s){return s.rt||s.bestArr||[]}
+function courseCompare(a,b){
+  const sa=courseSeries(a),sb=courseSeries(b);
+  for(let r=sa.length-1;r>=0;r--){
+    const va=sa[r],vb=sb[r];
+    if(va!=null&&vb!=null&&va!==vb)return va-vb}
+  return 0}
+function ageCompare(a,b){return(+b.p.age||0)-(+a.p.age||0)}
+function tieGroupAt(doneArr,n,keyOf){
+  if(n<=0||n>=doneArr.length)return null;
+  const boundaryVal=keyOf(doneArr[n-1]);
+  if(keyOf(doneArr[n])!==boundaryVal)return null;
+  let lo=n-1;while(lo>0&&keyOf(doneArr[lo-1])===boundaryVal)lo--;
+  let hi=n-1;while(hi<doneArr.length-1&&keyOf(doneArr[hi+1])===boundaryVal)hi++;
+  return[lo,hi]}
+// n명 선발 시 tie_rule을 적용해 경계 동점을 자동 해소한다.
+// 자동 해소 성공: {advanced:[p...], tied:null, autoResolved:true}
+// 자동 해소 불가(규칙이 연장전/별도선정이거나, 적용해도 여전히 동점): {advanced:null, base:[확정p...], tied:[동점p...], autoResolved:false}
+function resolveCut(doneArr,n,tieRule){
+  const keyOf=s=>s.topar;
+  if(n<=0)return{advanced:[],tied:null,autoResolved:true};
+  if(n>=doneArr.length)return{advanced:doneArr.map(s=>s.p),tied:null,autoResolved:true};
+  const group=tieGroupAt(doneArr,n,keyOf);
+  if(!group)return{advanced:doneArr.slice(0,n).map(s=>s.p),tied:null,autoResolved:true};
+  const[lo,hi]=group;
+  const isAutoCourse=tieRule==='최종 코스 카운트백'||tieRule==='최종 코스 총점 비교';
+  const isAutoAge=tieRule==='연장자 우선';
+  if(isAutoCourse||isAutoAge){
+    const cmp=isAutoCourse?courseCompare:ageCompare;
+    const sub=doneArr.slice(lo,hi+1).slice().sort(cmp);
+    const merged=doneArr.slice(0,lo).concat(sub,doneArr.slice(hi+1));
+    const stillTied=cmp(merged[n-1],merged[n])===0;
+    if(!stillTied)return{advanced:merged.slice(0,n).map(s=>s.p),tied:null,autoResolved:true};
+    const g2=tieGroupAt(merged,n,keyOf)||[lo,hi];
+    return{advanced:null,base:merged.slice(0,g2[0]).map(s=>s.p),tied:merged.slice(g2[0],g2[1]+1).map(s=>s.p),autoResolved:false}}
+  return{advanced:null,base:doneArr.slice(0,lo).map(s=>s.p),tied:doneArr.slice(lo,hi+1).map(s=>s.p),autoResolved:false}}
 async function renderOpsStats(){
   const box=$('#opStats');if(!box)return;
   await refreshStaffStatus();
@@ -1759,7 +1792,7 @@ async function renderOpsStats(){
       <div class="stat hot"><b>${doneG}<small>/${groups.length}</small></b><span>조 완료</span></div>
       <div class="stat"><b>${opened}<small>/${total}</small></b><span>심판 접속</span></div>
       <div class="stat"><b>${competing==null?'—':competing}</b><span>컷 ±2타 경쟁</span></div>`}}
-let stageSheetCtx=null;
+let stageSheetCtx=null,cutResolution=null;
 async function openStageSheet(){
   if(!config.id)return;
   const stages=await loadAllStages(config.id);
@@ -1768,6 +1801,9 @@ async function openStageSheet(){
   const curStage=stages[openIdx];
   const hasNext=openIdx+1<stages.length;
   await loadBoardData(config.id,true);
+  cutResolution=null;
+  $('#stageAdvTieBox').style.display='none';$('#stageAdvTieBox').innerHTML='';
+  $('#stageAdvConfirmBtn').style.display='block';
 
   if(!hasNext){
     $('#stageAdvTitle').textContent='결과를 확정할까요?';
@@ -1781,34 +1817,99 @@ async function openStageSheet(){
 
   const nextStage=stages[openIdx+1];
   const cut=curStage.advance_cut;
-  let done,advanced=[];
-  if(judgeStageKind==='period'||stageRecordMode==='total'){
-    done=periodStandings().filter(s=>!s.out&&s.tot!=null);
-    if(cut&&cut.total)advanced=done.slice(0,cut.total).map(s=>s.p);
-    else if(cut&&(cut.m||cut.f)){
-      const men=done.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
-      const women=done.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
-      advanced=men.concat(women)}
-  }else{
-    done=standings().filter(s=>!s.out&&s.thru>0);
-    if(cut&&cut.total)advanced=done.slice(0,cut.total).map(s=>s.p);
-    else if(cut&&(cut.m||cut.f)){
-      const men=done.filter(s=>s.p.sex==='남').slice(0,cut.m||0).map(s=>s.p);
-      const women=done.filter(s=>s.p.sex==='여').slice(0,cut.f||0).map(s=>s.p);
-      advanced=men.concat(women)}}
+  const tieRule=curStage.tie_rule||config.tie||'최종 코스 카운트백';
+  const isTotalMode=judgeStageKind==='period'||stageRecordMode==='total';
+  const done=isTotalMode
+    ?periodStandings().filter(s=>!s.out&&s.tot!=null)
+    :standings().filter(s=>!s.out&&s.thru>0);
+
+  const groups=[];
+  if(cut&&cut.total){
+    groups.push({key:'total',label:'',cutN:cut.total,res:resolveCut(done,cut.total,tieRule)})
+  }else if(cut&&(cut.m||cut.f)){
+    const men=done.filter(s=>s.p.sex==='남'),women=done.filter(s=>s.p.sex==='여');
+    if(cut.m)groups.push({key:'남',label:'남자부',cutN:cut.m,res:resolveCut(men,cut.m,tieRule)});
+    if(cut.f)groups.push({key:'여',label:'여자부',cutN:cut.f,res:resolveCut(women,cut.f,tieRule)})}
+
+  const unresolved=groups.filter(g=>!g.res.autoResolved);
+  let advanced=[];
+  groups.forEach(g=>{if(g.res.autoResolved)advanced=advanced.concat(g.res.advanced)});
 
   let html=`<p class="sheetli"><b>✓</b><span>${curStage.name} 순위가 확정됩니다 (완주 ${done.length}명 기준)</span></p>`;
-  if(cut&&cut.total)html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 ${advanced.length}명이 자동 선발됩니다</span></p>`;
-  else if(cut&&(cut.m||cut.f))html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 남 ${cut.m||0}명 · 여 ${cut.f||0}명이 자동 선발됩니다</span></p>`;
-  const tie=detectTie(done,cut);
-  if(tie)html+=`<p class="sheetli"><b>✓</b><span>${cut.total}위 동점 ${tie}명 → 동점 규칙(${config.tie||'카운트백'})으로 결정</span></p>`;
+  if(cut&&cut.total)html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 ${cut.total}명 선발 기준</span></p>`;
+  else if(cut&&(cut.m||cut.f))html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 남 ${cut.m||0}명 · 여 ${cut.f||0}명 선발 기준</span></p>`;
+  if(cut&&!unresolved.length)html+=`<p class="sheetli"><b>✓</b><span>${nextStage.name} 진출 ${advanced.length}명이 자동 선발됩니다(동점 규칙: ${tieRule})</span></p>`;
   html+=`<p class="sheetli warn"><b>!</b><span>마감 후에는 ${curStage.name} 기록을 입력·수정할 수 없습니다</span></p>`;
   $('#stageAdvTitle').textContent=`${curStage.name}을 마감할까요?`;
   $('#stageAdvList').innerHTML=html;
-  $('#stageAdvConfirmBtn').textContent=`마감하고 ${nextStage.name} 시작`;
-  stageSheetCtx={type:'advance',curStage,nextStage,advanced};
+
+  cutResolution={curStage,nextStage,tieRule,groups};
+
+  if(unresolved.length){
+    $('#stageAdvConfirmBtn').style.display='none';
+    $('#stageAdvTieBox').style.display='block';
+    renderTieBox()
+  }else{
+    $('#stageAdvConfirmBtn').textContent=`마감하고 ${nextStage.name} 시작`;
+    stageSheetCtx={type:'advance',curStage,nextStage,advanced}}
   $('#stageAdvOv').classList.add('on')}
-function closeStageAdv(){$('#stageAdvOv').classList.remove('on');stageSheetCtx=null}
+function renderTieBox(){
+  const box=$('#stageAdvTieBox');if(!box||!cutResolution)return;
+  const{groups,tieRule}=cutResolution;
+  box.innerHTML=groups.filter(g=>!g.res.autoResolved).map(g=>{
+    const needed=g.cutN-g.res.base.length;
+    const selCount=(g.selectedIdx||new Set()).size;
+    const done=!!g.finalPicks;
+    return`<div class="card" style="margin-bottom:10px;background:var(--main-soft);border:none">
+      <p class="sub" style="font-weight:700;margin-bottom:8px;color:var(--ink)">${g.label?g.label+' ':''}${g.cutN}위 경계 동점자 ${g.res.tied.length}명 — 동점 규칙(${tieRule})으로 자동 해소되지 않았습니다</p>
+      <div class="tools">${g.res.tied.map((p,i)=>{
+        const picked=done?g.finalPicks.some(x=>x.id===p.id):(g.selectedIdx&&g.selectedIdx.has(i));
+        return`<div class="trow" style="cursor:${done?'default':'pointer'};${picked?'opacity:1':done?'opacity:.4':''}" ${done?'':`onclick="toggleTiePick('${g.key}',${i})"`}>
+          <span class="tic">${picked?'✓':p.name[0]}</span>
+          <span class="tt"><b>${p.name}</b><span>${p.club||''}${p.age?' · '+p.age+'세':''}</span></span>
+        </div>`}).join('')}</div>
+      <p class="sub" style="margin:8px 0">잔여 진출 ${needed}자리 — 동점자 전원을 진출시키거나 필요한 인원만 골라 선택하세요</p>
+      ${done?`<p class="sub" style="color:var(--main-deep);font-weight:600">✓ 처리 방식 선택 완료 — ${g.finalPicks.length===g.res.tied.length?'전원 진출':g.finalPicks.map(p=>p.name).join(', ')+' 진출'}</p>`
+        :`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn sm ghost" onclick="expandTieGroup('${g.key}')">동점자 전원 진출(컷 확대)</button>
+        <button class="btn sm" ${selCount===needed?'':'disabled'} onclick="confirmTieManual('${g.key}')">선택 완료 (${selCount}/${needed})</button>
+      </div>`}
+    </div>`}).join('')+
+    (groups.filter(g=>!g.res.autoResolved).every(g=>g.finalPicks)
+      ?`<button class="btn full" style="margin-top:4px" onclick="finalizeCutResolution()">동점 처리 완료 — 마감하고 ${cutResolution.nextStage.name} 시작</button>`:'')}
+function findTieGroup(key){return cutResolution.groups.find(g=>g.key===key)}
+function toggleTiePick(key,i){
+  const g=findTieGroup(key);if(!g||g.finalPicks)return;
+  g.selectedIdx=g.selectedIdx||new Set();
+  if(g.selectedIdx.has(i))g.selectedIdx.delete(i);else g.selectedIdx.add(i);
+  renderTieBox()}
+function expandTieGroup(key){
+  const g=findTieGroup(key);if(!g)return;
+  g.finalPicks=g.res.tied.slice();
+  g.expanded=true;
+  renderTieBox()}
+function confirmTieManual(key){
+  const g=findTieGroup(key);if(!g)return;
+  const needed=g.cutN-g.res.base.length;
+  if(!g.selectedIdx||g.selectedIdx.size!==needed)return;
+  g.finalPicks=[...g.selectedIdx].map(i=>g.res.tied[i]);
+  renderTieBox()}
+async function finalizeCutResolution(){
+  if(!cutResolution)return;
+  const{curStage,nextStage,tieRule,groups}=cutResolution;
+  let advanced=[],logLines=[];
+  groups.forEach(g=>{
+    if(g.res.autoResolved){advanced=advanced.concat(g.res.advanced);return}
+    const picks=g.finalPicks||[];
+    advanced=advanced.concat(g.res.base,picks);
+    const label=g.label||'전체';
+    logLines.push(g.expanded
+      ?`${label} ${g.cutN}위 동점자 ${g.res.tied.length}명 전원 진출로 컷 확대(${g.cutN}→${g.res.base.length+picks.length}명)`
+      :`${label} ${g.cutN}위 동점자 ${g.res.tied.length}명 중 수동 선택: ${picks.map(p=>p.name).join(', ')} 진출`)});
+  if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${curStage.name}→${nextStage.name} 컷 동점 처리(규칙: ${tieRule}) — ${logLines.join(' / ')}`});
+  closeStageAdv();
+  await doAdvanceStage(curStage,nextStage,advanced)}
+function closeStageAdv(){$('#stageAdvOv').classList.remove('on');stageSheetCtx=null;cutResolution=null}
 async function confirmStageSheet(){
   if(!stageSheetCtx)return;
   const ctx=stageSheetCtx;
@@ -2563,11 +2664,12 @@ function setRecordMode(seq,mode){
 function updateTieOptions(){
   const sel=$('#fTie');if(!sel)return;
   const anyTotal=Object.values(config.recordModes).some(m=>m==='total');
-  const cbOpt=[...sel.options].find(o=>o.textContent.includes('카운트백'));
+  const cbOpt=[...sel.options].find(o=>o.textContent.includes('카운트백')||o.textContent.includes('코스 총점 비교'));
   if(!cbOpt)return;
-  cbOpt.disabled=anyTotal;
-  cbOpt.hidden=anyTotal;
-  if(anyTotal&&sel.value===cbOpt.value)sel.value='연장전 (서든데스)';
+  const wasSelected=sel.value===cbOpt.value;
+  cbOpt.textContent=anyTotal?'최종 코스 총점 비교':'최종 코스 카운트백';
+  cbOpt.value=cbOpt.textContent;
+  if(wasSelected)sel.value=cbOpt.value;
   $('#tieNote').style.display=anyTotal?'block':'none'}
 const SCREEN_VENUE_DEFAULTS=['1코스','2코스','3코스','4코스','5코스','6코스'];
 function renderScreenVenues(){
