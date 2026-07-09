@@ -146,6 +146,13 @@ tr:last-child td{border-bottom:none}
 .secttl{font-size:15px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:20px 0 12px;display:flex;align-items:center;gap:10px}
 .secttl::after{content:'';flex:1;height:1px;background:var(--line)}
 
+/* ===== 홈 히어로 (v2.3 차수 1) ===== */
+.hero{background:linear-gradient(150deg,#5A9ADA,var(--main-deep));border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:16px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .herotop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;letter-spacing:.02em;flex:0 0 auto}
+.hero h2{font-size:22px;font-weight:700;line-height:1.4;margin-bottom:16px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:#fff;color:var(--main-deep);font-weight:700;font-size:18px;min-height:54px;border-radius:15px;border:none}
+
 /* ===== 홈 피드 카드 (v2.1 Phase E) ===== */
 .hello{font-size:15px;color:var(--muted);margin:2px 0 16px}
 .hello b{color:var(--ink);font-weight:700}
@@ -432,6 +439,14 @@ tr:last-child td{border-bottom:none}
 
   <!-- 홈: 대회 피드 -->
   <section class="page on" id="opHome">
+    <div class="hero">
+      <div class="herotop">
+        <svg width="118" height="39" viewBox="0 0 252 84"><rect width="252" height="84" rx="22" fill="#224670"/><g transform="translate(20,18)"><rect x="0" y="0" width="13" height="13" rx="4" fill="#F7CF5C"/><rect x="18" y="0" width="42" height="13" rx="6.5" fill="#F7CF5C"/><rect x="0" y="18" width="13" height="13" rx="4" fill="#fff"/><rect x="18" y="18" width="32" height="13" rx="6.5" fill="#fff"/><rect x="0" y="36" width="13" height="13" rx="4" fill="#fff" opacity=".5"/><rect x="18" y="36" width="24" height="13" rx="6.5" fill="#fff" opacity=".5"/></g><text x="98" y="53" font-family="'Noto Sans KR'" font-weight="900" font-size="30" fill="#fff" letter-spacing="1">누가일등</text></svg>
+        <span class="tagchip">파크골프 대회 관리 플랫폼</span>
+      </div>
+      <h2>대회 개설부터 시상까지,<br>한 번에 끝내세요</h2>
+      <button class="cta" onclick="goTab('opCreate')">＋ 새 대회 개설하기</button>
+    </div>
     <p class="hello" id="homeGreeting"></p>
     <div class="filterrow" id="filterRow">
       <button class="fchip on" data-f="all">전체</button>
@@ -441,7 +456,6 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="mineSection"></div>
     <div id="listSection"></div>
-    <button class="btn full" style="margin-top:4px" onclick="goTab('opCreate')">새 대회 개설하기</button>
   </section>
 
   <!-- 내 대회 -->
