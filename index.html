@@ -309,10 +309,17 @@ tr:last-child td{border-bottom:none}
 /* ===== 대회 관리공간 ===== */
 .mgmthead{margin-bottom:2px}
 .mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3}
-.mtabs{display:flex;gap:8px;overflow-x:auto;padding:14px 0 12px;margin-bottom:4px;scrollbar-width:none}
-.mtabs::-webkit-scrollbar{display:none}
-.mtab{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
-.mtab.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
+.tabA{display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 2px;margin:10px -16px 14px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--main-deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--main-deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
 .mgpane{display:none}
 .mgpane.on{display:block}
 .seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
@@ -779,18 +786,19 @@ tr:last-child td{border-bottom:none}
       <div class="mgmtname" id="mgmtName">—</div>
       <p class="sub" id="mgSub">—</p>
     </div>
-    <div class="mtabs">
-      <button class="mtab on" data-mg="mgHome" onclick="mgShow('mgHome')">관리홈</button>
-      <button class="mtab" data-mg="mgNotice" onclick="mgShow('mgNotice')">요강</button>
-      <button class="mtab" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')">참가자</button>
-      <button class="mtab" data-mg="mgStaff" onclick="mgShow('mgStaff')">운영진</button>
-      <button class="mtab" data-mg="mgScore" onclick="mgShow('mgScore')">스코어입력</button>
-      <button class="mtab" data-mg="mgBoard" onclick="mgShow('mgBoard')">리더보드</button>
-      <button class="mtab" data-mg="mgResult" onclick="mgShow('mgResult')">결과</button>
+    <div class="tabA">
+      <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>관리홈</span></button>
+      <button class="ti" data-mg="mgNotice" onclick="mgShow('mgNotice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg><span>요강</span></button>
+      <button class="ti" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></button>
+      <button class="ti" data-mg="mgStaff" onclick="mgShow('mgStaff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg><span>운영진</span></button>
+      <button class="ti" data-mg="mgScore" onclick="mgShow('mgScore')"><span class="bdg" id="scoreBadge" style="display:none"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z" fill="currentColor" stroke="none"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg><span>스코어</span></button>
+      <button class="ti" data-mg="mgBoard" onclick="mgShow('mgBoard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></button>
+      <button class="ti" data-mg="mgResult" onclick="mgShow('mgResult')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg><span>결과</span></button>
     </div>
 
     <!-- 관리홈 -->
     <div class="mgpane on" id="mgHome">
+      <div id="scoreTodo" class="todo" style="display:none" onclick="enterMgmt('mgScore')">📋 <span><b id="scoreTodoText">검수 대기 0건</b> — 스코어 탭에서 처리</span><span class="chev">›</span></div>
       <div id="stageStepperCard" style="display:none">
         <div class="stepper" id="stageStepper"></div>
         <button class="btn full" id="advanceBtn" style="display:none;margin-bottom:14px" onclick="advanceStage()">다음 단계 시작</button>
@@ -1279,13 +1287,35 @@ function mgShow(id){
   curMgTab=id;
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
-  if(id==='mgHome'){renderStageStepper();renderOpsStats()}
+  document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
+  if(id==='mgHome'){renderStageStepper();renderOpsStats();renderScoreBadge()}
   if(id==='mgPlayers')playersSegShow(curPlayersSeg);
   if(id==='mgStaff')renderTools();
-  if(id==='mgScore')renderScoreTab();
+  if(id==='mgScore'){renderScoreTab();$('#scoreBadge').style.display='none'}
   if(id==='mgResult')renderResult();
   window.scrollTo(0,0)}
+async function pendingReviewCount(){
+  if(!config.id||judgeStageKind!=='round'||!groups.length)return 0;
+  const{data:photos}=await sb.from('scorecard_photos').select('group_no,course_no').eq('tournament_id',config.id);
+  if(!photos||!photos.length)return 0;
+  const pairs=[...new Set(photos.map(p=>p.group_no+'-'+p.course_no))];
+  let pending=0;
+  pairs.forEach(key=>{
+    const[g,c]=key.split('-').map(Number);
+    const gi=groups[g];
+    if(!gi){pending++;return}
+    const done=gi.filter(pi=>!isOut(players[pi])).every(pi=>{
+      for(let h=c*18;h<c*18+18;h++)if(players[pi].scores[h]==null)return false;
+      return true});
+    if(!done)pending++});
+  return pending}
+async function renderScoreBadge(){
+  const n=await pendingReviewCount();
+  const badge=$('#scoreBadge'),todo=$('#scoreTodo');
+  if(badge)badge.style.display=n>0?'block':'none';
+  if(!todo)return;
+  todo.style.display=n>0?'flex':'none';
+  if(n>0)$('#scoreTodoText').textContent=`검수 대기 ${n}건`}
 let curPlayersSeg='pList';
 function playersSegShow(seg){
   curPlayersSeg=seg;
