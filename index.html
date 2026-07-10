@@ -318,12 +318,13 @@ tr:last-child td{border-bottom:none}
 .tooldetail.on{display:block}
 
 /* ===== 대회 관리공간 ===== */
-.mgmthead{margin-bottom:2px}
-.mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3}
-.tabA{display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 2px;margin:10px -16px 14px}
+.mgmthead{background:var(--main-deep);color:#fff;margin:-20px -16px 0;padding:18px 20px 16px}
+.mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3;color:#fff}
+.mgmthead .sub{color:rgba(255,255,255,.75)}
+.tabA{display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 2px;margin:0 -16px 14px}
 .tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
 .tabA .ti svg{width:21px;height:21px}
-.tabA .ti span{font-size:11px;font-weight:500;white-space:nowrap}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
 .tabA .ti.on{color:var(--main-deep)}
 .tabA .ti.on span{font-weight:700}
 .tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--main-deep)}
@@ -1053,7 +1054,7 @@ tr:last-child td{border-bottom:none}
 
 <!-- ================= 심판 ================= -->
 <div class="mobile" id="viewJudge" style="display:none">
-  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>실서비스: 심판은 문자 링크로 이 화면만 봅니다</span></div>
+  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span id="judgeHeadName">—</span></div>
   <header class="appbar">
     <div class="logo"><span class="flag"></span>점수 입력</div>
     <div class="who"><span class="livepill" id="jLive" style="display:none"><span class="dot"></span>LIVE 반영 중</span><span class="queueBadge" id="jQueueBadge">0건 전송 대기</span></div>
@@ -1110,7 +1111,7 @@ tr:last-child td{border-bottom:none}
 
 <!-- ================= 전광판 ================= -->
 <div class="mobile wide" id="viewBoard" style="display:none">
-  <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="leaveBoard()">← 뒤로</button><span>실서비스: 이 주소를 대회장 TV 노트북에서 엽니다 — nuga1.kr/t/1024/board</span></div>
+  <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="leaveBoard()">← 뒤로</button><span id="boardHeadName">전광판</span></div>
   <div class="boardwrap">
     <div class="boardctl" id="boardCtl">
       <button class="btn" id="simBtn" onclick="toggleSim()">▶ 데모 경기 시작</button>
@@ -1142,7 +1143,7 @@ tr:last-child td{border-bottom:none}
 
 <!-- ================= 참가 신청 (공개 링크) ================= -->
 <div class="mobile" id="viewApply" style="display:none">
-  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span id="applyUrlHint">실서비스: 공개 링크로 접속</span></div>
+  <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span id="applyUrlHint">—</span></div>
   <section class="page on" style="padding-top:16px">
     <div id="applyGate" style="display:none"></div>
     <div class="poster" id="applyPoster">
@@ -3231,7 +3232,7 @@ async function openApply(id){
     applyT=dbToTournament(row,count||0)}
   $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
   const t=applyT;
-  $('#applyUrlHint').textContent=`실서비스: nuga1.kr/t/${1000+t.id}/apply — 카톡방에 공유하는 공개 링크`;
+  $('#applyUrlHint').textContent=t.name;
   const period=t.dateE&&t.dateE!==t.date
     ?`${t.date.replaceAll('-','.')} ~ ${t.dateE.slice(5).replace('-','.')}`
     :t.date.replaceAll('-','.');
@@ -3463,6 +3464,7 @@ async function createTournament(){
   tournaments.unshift({id:tournamentId,name:config.name,place:config.place,date:config.dateS,dateE:config.dateE,
     status:'ready',players:0,cap:config.cap,host:config.hostOrg||user.name,mine:true});
   $('#boardTitle').textContent=config.name;
+  const bhn0=$('#boardHeadName');if(bhn0)bhn0.textContent=config.name;
   $('#boardSub').textContent=config.type==='screen'
     ?`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${config.hostOrg}`
     :`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${config.hostOrg}`;
@@ -3796,6 +3798,7 @@ async function enterViaJudgeToken(token){
 /* ================= 심판 ================= */
 function judges(){return staff.filter(s=>s.canScore)}
 function renderJudge(){
+  const jhn=$('#judgeHeadName');if(jhn)jhn.textContent=config.name||'점수 입력';
   if(judgeTokenMode&&staff.length===1&&!staff[0].canScore){
     const s=staff[0];
     $('#jSel').innerHTML='';
@@ -4091,6 +4094,7 @@ async function loadBoardData(tournamentId,trusted){
   config.cap=t.cap;config.created=true;
   const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
   $('#boardTitle').textContent=t.name;
+  const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
 
   const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',tournamentId)
     .eq('current_stage',stage?stage.seq:1)
