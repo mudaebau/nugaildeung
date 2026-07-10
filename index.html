@@ -1403,7 +1403,7 @@ const config={created:false,type:'field',stageCount:1,name:'',hostOrg:'',dateS:'
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
   prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:''},recordModes:{1:'hole',2:'hole',3:'hole'},regClosed:false};
-const user={loggedIn:false,name:'',phone:'',id:null};
+const user={loggedIn:false,name:'',phone:'',id:null,secret:null};
 let staff=[
   {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
   {name:'이도현',phone:'010-8873-0294',duty:'2코스 심판 (미사한강)',canScore:true},
@@ -1860,7 +1860,7 @@ function openRegCloseSheet(){
   $('#regCloseOv').classList.add('on')}
 function closeRegCloseSheet(){$('#regCloseOv').classList.remove('on')}
 async function confirmRegClose(){
-  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:true});
+  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:true,p_owner_secret:user.secret});
   if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}
   config.regClosed=true;
   const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=true;
@@ -1869,7 +1869,7 @@ async function confirmRegClose(){
   renderStageHome();
   toast('접수를 마감했습니다')}
 async function reopenRegistration(){
-  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:false});
+  const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:false,p_owner_secret:user.secret});
   if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}
   config.regClosed=false;
   const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=false;
@@ -2137,7 +2137,7 @@ async function copyAdvanceResult(){
   toast('진출 안내 문구가 복사되었습니다 — 카톡방·문자로 붙여넣으세요')}
 async function loadTournaments(){
   const myId=user.id||'00000000-0000-0000-0000-000000000000';
-  const{data,error}=await sb.from('tournaments').select('*')
+  const{data,error}=await sb.from('tournaments').select('id,owner_id,name,host_org,date_start,date_end,rounds,venues,course_pars,tie_rule,cap,fields,awards,status,created_at,type,visibility,notice_extra,reg_closed')
     .or(`visibility.eq.public,owner_id.eq.${myId}`).order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
   const withCounts=await Promise.all(data.map(async row=>{
@@ -2158,6 +2158,8 @@ async function fetchGatedTournament(id,code){
 function savedCode(id){try{return localStorage.getItem('nuga1_code_'+id)||''}catch(e){return ''}}
 function saveCode(id,code){try{localStorage.setItem('nuga1_code_'+id,code)}catch(e){}}
 function myCodeFor(id){return(config.id===id&&config.created?config.accessCode:'')||savedCode(id)}
+function savedOwnerSecret(phone){try{return localStorage.getItem('nuga1_ownersecret_'+phone)||''}catch(e){return ''}}
+function saveOwnerSecret(phone,secret){try{localStorage.setItem('nuga1_ownersecret_'+phone,secret)}catch(e){}}
 function gateFormHTML(){
   return`<div class="card" style="text-align:center;padding:40px 24px">
     <h2 style="margin-bottom:6px">🔒 비공개 대회</h2>
@@ -2222,11 +2224,11 @@ async function loadMyTournament(tournamentId){
   judgeStageKind=boardStageKind;stageRecordMode=boardStageRecordMode;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
-  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,access_code,reg_closed,status').eq('id',tournamentId).single();
+  const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,reg_closed,status').eq('id',tournamentId).single();
   if(tRow){config.tie=tRow.tie_rule||config.tie;config.fields=tRow.fields||config.fields;
     config.awards=tRow.awards||config.awards;config.type=tRow.type||config.type;
     config.dateS=tRow.date_start;config.dateE=tRow.date_end;
-    config.visibility=tRow.visibility||'public';config.accessCode=tRow.access_code||'';
+    config.visibility=tRow.visibility||'public';config.accessCode=savedCode(tournamentId)||'';
     config.regClosed=!!tRow.reg_closed;config.tStatus=tRow.status}
   const{data:wRows}=await sb.from('players').select('*').eq('tournament_id',tournamentId).eq('status','wait');
   waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
@@ -2256,7 +2258,7 @@ function renderMyPage(){
   </div>
   <button class="btn ghost full" onclick="logout()">로그아웃</button>`}
 async function logout(){
-  user.loggedIn=false;user.id=null;user.name='';user.phone='';
+  user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;
   config.created=false;config.id=null;config.name='';config.hostOrg='';config.place='';
   config.visibility='public';config.accessCode='';
   config.eligibility={type:'open',text:''};config.prizeTotal='';config.prizes=[];
@@ -2439,7 +2441,7 @@ async function saveEditBasic(){
     t_id:config.id,p_name:name,p_host_org:host,p_awards:config.awards,
     p_prize_total:config.prizeTotal,p_prizes:config.prizes.filter(p=>p.label),
     p_contact:config.noticeExtra.contact,p_fee:config.noticeExtra.fee,p_rules:config.noticeExtra.rules,
-    p_who:user.name});
+    p_owner_secret:user.secret,p_who:user.name});
   if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
   config.name=name;config.hostOrg=host;
   renderMgmtHeader();editInfoBack();toast('대회명·주최 정보를 저장했습니다')}
@@ -2485,7 +2487,7 @@ async function saveEditAwards(){
     t_id:config.id,p_name:config.name,p_host_org:config.hostOrg,p_awards:config.awards,
     p_prize_total:config.prizeTotal,p_prizes:config.prizes.filter(p=>p.label),
     p_contact:config.noticeExtra.contact,p_fee:config.noticeExtra.fee,p_rules:config.noticeExtra.rules,
-    p_who:user.name});
+    p_owner_secret:user.secret,p_who:user.name});
   if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
   editInfoBack();toast('시상·요강 정보를 저장했습니다')}
 
@@ -2512,6 +2514,7 @@ function saveEditSchedule(){
       t_id:config.id,p_date_start:dateS,p_date_end:dateE,p_cap:config.cap,
       p_eligibility:config.eligibility,p_visibility:config.visibility,
       p_access_code:config.visibility==='private'?config.accessCode:null,
+      p_owner_secret:user.secret,
       p_who:user.name,p_what:`일정 수정: ${oldS}~${oldE} → ${dateS}~${dateE}`});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     config.dateS=dateS;config.dateE=dateE;
@@ -2562,6 +2565,7 @@ async function saveEditCap(){
       t_id:config.id,p_date_start:config.dateS,p_date_end:config.dateE,p_cap:newCap,
       p_eligibility:config.eligibility,p_visibility:config.visibility,
       p_access_code:config.visibility==='private'?config.accessCode:null,
+      p_owner_secret:user.secret,
       p_who:user.name,p_what:`정원 수정: ${oldCap}명 → ${newCap}명`});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     config.cap=newCap;
@@ -2607,6 +2611,7 @@ async function saveEditEligibility(){
       t_id:config.id,p_date_start:config.dateS,p_date_end:config.dateE,p_cap:config.cap,
       p_eligibility:config.eligibility,p_visibility:config.visibility,
       p_access_code:config.visibility==='private'?config.accessCode:null,
+      p_owner_secret:user.secret,
       p_who:user.name,p_what:'참여 대상 수정'});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     editInfoBack();toast('참여 대상을 저장했습니다')})}
@@ -2641,8 +2646,10 @@ async function saveEditVisibility(){
       t_id:config.id,p_date_start:config.dateS,p_date_end:config.dateE,p_cap:config.cap,
       p_eligibility:config.eligibility,p_visibility:config.visibility,
       p_access_code:config.visibility==='private'?config.accessCode:null,
+      p_owner_secret:user.secret,
       p_who:user.name,p_what:'공개 설정 수정'});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
+    if(config.visibility==='private')saveCode(config.id,config.accessCode);else saveCode(config.id,'');
     editInfoBack();toast('공개 설정을 저장했습니다')})}
 
 /* --- ③잠금: 코스·단계 구성 --- */
@@ -2740,9 +2747,11 @@ function verifyCode(){
 async function finishSignup(){
   const n=$('#loginName').value.trim();
   if(!n){toast('이름을 입력해 주세요');return}
-  const{data,error}=await sb.from('operators').upsert({phone:user.phone,name:n},{onConflict:'phone'}).select().single();
-  if(error){toast('가입 처리 중 오류가 발생했습니다');console.error(error);return}
-  user.id=data.id;user.name=data.name;user.loggedIn=true;
+  const{data,error}=await sb.rpc('operator_signup',{p_phone:user.phone,p_name:n});
+  if(error||!data||!data.length){toast('가입 처리 중 오류가 발생했습니다');console.error(error);return}
+  const row=data[0];
+  user.id=row.id;user.name=row.name;user.secret=row.secret;user.loggedIn=true;
+  saveOwnerSecret(user.phone,user.secret);
   whoRender();
   $('#authStep3').style.display='none';$('#wizBox').style.display='block';
   $('#ownerName').textContent=user.name;
@@ -3244,6 +3253,7 @@ async function createTournament(){
       prizes:config.prizes.filter(p=>p.label),...config.noticeExtra}});
   if(tErr){toast('대회 저장에 실패했습니다');console.error(tErr);config.created=false;return}
   config.id=tournamentId;
+  if(config.visibility==='private'&&config.accessCode)saveCode(tournamentId,config.accessCode);
 
   function readCut(suf){
     const mode=$('#fCutMode'+suf).value;
@@ -3475,7 +3485,7 @@ async function addAsWaitlist(){
   closeCapChoice()}
 async function expandCapAndAdd(){
   if(!pendingAdd)return;
-  const{data:appliedCap,error}=await sb.rpc('increase_tournament_cap',{t_id:config.id,new_cap:config.cap+1});
+  const{data:appliedCap,error}=await sb.rpc('increase_tournament_cap',{t_id:config.id,new_cap:config.cap+1,p_owner_secret:user.secret});
   if(error){toast('정원 변경 중 오류가 발생했습니다');console.error(error);return}
   config.cap=appliedCap;
   await doAddPlayer(pendingAdd,'ok');
@@ -3543,7 +3553,7 @@ let judgeTokenMode=false,judgeStageKind='round',stageRecordMode='hole',peSelecte
 async function enterViaJudgeToken(token){
   const{data:s,error:sErr}=await sb.from('staff').select('*').eq('token',token).single();
   if(sErr||!s){toast('유효하지 않은 링크입니다');return false}
-  const{data:t,error:tErr}=await sb.from('tournaments').select('*').eq('id',s.tournament_id).single();
+  const{data:t,error:tErr}=await sb.from('tournaments').select('id,owner_id,name,host_org,date_start,date_end,rounds,venues,course_pars,tie_rule,cap,fields,awards,status,created_at,type,visibility,notice_extra,reg_closed').eq('id',s.tournament_id).single();
   if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return false}
 
   const stage=await loadPrimaryStage(t.id);
@@ -3760,7 +3770,7 @@ async function refreshMyTournamentStatus(){
   if(t&&t.status!==data.status){t.status=data.status;renderHome()}}
 async function finalizeTournament(){
   if(!config.id){mgShow('mgResult');return}
-  const{error}=await sb.rpc('finalize_tournament',{t_id:config.id});
+  const{error}=await sb.rpc('finalize_tournament',{t_id:config.id,p_owner_secret:user.secret});
   if(error){toast(error.message);console.error(error);mgShow('mgResult');return}
   toast('대회 결과 · 시상이 확정되었습니다');
   await refreshMyTournamentStatus();
@@ -3871,7 +3881,7 @@ async function loadBoardData(tournamentId,trusted){
   if(!tournamentId)return;
   let t;
   if(trusted){
-    const{data,error}=await sb.from('tournaments').select('*').eq('id',tournamentId).single();
+    const{data,error}=await sb.from('tournaments').select('id,owner_id,name,host_org,date_start,date_end,rounds,venues,course_pars,tie_rule,cap,fields,awards,status,created_at,type,visibility,notice_extra,reg_closed').eq('id',tournamentId).single();
     if(error||!data){toast('대회 정보를 불러오지 못했습니다');return}
     t=data
   }else{
