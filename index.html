@@ -2074,10 +2074,10 @@ async function confirmStageSheet(){
 async function doAdvanceStage(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return}
   const ids=advanced.map(p=>p.id);
-  const{error:upErr}=await sb.from('players').update({current_stage:nextStage.seq}).in('id',ids);
+  const{error:upErr}=await sb.rpc('advance_stage',{
+    t_id:config.id,cur_stage_id:curStage.id,next_stage_id:nextStage.id,
+    p_owner_secret:user.secret,p_advanced_player_ids:ids});
   if(upErr){toast('진출자 반영 실패');console.error(upErr);return}
-  await sb.from('stages').update({status:'done'}).eq('id',curStage.id);
-  await sb.from('stages').update({status:'open'}).eq('id',nextStage.id);
 
   lastAdvanceResult=`[${config.name}] ${nextStage.name} 진출자 안내\n${nextStage.name} 진출자 ${advanced.length}명: ${advanced.map(p=>p.name).join(', ')}\n일정: ${nextStage.date_start||''}${nextStage.date_end&&nextStage.date_end!==nextStage.date_start?' ~ '+nextStage.date_end:''}`;
   $('#advanceResultBox').innerHTML=`<div class="card" style="background:var(--main-soft);border:none">
@@ -2536,7 +2536,7 @@ function saveEditVenue(){
   const names=[...document.querySelectorAll('.eiVenueIn')].map((el,i)=>el.value.trim()||`${i+1}코스`);
   const oldNames=(editStage.venues&&editStage.venues.length?editStage.venues:config.venues)||[];
   openWarnEdit(`'${editStage.name}' 단계 코스명이 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
-    const{error}=await sb.from('stages').update({venues:names}).eq('id',editStage.id);
+    const{error}=await sb.rpc('update_stage_venues',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,p_venues:names});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     editStage.venues=names;config.venues=names;
     await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`장소 수정: ${oldNames.join(', ')} → ${names.join(', ')}`});
@@ -2573,7 +2573,7 @@ async function saveEditCap(){
       const{data:overflowRows}=await sb.from('players').select('id,name').eq('tournament_id',config.id).eq('status','ok').order('created_at',{ascending:false}).limit(overflow);
       const ids=(overflowRows||[]).map(r=>r.id);
       if(ids.length){
-        await sb.from('players').update({status:'wait'}).in('id',ids);
+        await Promise.all(ids.map(id=>sb.rpc('update_player',{t_id:config.id,player_id:id,p_owner_secret:user.secret,p_status:'wait'})));
         players=players.filter(p=>!ids.includes(p.id));
         const{data:wRows}=await sb.from('players').select('*').in('id',ids);
         waitlist.push(...(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',region:r.region||'',nick:r.nick||''})));
@@ -2720,7 +2720,8 @@ async function saveEditCourse(){
   const newRecordMode=editStage.kind==='round'?(editRecordMode||editStage.record_mode||'hole'):editStage.record_mode;
   const modeChanged=newRecordMode!==(editStage.record_mode||'hole');
   openWarnEdit(`'${editStage.name}' 단계의 코스 파${hasNext?'·진출 컷':''}${modeChanged?'·기록 방식':''}이(가) 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
-    const{error}=await sb.from('stages').update({course_pars:editCoursePars,advance_cut:cut,record_mode:newRecordMode}).eq('id',editStage.id);
+    const{error}=await sb.rpc('update_stage_course',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,
+      p_course_pars:editCoursePars,p_advance_cut:cut,p_record_mode:newRecordMode});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     editStage.course_pars=editCoursePars;editStage.advance_cut=cut;editStage.record_mode=newRecordMode;
     const active=curActiveStage(stages);
@@ -3145,18 +3146,16 @@ async function submitSingle(){
     club:f.club?($('#apiClub').value.trim()||'무소속'):'',region:f.region?$('#apiRegion').value.trim():'',
     nick:f.nick?$('#apiNick').value.trim():''};
 
-  const okCount=await countStatus(applyT.id,'ok');
-  const willWait=okCount>=applyT.cap;
-  const{data,error}=await sb.from('players').insert({
-    tournament_id:applyT.id,name:p.name,phone:p.phone,
-    sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,nick:p.nick||null,
-    status:willWait?'wait':'ok'}).select('id').single();
+  const{data,error}=await sb.rpc('apply_to_tournament',{
+    t_id:applyT.id,p_code:myCodeFor(applyT.id)||null,p_name:p.name,p_phone:p.phone,
+    p_sex:p.sex||null,p_age:p.age||null,p_club:p.club||null,p_region:p.region||null,p_nick:p.nick||null});
   if(error){
     if(error.code==='23505'){toast('이미 접수된 전화번호입니다');return}
-    toast('접수 처리 중 오류가 발생했습니다');console.error(error);return}
+    toast('접수 처리 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  const row=data[0];const willWait=row.status==='wait';
 
   if(applyT.mine){
-    const local={...p,id:data.id,scores:Array(HOLES).fill(null),group:-1};
+    const local={...p,id:row.player_id,scores:Array(HOLES).fill(null),group:-1};
     if(willWait)waitlist.push(local);else players.push(local);
     renderPlayers();syncMine();updateApplyStat()}
   else if(!willWait)applyT.players++;
@@ -3179,16 +3178,15 @@ async function submitGroup(){
   if(!eligibilityOk()||!privacyOk())return;
   const club=$('#apClub').value.trim()||'무소속';
   let added=0,dup=0,waited=0;
-  let okCount=await countStatus(applyT.id,'ok');
+  const p_code=myCodeFor(applyT.id)||null;
   for(const r of apPending){
-    const status=okCount<applyT.cap?'ok':'wait';
-    const{data,error}=await sb.from('players').insert({
-      tournament_id:applyT.id,name:r.name,phone:r.phone,
-      sex:r.sex||null,age:r.age||null,club,region:null,nick:null,status}).select('id').single();
+    const{data,error}=await sb.rpc('apply_to_tournament',{
+      t_id:applyT.id,p_code,p_name:r.name,p_phone:r.phone,
+      p_sex:r.sex||null,p_age:r.age||null,p_club:club,p_region:null,p_nick:null});
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
-    added++;
-    if(status==='ok'){okCount++;if(applyT.mine)players.push({...r,id:data.id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1});else applyT.players++}
-    else{waited++;if(applyT.mine)waitlist.push({...r,id:data.id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1})}}
+    const row=data[0];added++;
+    if(row.status==='ok'){if(applyT.mine)players.push({...r,id:row.player_id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1});else applyT.players++}
+    else{waited++;if(applyT.mine)waitlist.push({...r,id:row.player_id,club,region:'',nick:'',scores:Array(HOLES).fill(null),group:-1})}}
   apPending=[];
   if(applyT.mine){renderPlayers();syncMine();updateApplyStat()}
   renderCap();renderHome();
@@ -3262,12 +3260,10 @@ async function createTournament(){
       :{total:Math.max(2,+$('#fCutTotal'+suf).value||24)}}
 
   const stage1Cut=config.stageCount>=2?readCut(''):null;
-  const{error:stErr}=await sb.from('stages').insert({
-    tournament_id:tournamentId,seq:1,name:config.stageCount>=2?'예선':'본선',kind:stageKind,
+  const stagesPayload=[{seq:1,name:config.stageCount>=2?'예선':'본선',kind:stageKind,
     date_start:config.dateS,date_end:config.dateE,venues:stageVenues,
     course_pars:stageCoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-    advance_cut:stage1Cut,status:'open',record_mode:config.recordModes[1]});
-  if(stErr)console.error(stErr);
+    advance_cut:stage1Cut,status:'open',record_mode:config.recordModes[1]}];
 
   if(config.stageCount>=2){
     let stage2Venues,stage2CoursePars;
@@ -3279,12 +3275,10 @@ async function createTournament(){
       stage2CoursePars=coursePars2}
     const dateS2=$('#fDateS2').value||config.dateS,dateE2=$('#fDateE2').value||config.dateE;
     const stage2Cut=config.stageCount===3?readCut('2'):null;
-    const{error:st2Err}=await sb.from('stages').insert({
-      tournament_id:tournamentId,seq:2,name:config.stageCount===3?'본선':'결승',kind:stageKind,
+    stagesPayload.push({seq:2,name:config.stageCount===3?'본선':'결승',kind:stageKind,
       date_start:dateS2,date_end:dateE2,venues:stage2Venues,
       course_pars:stage2CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-      advance_cut:stage2Cut,status:'waiting',record_mode:config.recordModes[2]});
-    if(st2Err)console.error(st2Err)}
+      advance_cut:stage2Cut,status:'waiting',record_mode:config.recordModes[2]})}
 
   if(config.stageCount===3){
     let stage3Venues,stage3CoursePars;
@@ -3295,12 +3289,13 @@ async function createTournament(){
       stage3Venues=[...document.querySelectorAll('.venueIn3')].map((v,i)=>v.value.trim()||`${i+1}코스`);
       stage3CoursePars=coursePars3}
     const dateS3=$('#fDateS3').value||config.dateS,dateE3=$('#fDateE3').value||config.dateE;
-    const{error:st3Err}=await sb.from('stages').insert({
-      tournament_id:tournamentId,seq:3,name:'결승',kind:stageKind,
+    stagesPayload.push({seq:3,name:'결승',kind:stageKind,
       date_start:dateS3,date_end:dateE3,venues:stage3Venues,
       course_pars:stage3CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
-      advance_cut:null,status:'waiting',record_mode:config.recordModes[3]});
-    if(st3Err)console.error(st3Err)}
+      advance_cut:null,status:'waiting',record_mode:config.recordModes[3]})}
+
+  const{error:stErr}=await sb.rpc('create_stages',{t_id:tournamentId,p_owner_secret:user.secret,p_stages:stagesPayload});
+  if(stErr)console.error(stErr);
 
   if(staff.length){
     const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
@@ -3355,21 +3350,23 @@ function parsePaste(){
 async function confirmPaste(){
   let added=0,dup=0;
   for(const p of pending){
-    const{data,error}=await sb.from('players').insert({
-      tournament_id:config.id,name:p.name,phone:p.phone,
-      sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,nick:p.nick||null,
-      status:'ok'}).select('id').single();
+    const{data,error}=await sb.rpc('add_player',{
+      t_id:config.id,p_owner_secret:user.secret,p_name:p.name,p_phone:p.phone,
+      p_sex:p.sex||null,p_age:p.age||null,p_club:p.club||null,p_region:p.region||null,p_nick:p.nick||null,p_status:'ok'});
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
     players.push({...p,id:data.id});added++}
   pending=[];$('#previewCard').style.display='none';$('#pasteBox').value='';
   syncMine();renderPlayers();refreshAll();
   toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외(전화번호 기준)`:''}`)}
 async function loadDemo(){
-  const rows=DEMO.map((n,i)=>({tournament_id:config.id,name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
-    club:CLUBS[i%4],region:'하남',status:'ok'}));
-  const{data,error}=await sb.from('players').upsert(rows,{onConflict:'tournament_id,phone'}).select('id,phone');
-  if(error){toast('데모 등록 중 오류가 발생했습니다');console.error(error);return}
-  const idByPhone={};data.forEach(r=>idByPhone[r.phone]=r.id);
+  const idByPhone={};
+  for(let i=0;i<DEMO.length;i++){
+    const phone=genPhone(i);
+    const{data,error}=await sb.rpc('add_player',{
+      t_id:config.id,p_owner_secret:user.secret,p_name:DEMO[i][0],p_phone:phone,
+      p_sex:DEMO[i][1],p_age:DEMO[i][2],p_club:CLUBS[i%4],p_region:'하남',p_nick:null,p_status:'ok'});
+    if(error){if(error.code!=='23505'){toast('데모 등록 중 오류가 발생했습니다');console.error(error);return}continue}
+    idByPhone[phone]=data.id}
   players=DEMO.map((n,i)=>({name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
     club:CLUBS[i%4],region:'하남',nick:'',id:idByPhone[genPhone(i)],scores:Array(HOLES).fill(null),group:-1}));
   syncMine();renderPlayers();await makeGroups(false);refreshAll();
@@ -3392,12 +3389,12 @@ function renderPlayersSub(){
   $('#mgSub').textContent=`참가자 ${players.length}명 · 출석 ${ci} · 입금 ${paid}`}
 async function toggleCheckin(i){
   const p=players[i];if(!p.id)return;const next=!p.ci;
-  const{error}=await sb.from('players').update({checked_in_at:next?new Date().toISOString():null}).eq('id',p.id);
+  const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_checked_in:next});
   if(error){toast('출석 처리 중 오류가 발생했습니다');console.error(error);return}
   p.ci=next;renderPlayers()}
 async function togglePaid(){
   if(editIdx<0)return;const p=players[editIdx];if(!p.id)return;const next=!p.paid;
-  const{error}=await sb.from('players').update({paid:next}).eq('id',p.id);
+  const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_paid:next});
   if(error){toast('입금 처리 중 오류가 발생했습니다');console.error(error);return}
   p.paid=next;
   const btn=$('#pevPaidBtn');btn.textContent=next?'입금':'미입금';btn.className='pill2 '+(next?'pay':'nopay');
@@ -3413,15 +3410,29 @@ function openPEdit(i){editIdx=i;const p=players[i];
   const paidBtn=$('#pevPaidBtn');paidBtn.textContent=p.paid?'입금':'미입금';paidBtn.className='pill2 '+(p.paid?'pay':'nopay');
   $('#pev').classList.add('on')}
 function closePEdit(){$('#pev').classList.remove('on');editIdx=-1}
-function savePEdit(){if(editIdx<0)return;const p=players[editIdx];
-  p.name=$('#pevName').value.trim()||p.name;p.sex=$('#pevSex').value;
-  p.age=+$('#pevAge').value||p.age;p.club=$('#pevClub').value.trim();
+async function savePEdit(){if(editIdx<0)return;const p=players[editIdx];
+  const name=$('#pevName').value.trim()||p.name,sex=$('#pevSex').value;
+  const age=+$('#pevAge').value||p.age,club=$('#pevClub').value.trim();
+  if(p.id){
+    const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_name:name,p_sex:sex,p_age:age,p_club:club});
+    if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}}
+  p.name=name;p.sex=sex;p.age=age;p.club=club;
   closePEdit();renderPlayers();renderGroups();refreshAll();toast('참가자 정보를 수정했습니다')}
-function setPStatus(st){if(editIdx<0)return;const p=players[editIdx];
-  if(st==='wd'&&isOut(p)){p.st='ok';closePEdit();renderPlayers();refreshAll();toast(`${p.name} 님을 복귀 처리했습니다`);return}
+async function setPStatus(st){if(editIdx<0)return;const p=players[editIdx];
+  const revert=st==='wd'&&isOut(p);
+  const newSt=revert?'ok':st;
+  if(p.id){
+    const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_status:newSt});
+    if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}}
+  if(revert){p.st='ok';closePEdit();renderPlayers();refreshAll();toast(`${p.name} 님을 복귀 처리했습니다`);return}
   p.st=st;closePEdit();renderPlayers();refreshAll();
   toast(`${p.name} 님을 ${st==='wd'?'기권':'실격'} 처리했습니다 — 리더보드 하단으로 이동`)}
-function delPlayer(){if(editIdx<0)return;const p=players[editIdx];
+async function delPlayer(){if(editIdx<0)return;const p=players[editIdx];
+  if(p.id){
+    const{error}=await sb.rpc('delete_player',{t_id:config.id,p_player_id:p.id,p_owner_secret:user.secret});
+    if(error){
+      closePEdit();
+      toast(error.message+' — 기권 처리를 이용해 주세요');console.error(error);return}}
   const gi=groups.findIndex(g=>g.includes(editIdx));
   if(gi>=0)groups[gi].splice(groups[gi].indexOf(editIdx),1);
   groups.forEach(g=>g.forEach((pi,i)=>{if(pi>editIdx)g[i]=pi-1}));
@@ -3442,9 +3453,13 @@ function renderWait(){
      <button class="btn sm ${space?'':'ghost'}" ${space?'':'disabled'} onclick="promoteWait(${i})">승격</button>
      <button class="btn sm ghost" onclick="waitlist.splice(${i},1);renderWait();toast('대기 취소 처리')">취소</button></div>`).join('')
     :'<p class="sub" style="text-align:center;padding:20px 0">대기자가 없습니다</p>'}
-function promoteWait(i){
+async function promoteWait(i){
   if(players.length>=config.cap){toast('정원이 가득 찼습니다');return}
-  const p=waitlist.splice(i,1)[0];p.group=-1;players.push(p);
+  const p=waitlist[i];
+  if(p.id){
+    const{error}=await sb.rpc('promote_waitlist_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret});
+    if(error){toast(error.message);console.error(error);return}}
+  waitlist.splice(i,1);p.group=-1;if(!p.scores)p.scores=Array(HOLES).fill(null);players.push(p);
   syncMine();renderPlayers();refreshAll();
   toast(`${p.name} 님을 참가자로 승격했습니다 — 확정 문자 발송(실서비스)`)}
 
@@ -3495,10 +3510,9 @@ async function expandCapAndAdd(){
   closeCapChoice();
   toast(`정원을 ${appliedCap}명으로 늘리고 확정 등록했습니다`)}
 async function doAddPlayer(p,status){
-  const{data,error}=await sb.from('players').insert({
-    tournament_id:config.id,name:p.name,phone:p.phone,
-    sex:p.sex||null,age:p.age||null,club:p.club||null,region:p.region||null,
-    status}).select('id').single();
+  const{data,error}=await sb.rpc('add_player',{
+    t_id:config.id,p_owner_secret:user.secret,p_name:p.name,p_phone:p.phone,
+    p_sex:p.sex||null,p_age:p.age||null,p_club:p.club||null,p_region:p.region||null,p_nick:null,p_status:status});
   if(error){
     if(error.code==='23505'){toast('이미 등록된 전화번호입니다');return}
     toast('등록 중 오류가 발생했습니다');console.error(error);return}
@@ -3512,11 +3526,12 @@ async function doAddPlayer(p,status){
 /* ================= 조편성 ================= */
 async function persistGroups(){
   if(!config.id)return;
-  const updates=[];
+  const assignments=[];
   groups.forEach((g,gi)=>g.forEach((pi,order)=>{
     const p=players[pi];
-    if(p.id)updates.push(sb.from('players').update({group_no:gi,group_order:order}).eq('id',p.id))}));
-  await Promise.all(updates)}
+    if(p.id)assignments.push({id:p.id,group_no:gi,group_order:order})}));
+  if(!assignments.length)return;
+  await sb.rpc('set_group_assignments',{t_id:config.id,p_owner_secret:user.secret,p_assignments:assignments})}
 async function makeGroups(announce){
   swapSel=null;
   if(!players.length){groups=[];renderGroupsSeg();return}
