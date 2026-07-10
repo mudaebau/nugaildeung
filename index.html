@@ -932,24 +932,21 @@ tr:last-child td{border-bottom:none}
 
       <!-- 명단 -->
       <div class="psegpane on" id="pList">
-        <p class="sub">카톡 명단을 그대로 붙여넣으면 자동 인식합니다.</p>
-        <div class="card">
-          <label class="fl" style="margin-top:0">이 명단의 소속 클럽</label>
-          <select id="pasteClub"><option>솔터공원회</option><option>한강은빛회</option><option>청솔클럽</option><option>미사리파크</option><option>무소속</option></select>
-          <label class="fl">명단 붙여넣기</label>
-          <textarea id="pasteBox" rows="6"></textarea>
-          <button class="btn full" style="margin-top:12px" onclick="parsePaste()">명단 인식</button>
-          <button class="btn sm ghost full" style="margin-top:8px" onclick="loadDemo()">데모 32명 불러오기</button>
+        <div class="stagechips" id="playersStageChips" style="display:none"></div>
+        <div id="pListCurrent">
+          <div class="card" id="rosterConfirmCard" style="display:none;text-align:center"></div>
+          <button class="btn full" style="margin-bottom:12px" onclick="openAddPlayer()">+ 참가자 추가</button>
+          <button class="btn ghost full" id="callUpBtn" style="display:none;margin-bottom:12px" onclick="openCallUp()">+ 콜업 (이전 단계 참가자 불러오기)</button>
+          <p class="sub" style="margin-bottom:8px">동그라미 탭 = 출석 체크 · 이름 탭 = 수정(입금 표시·기권·삭제)</p>
+          <div class="card" style="padding:0 18px">
+            <div id="ptable"></div>
+          </div>
         </div>
-        <div class="card" id="previewCard" style="display:none">
-          <label class="fl" style="margin-top:0">인식 결과</label>
-          <div id="prevList"></div>
-          <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
-        </div>
-        <button class="btn full" style="margin-bottom:12px" onclick="openAddPlayer()">+ 참가자 추가</button>
-        <p class="sub" style="margin-bottom:8px">동그라미 탭 = 출석 체크 · 이름 탭 = 수정(입금 표시·기권·삭제)</p>
-        <div class="card" style="padding:0 18px">
-          <div id="ptable"></div>
+        <div id="pListPast" style="display:none">
+          <p class="sub" style="margin-bottom:10px">이전 단계 명단 — 조회 전용입니다.</p>
+          <div class="card" style="padding:0 18px">
+            <div id="ptablePast"></div>
+          </div>
         </div>
       </div>
 
@@ -1302,10 +1299,50 @@ tr:last-child td{border-bottom:none}
   <div class="pad">
     <h3>참가자 추가</h3>
     <p class="sub" style="margin-bottom:14px">접수 마감 여부와 관계없이 바로 등록됩니다</p>
-    <label class="fl" style="margin-top:0">이름</label><input type="text" id="apdName">
-    <label class="fl">전화번호</label><input type="tel" id="apdPhone" placeholder="본인 연락이 어려우면 가족 번호 가능">
-    <div id="apdFields"></div>
-    <button class="btn full" style="margin-top:16px" onclick="submitAddPlayer()">추가</button>
+    <div class="seg" id="addPlayerModeSeg">
+      <div class="on" data-m="single" onclick="setAddPlayerMode('single')">개인 추가</div>
+      <div data-m="group" onclick="setAddPlayerMode('group')">단체 추가</div>
+    </div>
+    <div id="apdSinglePane">
+      <label class="fl" style="margin-top:0">이름</label><input type="text" id="apdName">
+      <label class="fl">전화번호</label><input type="tel" id="apdPhone" placeholder="본인 연락이 어려우면 가족 번호 가능">
+      <div id="apdFields"></div>
+      <button class="btn full" style="margin-top:16px" onclick="submitAddPlayer()">추가</button>
+    </div>
+    <div id="apdGroupPane" style="display:none">
+      <label class="fl" style="margin-top:0">이 명단의 소속 클럽</label>
+      <select id="pasteClub"><option>솔터공원회</option><option>한강은빛회</option><option>청솔클럽</option><option>미사리파크</option><option>무소속</option></select>
+      <label class="fl">명단 붙여넣기</label>
+      <p class="sub" style="margin-bottom:6px">카톡 명단을 그대로 붙여넣으면 자동 인식합니다.</p>
+      <textarea id="pasteBox" rows="6"></textarea>
+      <button class="btn full" style="margin-top:12px" onclick="parsePaste()">명단 인식</button>
+      <button class="btn sm ghost full" style="margin-top:8px" onclick="loadDemo()">데모 32명 불러오기</button>
+      <div class="card" id="previewCard" style="display:none;margin-top:12px">
+        <label class="fl" style="margin-top:0">인식 결과</label>
+        <div id="prevList"></div>
+        <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 콜업(이전 단계 참가자 불러오기) -->
+<div class="overlay" id="callUpOv" onclick="if(event.target===this)closeCallUp()">
+  <div class="pad">
+    <h3>콜업 — 이전 단계 참가자 불러오기</h3>
+    <p class="sub" style="margin-bottom:14px">진출하지 못한 참가자를 현재 단계 명단에 추가합니다.</p>
+    <div id="callUpList"></div>
+  </div>
+</div>
+
+<!-- 현재 단계 명단에서 제외(사유 기록) -->
+<div class="overlay" id="excludeOv" onclick="if(event.target===this)closeExclude()">
+  <div class="pad">
+    <h3>명단에서 제외</h3>
+    <p class="sub" id="excludeDesc" style="margin-bottom:14px">—</p>
+    <label class="fl" style="margin-top:0">사유</label>
+    <textarea id="excludeReason" rows="3" placeholder="예: 개인 사정으로 불참"></textarea>
+    <button class="btn full warn" style="margin-top:16px" onclick="confirmExclude()">제외 처리</button>
   </div>
 </div>
 
@@ -1495,7 +1532,7 @@ function mgShow(id){
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
   if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge()}
-  if(id==='mgPlayers')playersSegShow(curPlayersSeg);
+  if(id==='mgPlayers'){playersStageId=null;renderPlayersForStage().then(()=>playersSegShow(curPlayersSeg))}
   if(id==='mgStaff')renderTools();
   if(id==='mgScore'){scoreStageId=null;renderScoreTab();$('#scoreBadge').style.display='none'}
   if(id==='mgBoard'){boardStageSel=null;renderBoardTab()}
@@ -1529,16 +1566,101 @@ function playersSegShow(seg){
   document.querySelectorAll('#playersSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.seg===seg));
   document.querySelectorAll('.psegpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+seg);if(pane)pane.classList.add('on');
-  if(seg==='pList')renderPlayers();
+  if(seg==='pList'){playersStageId=null;renderPlayersForStage()}
   if(seg==='pGroups')renderGroupsSeg();
   if(seg==='pWait')renderWait()}
 function enterPlayersSeg(seg){enterMgmt('mgPlayers');playersSegShow(seg)}
+let playersStageId=null,playersActiveStage=null;
+async function renderPlayersForStage(){
+  const stages=await loadAllStages(config.id);
+  const advanced=stages.some(s=>s.status==='done');
+  if(stages.length<=1||!advanced){
+    $('#playersStageChips').style.display='none';
+    $('#pListCurrent').style.display='block';$('#pListPast').style.display='none';
+    playersActiveStage=curActiveStage(stages)||stages[0]||null;
+    $('#callUpBtn').style.display='none';$('#rosterConfirmCard').style.display='none';
+    renderPlayers();return}
+  if(!playersStageId||!stages.find(s=>s.id===playersStageId))playersStageId=(curActiveStage(stages)||stages[0]).id;
+  $('#playersStageChips').style.display='flex';
+  $('#playersStageChips').innerHTML=stageChipsHTML(stages,playersStageId,'selectPlayersStage');
+  const sel=stages.find(s=>s.id===playersStageId);
+  const active=curActiveStage(stages);
+  playersActiveStage=active;
+  if(sel.id===active.id){
+    $('#pListCurrent').style.display='block';$('#pListPast').style.display='none';
+    const confirmed=active.seq===1||active.roster_confirmed;
+    $('#callUpBtn').style.display=active.seq>1?'block':'none';
+    if(active.seq>1&&!confirmed){
+      $('#rosterConfirmCard').style.display='block';
+      $('#rosterConfirmCard').innerHTML=`<p class="sub" style="margin-bottom:12px">'${active.name}' 명단을 조정한 뒤 확정하면 조편성이 가능해집니다.</p>
+        <button class="btn full" onclick="confirmStageRoster()">'${active.name}' 명단 확정</button>`;
+    }else{
+      $('#rosterConfirmCard').style.display='none'}
+    renderPlayers();
+  }else{
+    $('#pListCurrent').style.display='none';$('#pListPast').style.display='block';
+    const{data:pastRows}=await sb.from('players').select('*').eq('tournament_id',config.id)
+      .gte('current_stage',sel.seq).neq('status','wait').order('created_at');
+    $('#ptablePast').innerHTML=(pastRows||[]).length?pastRows.map(p=>
+      `<div class="toolrow" style="${p.status==='wd'||p.status==='dq'?'opacity:.5':''}">
+        <div class="info"><b>${p.name}${p.status==='wd'?' <span class="pill red">기권</span>':p.status==='dq'?' <span class="pill red">실격</span>':''}</b>
+        <span class="num">${maskPhone(p.phone)}${p.club?' · '+p.club:''}</span></div>
+      </div>`).join('')
+      :'<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>'}}
+function selectPlayersStage(id){playersStageId=id;renderPlayersForStage()}
+async function confirmStageRoster(){
+  if(!playersActiveStage)return;
+  const{error}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:playersActiveStage.id,p_owner_secret:user.secret});
+  if(error){toast('확정 중 오류가 발생했습니다');console.error(error);return}
+  toast(`'${playersActiveStage.name}' 명단이 확정되었습니다 — 이제 조편성을 할 수 있어요`);
+  renderPlayersForStage()}
+let callUpCandidates=[];
+async function openCallUp(){
+  if(!playersActiveStage)return;
+  const{data}=await sb.from('players').select('*').eq('tournament_id',config.id)
+    .lt('current_stage',playersActiveStage.seq).eq('status','ok').order('name');
+  callUpCandidates=data||[];
+  $('#callUpList').innerHTML=callUpCandidates.length?callUpCandidates.map((p,i)=>
+    `<div class="toolrow" style="cursor:pointer" onclick="callUpPlayer(${i})">
+      <div class="avatar">${p.name[0]}</div>
+      <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${p.club?' · '+p.club:''}</span></div>
+    </div>`).join('')
+    :'<p class="sub" style="text-align:center;padding:20px 0">불러올 수 있는 참가자가 없습니다</p>';
+  $('#callUpOv').classList.add('on')}
+function closeCallUp(){$('#callUpOv').classList.remove('on')}
+async function callUpPlayer(i){
+  const p=callUpCandidates[i];if(!p||!playersActiveStage)return;
+  const{error}=await sb.rpc('set_player_stage',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_stage_seq:playersActiveStage.seq});
+  if(error){toast('콜업 중 오류가 발생했습니다');console.error(error);return}
+  closeCallUp();
+  toast(`${p.name} 님을 '${playersActiveStage.name}' 명단으로 불러왔습니다`);
+  await loadBoardData(config.id,true);
+  renderPlayersForStage()}
+let excludeTargetIdx=-1;
+function closeExclude(){$('#excludeOv').classList.remove('on');excludeTargetIdx=-1}
+async function confirmExclude(){
+  if(excludeTargetIdx<0)return;
+  const p=players[excludeTargetIdx];
+  const reason=$('#excludeReason').value.trim()||'사유 미기재';
+  if(p.id){
+    const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_status:'wd'});
+    if(error){toast('처리 중 오류가 발생했습니다');console.error(error);return}
+    await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,
+      what:`${p.name} 님을 '${playersActiveStage?playersActiveStage.name:''}' 명단에서 제외 — 사유: ${reason}`})}
+  p.st='wd';closeExclude();renderPlayers();refreshAll();
+  toast(`${p.name} 님을 명단에서 제외했습니다`)}
 function renderGroupsSeg(){
   const disabled=judgeStageKind==='period'||stageRecordMode==='total';
   $('#groupsDisabledNote').style.display=disabled?'block':'none';
   if(disabled)$('#groupsDisabledNote').innerHTML=judgeStageKind==='period'
     ?'<p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>'
     :'<p class="sub" style="margin:0">이 단계는 <b>총점만(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>';
+  if(playersActiveStage&&playersActiveStage.seq>1&&!playersActiveStage.roster_confirmed){
+    $('#groupsDisabledNote').style.display='block';
+    $('#groupsDisabledNote').innerHTML=`<p class="sub" style="margin:0">'${playersActiveStage.name}' 명단을 먼저 확정해야 조편성을 할 수 있습니다.</p>
+      <button class="btn ghost sm" style="margin-top:10px" onclick="enterPlayersSeg('pList')">참가자 탭에서 명단 확정하기</button>`;
+    $('#groupsEmpty').style.display='none';$('#groupsFormed').style.display='none';
+    return}
   $('#groupsEmpty').style.display=(!disabled&&!groups.length)?'block':'none';
   $('#groupsFormed').style.display=(!disabled&&groups.length>0)?'block':'none';
   if(disabled)return;
@@ -3354,9 +3476,11 @@ async function confirmPaste(){
       t_id:config.id,p_owner_secret:user.secret,p_name:p.name,p_phone:p.phone,
       p_sex:p.sex||null,p_age:p.age||null,p_club:p.club||null,p_region:p.region||null,p_nick:p.nick||null,p_status:'ok'});
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
-    players.push({...p,id:data.id});added++}
+    if(!boardActiveStage||boardActiveStage.seq===1)players.push({...p,id:data.id});
+    added++}
   pending=[];$('#previewCard').style.display='none';$('#pasteBox').value='';
   syncMine();renderPlayers();refreshAll();
+  closeAddPlayer();
   toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외(전화번호 기준)`:''}`)}
 async function loadDemo(){
   const idByPhone={};
@@ -3420,6 +3544,12 @@ async function savePEdit(){if(editIdx<0)return;const p=players[editIdx];
   closePEdit();renderPlayers();renderGroups();refreshAll();toast('참가자 정보를 수정했습니다')}
 async function setPStatus(st){if(editIdx<0)return;const p=players[editIdx];
   const revert=st==='wd'&&isOut(p);
+  if(st==='wd'&&!revert&&playersActiveStage&&playersActiveStage.seq>1){
+    excludeTargetIdx=editIdx;closePEdit();
+    $('#excludeDesc').innerHTML=`<b>${p.name}</b> 님을 '${playersActiveStage.name}' 명단에서 제외합니다(기권 처리).`;
+    $('#excludeReason').value='';
+    $('#excludeOv').classList.add('on');
+    return}
   const newSt=revert?'ok':st;
   if(p.id){
     const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_status:newSt});
@@ -3477,9 +3607,15 @@ function addPlayerFieldsHTML(){
     h+=f.region?'<div><label class="fl" style="margin-top:0">지역</label><input type="text" id="apdRegion"></div>':'<div></div>';
     h+='</div>'}
   return h}
+function setAddPlayerMode(m){
+  document.querySelectorAll('#addPlayerModeSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.m===m));
+  $('#apdSinglePane').style.display=m==='single'?'block':'none';
+  $('#apdGroupPane').style.display=m==='group'?'block':'none'}
 function openAddPlayer(){
   $('#apdName').value='';$('#apdPhone').value='';
   $('#apdFields').innerHTML=addPlayerFieldsHTML();
+  $('#pasteBox').value='';$('#previewCard').style.display='none';pending=[];
+  setAddPlayerMode('single');
   $('#padd').classList.add('on')}
 function closeAddPlayer(){$('#padd').classList.remove('on')}
 async function submitAddPlayer(){
@@ -3517,7 +3653,8 @@ async function doAddPlayer(p,status){
     if(error.code==='23505'){toast('이미 등록된 전화번호입니다');return}
     toast('등록 중 오류가 발생했습니다');console.error(error);return}
   const local={...p,id:data.id,scores:Array(HOLES).fill(null),group:-1,ci:false,paid:false};
-  if(status==='wait')waitlist.push(local);else players.push(local);
+  if(status==='wait')waitlist.push(local);
+  else if(!boardActiveStage||boardActiveStage.seq===1)players.push(local);
   closeAddPlayer();
   syncMine();renderPlayers();renderWait();
   refreshAll();
