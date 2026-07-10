@@ -44,7 +44,7 @@ button{font-family:inherit;cursor:pointer}
 .abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
 .logo .flag{width:20px;height:20px;background:url('brand/app-icon.svg') center/contain no-repeat}
-.appbar-logo{height:30px;display:block}
+.appbar-logo{height:28px;display:block}
 .appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
@@ -406,39 +406,44 @@ tr:last-child td{border-bottom:none}
 .receipt .rn{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:var(--main-deep);letter-spacing:.1em;background:var(--main-soft);display:inline-block;padding:10px 24px;border-radius:14px;margin:12px 0}
 .receipt p{color:var(--muted);font-size:17px;line-height:1.75}
 
-/* ===== 전광판 (TV용 · 소프트 블루 B안) ===== */
-.boardwrap{max-width:1100px;margin:0 auto;padding:20px 16px}
-.boardctl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.boardctl .btn.ghost{background:rgba(255,255,255,.14);color:#fff}
-.boardctl .btn.ghost.on{background:#fff;color:var(--main-deep)}
+/* ===== 전광판 (TV용 · 소프트 블루 B안 · 차수24 콤팩트) ===== */
+.boardwrap{max-width:1100px;margin:0 auto;padding:14px 12px}
+.boardctl{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.bico{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px;font-weight:700;cursor:pointer;position:relative}
+.bico svg{width:16px;height:16px;stroke:#C9DCEF}
+.bico.on{background:#fff;color:var(--main-deep)}
+.bico.on svg{stroke:var(--main-deep)}
+.boardMoreMenu{position:absolute;top:42px;right:0;background:var(--paper);border-radius:14px;box-shadow:0 12px 30px rgba(23,51,80,.3);padding:8px;min-width:180px;display:none;z-index:20}
+.boardMoreMenu.on{display:block}
+.boardMoreMenu button{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:var(--ink);background:none;border:none}
+.boardMoreMenu button:hover{background:var(--bg)}
 .boardshell{background:linear-gradient(170deg,#3D71A9,#2E5C8D);border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,.15)}
-.boardtop{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.18);flex-wrap:wrap}
-.boardtop h3{font-family:'Noto Sans KR',sans-serif;font-weight:700;color:#fff;font-size:clamp(20px,3vw,30px)}
-.boardtop .bsub{color:#C6D9EC;font-size:15px}
-.boardtop .live{margin-left:auto;color:#fff;background:var(--coral);font-weight:600;font-size:15px;padding:6px 14px;border-radius:99px;display:flex;gap:7px;align-items:center;visibility:hidden}
-.boardtop .live .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
-.bhead{display:grid;padding:12px 24px;color:#B9D0E6;font-size:13px;font-weight:600;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,.15)}
-.brow{display:grid;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid rgba(255,255,255,.1);transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s}
+.boardMeta{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;color:#9FBEDC;font-size:12px}
+.boardMeta .live2{margin-left:auto;color:#fff;background:var(--coral);font-weight:600;font-size:12.5px;padding:4px 10px;border-radius:99px;display:flex;gap:6px;align-items:center;visibility:hidden}
+.boardMeta .live2 .dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+.bhead{display:grid;padding:8px 20px;color:#B9D0E6;font-size:11.5px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid rgba(255,255,255,.15)}
+.brow{display:grid;align-items:center;padding:0 20px;height:48px;border-bottom:1px solid rgba(255,255,255,.1);transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s}
 .brow:nth-child(odd){background:rgba(255,255,255,.045)}
-.brow .rank{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;color:#A9C4DE}
-.brow .name{font-family:'Noto Sans KR',sans-serif;font-weight:600;color:#fff;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brow .name small{font-family:'Noto Sans KR',sans-serif;font-weight:400;color:#A9C4DE;font-size:13px;margin-left:9px}
-.brow .topar{font-family:'Oswald',sans-serif;font-size:24px;font-weight:600;color:#fff;text-align:right}
+.brow .rank{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:#A9C4DE}
+.brow .name{font-family:'Noto Sans KR',sans-serif;font-weight:600;color:#fff;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .name small{font-family:'Noto Sans KR',sans-serif;font-weight:400;color:#A9C4DE;font-size:11.5px;margin-left:7px}
+.brow .topar{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:#fff;text-align:right}
 .brow .topar.minus{color:#FFB49E}
-.brow .thru{color:#B9D0E6;text-align:center;font-size:15px}
-.brow .thru b{font-family:'Oswald',sans-serif;font-weight:600;font-size:19px;color:#DCE9F5;margin-right:2px}
-.brow .thru.done{color:#8FE0C8;font-weight:700;font-size:16px}
-.brow .total{font-family:'Oswald',sans-serif;font-size:25px;font-weight:700;color:#fff;text-align:right}
-.brow .rsc{font-family:'Oswald',sans-serif;font-size:17px;font-weight:500;color:#B9D0E6;text-align:right}
+.brow .thru{color:#B9D0E6;text-align:center;font-size:13px}
+.brow .thru b{font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;color:#DCE9F5;margin-right:2px}
+.brow .thru.done{color:#8FE0C8;font-weight:700;font-size:13px}
+.brow .total{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:#fff;text-align:right}
+.brow .rsc{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;color:#B9D0E6;text-align:right}
 .brow.top1{background:linear-gradient(90deg,rgba(247,207,92,.22),transparent 75%);border-left:5px solid var(--sun)}
 .brow.top1 .rank,.brow.top1 .total{color:var(--sun)}
 .brow.top1 .name{font-weight:700}
 .brow.flash{background:rgba(247,207,92,.24)}
-.bchip{border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:#B9D0E6;border-radius:99px;padding:10px 16px;font-weight:600;font-size:16px}
-.bchip.on{background:#fff;color:var(--main-deep);border-color:#fff}
-.boardfoot{padding:14px 24px;color:#A9C4DE;font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.bchip{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#C9DCEF;border-radius:99px;padding:6px 12px;font-weight:500;font-size:12.5px}
+.bchip.on{background:#fff;color:var(--main-deep);border-color:#fff;font-weight:700}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 20px 0}
+.boardfoot{padding:10px 20px;color:#A9C4DE;font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .bempty{color:#B9D0E6;text-align:center;padding:54px 20px;font-size:19px}
-.cutline{display:flex;align-items:center;gap:8px;margin:2px 24px;border-top:2px dashed var(--coral)}
+.cutline{display:flex;align-items:center;gap:8px;margin:2px 20px;border-top:2px dashed var(--coral)}
 .cutline span{color:var(--coral);font-size:12px;font-weight:600;white-space:nowrap;transform:translateY(-9px);background:#345f8f;padding:0 8px}
 :fullscreen .boardshell{border-radius:0;min-height:100vh}
 
@@ -505,7 +510,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 <div class="mobile" id="viewOwner">
   <header class="appbar">
     <button class="abk" id="abkBtn" onclick="navBack()">←</button>
-    <div class="logo"><img src="brand/logo-appbar.svg" alt="누가일등" class="appbar-logo"></div>
+    <div class="logo"><img src="brand/logo-light.svg" alt="누가일등" class="appbar-logo"></div>
     <div class="who" id="whoBox">둘러보는 중 · 로그인 안 함</div>
   </header>
 
@@ -1112,13 +1117,17 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="leaveBoard()">← 뒤로</button><span id="boardHeadName">전광판</span></div>
   <div class="boardwrap">
     <div class="boardctl" id="boardCtl">
-      <button class="btn" id="simBtn" onclick="toggleSim()">▶ 데모 경기 시작</button>
-      <button class="btn ghost" onclick="resetScores()">↺ 초기화</button>
-      <button class="btn ghost" onclick="fullBoard()">⛶ 전체 화면</button>
-      <button class="btn ghost" id="autoRotateBtn" onclick="toggleAutoRotate()" style="display:none">🔁 자동 순환</button>
-      <div id="boardModeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto"></div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <div class="bico" onclick="fullBoard()" title="전체화면"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></div>
+        <div class="bico" id="autoRotateBtn" onclick="toggleAutoRotate()" style="display:none" title="자동순환"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v4h-4M7 22v-4h4"/><path d="M20.5 8A9 9 0 0 0 6 5.3L3 8M3.5 16A9 9 0 0 0 18 18.7L21 16"/></svg></div>
+        <div class="bico" onclick="toggleBoardMore()" title="더보기">⋯
+          <div class="boardMoreMenu" id="boardMoreMenu" onclick="event.stopPropagation()">
+            <button id="simBtn" onclick="toggleSim()">▶ 데모 경기 시작</button>
+            <button onclick="resetScores()">↺ 초기화</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="boardScopeChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
     <div class="boardshell" id="boardGate" style="display:none;text-align:center;padding:60px 24px">
       <h2 style="color:#fff;margin-bottom:8px">🔒 비공개 대회</h2>
       <p style="color:#9FBEDC;margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
@@ -1126,12 +1135,11 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="btn full big" style="max-width:220px;margin:0 auto" onclick="submitBoardGate()">입장하기</button>
     </div>
     <div class="boardshell" id="boardShell">
-      <div class="boardtop">
-        <h3 id="boardTitle">대회를 개설하면 표시됩니다</h3>
-        <div class="bsub" id="boardSub"></div>
-        <div class="live" id="boardLive"><span class="dot"></span>LIVE</div>
-      </div>
-      <div class="reconnectBadge" id="boardReconnectBadge" style="margin:10px 24px 0"><span class="dot"></span>재접속 중…</div>
+      <h3 id="boardTitle" style="display:none"></h3>
+      <div id="boardModeChips" class="fchips"></div>
+      <div id="boardScopeChips" class="fchips"></div>
+      <div class="boardMeta" id="boardMetaLine"><span id="boardSub"></span><span class="live2" id="boardLive"><span class="dot"></span>LIVE</span></div>
+      <div class="reconnectBadge" id="boardReconnectBadge" style="margin:10px 20px 0"><span class="dot"></span>재접속 중…</div>
       <div class="bhead" id="bhead"></div>
       <div class="brows" id="brows"><div class="bempty">참가자를 등록하면 명단이 표시됩니다</div></div>
       <div class="boardfoot"><span style="display:flex;align-items:center;gap:6px"><img src="brand/app-icon.svg" alt="" style="width:16px;height:16px">누가일등 실시간 집계 · nuga1.kr · 대회장 TV/빔 연결용</span><span id="footClock"></span></div>
@@ -4396,8 +4404,12 @@ function toggleAutoRotate(){
   boardAutoRotate=!boardAutoRotate;
   const btn=$('#autoRotateBtn');
   btn.classList.toggle('on',boardAutoRotate);
-  btn.textContent=boardAutoRotate?'⏸ 자동 순환 중':'🔁 자동 순환';
+  btn.title=boardAutoRotate?'자동 순환 중 — 눌러서 정지':'자동 순환';
   if(boardAutoRotate)startAutoRotate();else stopAutoRotate()}
+function toggleBoardMore(){$('#boardMoreMenu').classList.toggle('on')}
+document.addEventListener('click',e=>{
+  const menu=$('#boardMoreMenu');
+  if(menu&&menu.classList.contains('on')&&!e.target.closest('.bico'))menu.classList.remove('on')});
 function startAutoRotate(){
   const seq=[['all',20000],['남',10000],['여',10000]];
   let i=0;
