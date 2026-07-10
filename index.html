@@ -362,6 +362,11 @@ tr:last-child td{border-bottom:none}
 .hc.birdie b{color:var(--red)}
 .sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
 .sumrow b{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--main-deep)}
+.gridsummary{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0;padding:10px 14px;background:var(--main-soft);border-radius:14px;font-size:13px;color:var(--muted)}
+.gridsummary span.cur{color:var(--main-deep);font-weight:700}
+.gridsummary b{font-family:'Oswald',sans-serif;font-weight:700;color:var(--ink)}
+.gridsummary .total{margin-left:auto;color:var(--main-deep);font-weight:700}
+.gridsummary .total b{color:var(--main-deep);font-size:17px}
 
 /* ===== 대회 도구 ===== */
 .toolrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line)}
@@ -1679,7 +1684,7 @@ function stageChipsHTML(stages,selId,onclickFn){
   return stages.map(s=>{
     const label=s.status==='done'?`${s.name} (확정)`:s.name;
     return`<button class="stagechip ${s.id===selId?'on':''}" onclick="${onclickFn}('${s.id}')">${label}</button>`}).join('')}
-let scoreStageId=null,scoreMode='player',gridPlayerIdx=null;
+let scoreStageId=null,scoreMode='player',gridPlayerIdx=null,gridCourseIdx=0;
 function selectScoreStage(id){scoreStageId=id;renderScoreTab()}
 function setScoreMode(m){scoreMode=m;renderScoreTab()}
 async function renderScoreTab(){
@@ -1754,31 +1759,61 @@ function openGridPad(pi,gi){
   if(!judges().length){toast('입력 권한이 있는 스탭이 없습니다 — 운영진 탭에서 추가하세요');return}
   if(curStaff>=judges().length)curStaff=0;
   openPad(pi,gi)}
+function selectGridCourse(c){gridCourseIdx=c;renderGridCard()}
 function renderGridCard(){
   const card=$('#gridCard');if(!card)return;
   const pi=gridPlayerIdx,p=players[pi];
   if(!p){card.innerHTML='';return}
   const gIdx=groups.findIndex(gr=>gr.includes(pi));
-  const venue=(config.venues[0]||'').replace(' 파크골프장','');
-  let filled=0,total=0,parSum=0;
-  const cells=Array.from({length:HOLES},(_,gi)=>{
-    const v=p.scores[gi],par=parAt(gi);
-    if(v!=null){filled++;total+=v;parSum+=par}
-    return{gi,par,v,course:Math.floor(gi/18)+1,hole:gi%18+1}});
-  const firstEmpty=cells.find(c=>c.v==null);
-  const topar=total-parSum;
-  const gridHTML=cells.map(c=>{
-    let cls=c.v==null?'empty':(c.v<c.par?'birdie':'');
-    if(firstEmpty&&c.gi===firstEmpty.gi)cls+=' cur';
-    return`<div class="hc ${cls}" onclick="openGridPad(${pi},${c.gi})"><small>${c.hole}홀·P${c.par}</small><b>${c.v==null?'—':c.v}</b></div>`}).join('');
+  if(gridCourseIdx>=ROUNDS||gridCourseIdx<0)gridCourseIdx=0;
+  const venue=(config.venues[gridCourseIdx]||'').replace(' 파크골프장','');
+
+  const courseStats=Array.from({length:ROUNDS},(_,c)=>{
+    let filled=0,total=0;
+    for(let h=0;h<18;h++){const v=p.scores[c*18+h];if(v!=null){filled++;total+=v}}
+    return{filled,total}});
+  const grandFilled=courseStats.reduce((a,c)=>a+c.filled,0);
+  const grandTotal=courseStats.reduce((a,c)=>a+c.total,0);
+
+  const summaryHTML=ROUNDS>1?`<div class="gridsummary">
+    ${courseStats.map((c,i)=>`<span class="${i===gridCourseIdx?'cur':''}">${i+1}코스 <b>${c.filled?c.total:'—'}</b></span>`).join('')}
+    <span class="total">총합 <b>${grandFilled?grandTotal:'—'}</b></span></div>`:'';
+  const chipsHTML=ROUNDS>1?`<div class="chiprow" id="gridCourseChips">${Array.from({length:ROUNDS},(_,c)=>
+      `<button class="chip ${c===gridCourseIdx?'on':''}" onclick="selectGridCourse(${c})">${c+1}코스</button>`).join('')}</div>`:'';
+
+  const courseLen=(coursePars[gridCourseIdx]||PRESET66).length||18;
+  const buildCells=(s,e)=>Array.from({length:e-s},(_,k)=>{
+    const h=s+k,gi=gridCourseIdx*18+h,v=p.scores[gi],par=parAt(gi);
+    return{gi,par,v,hole:h+1}});
+  const sectionHTML=(cells,label)=>{
+    const filled=cells.filter(c=>c.v!=null).length;
+    const total=cells.reduce((a,c)=>a+(c.v||0),0);
+    const firstEmpty=cells.find(c=>c.v==null);
+    const cellsHTML=cells.map(c=>{
+      let cls=c.v==null?'empty':(c.v<c.par?'birdie':'');
+      if(firstEmpty&&c.gi===firstEmpty.gi)cls+=' cur';
+      return`<div class="hc ${cls}" onclick="openGridPad(${pi},${c.gi})"><small>${c.hole}홀·P${c.par}</small><b>${c.v==null?'—':c.v}</b></div>`}).join('');
+    return label?`<p class="sub" style="margin:12px 0 6px;font-weight:700">${label} <span style="font-weight:400;color:var(--muted)">소계 ${filled?total:'—'}</span></p><div class="holegrid">${cellsHTML}</div>`
+                 :`<div class="holegrid">${cellsHTML}</div>`};
+  const bodyHTML=courseLen===18
+    ?sectionHTML(buildCells(0,9),'전반')+sectionHTML(buildCells(9,18),'후반')
+    :sectionHTML(buildCells(0,courseLen),'');
+
+  const cs=courseStats[gridCourseIdx];
+  let parSum=0;
+  for(let h=0;h<courseLen;h++){const gi=gridCourseIdx*18+h;if(p.scores[gi]!=null)parSum+=parAt(gi)}
+  const topar=cs.total-parSum;
+
   card.innerHTML=`
     <div style="display:flex;align-items:center;gap:11px;margin-bottom:4px">
       <span class="gav" style="width:40px;height:40px;font-size:15px">${p.name[0]}</span>
       <div><b style="font-size:17px">${p.name}</b><div class="meta" style="font-size:12px;color:var(--muted)">${gIdx>=0?(gIdx+1)+'조 · ':''}${venue}</div></div>
       <span style="margin-left:auto;color:var(--muted);font-size:12.5px;cursor:pointer" onclick="focusGridSearch()">선수 변경 ›</span>
     </div>
-    <div class="holegrid">${gridHTML}</div>
-    <div class="sumrow"><span style="color:var(--muted)">${filled}홀 입력 · 파 대비 <b style="color:${filled===0?'var(--muted)':topar>0?'var(--red)':topar<0?'var(--main-deep)':'var(--ink)'}">${filled===0?'—':topar===0?'E':(topar>0?'+':'')+topar}</b></span><span>합계 <b>${total||0}</b></span></div>
+    ${summaryHTML}
+    ${chipsHTML}
+    ${bodyHTML}
+    <div class="sumrow"><span style="color:var(--muted)">${cs.filled}홀 입력 · 파 대비 <b style="color:${cs.filled===0?'var(--muted)':topar>0?'var(--red)':topar<0?'var(--main-deep)':'var(--ink)'}">${cs.filled===0?'—':topar===0?'E':(topar>0?'+':'')+topar}</b></span><span>코스 합계 <b>${cs.total||0}</b></span></div>
     <p class="sub" style="margin-top:10px;text-align:center">칸을 누르면 숫자판 · 입력하면 다음 홀로 자동 이동 · 기존 값 변경 시 정정 사유 기록</p>`}
 let boardStageSel=null;
 async function renderBoardTab(){
