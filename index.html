@@ -478,6 +478,18 @@ tr:last-child td{border-bottom:none}
 .gcard li span{color:var(--muted);font-size:14px;font-weight:500}
 
 .toast{position:fixed;bottom:calc(var(--navh) + 16px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:14px 22px;border-radius:99px;font-weight:600;font-size:17px;opacity:0;transition:.35s;z-index:200;pointer-events:none;max-width:92vw;text-align:center}
+.toastUndoBtn{text-decoration:underline;font-weight:700;margin-left:10px;cursor:pointer;color:var(--sun)}
+/* 차수23②: 총점 인라인 입력 */
+.inrow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--paper)}
+.inrow:last-child{border-bottom:none}
+.inrow .who{flex:1;min-width:0}
+.inrow .who b{display:block;font-size:15.5px;font-weight:700}
+.inrow .who span{font-size:11.5px;color:var(--muted)}
+input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:var(--ink);flex:0 0 auto}
+.numbox.filled{border-color:var(--main)}
+.okbtn{height:44px;padding:0 14px;border-radius:12px;background:var(--main);color:#fff;font-weight:700;font-size:14px;border:none;flex:0 0 auto}
+.okbtn.done{background:#E7F5EE;color:#2E8B63}
+.bestrow{background:#F4FBF8}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .note{background:#FDF6E1;border:2px solid #F2E3B4;border-radius:14px;padding:14px 16px;font-size:16px;color:#6f5a13;margin-bottom:16px;line-height:1.65}
 
@@ -1006,13 +1018,7 @@ tr:last-child td{border-bottom:none}
       <span class="queueBadge" id="mgQueueBadge" style="margin-bottom:10px">0건 전송 대기</span>
       <div id="scorePastNotice" class="card" style="display:none;text-align:center;padding:40px 20px"></div>
       <div id="scoreLiveArea">
-        <div class="tools" style="margin-bottom:14px">
-          <div class="trow" style="cursor:pointer" onclick="openJudge(0)">
-            <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-            <span class="tt"><b>스코어카드 사진 입력</b><span>촬영 → 보조 증빙으로 첨부</span></span>
-            <span class="chev">›</span>
-          </div>
-        </div>
+        <!-- 차수23①: 스코어카드 사진 입력 진입 행 숨김(v3 재도입 예정) -->
         <div class="seg" id="scoreModeSeg" style="display:none">
           <div class="on" data-m="player" onclick="setScoreMode('player')">선수별</div>
           <div data-m="group" onclick="setScoreMode('group')">조별</div>
@@ -1084,28 +1090,18 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <button class="btn full big" id="holeNextBtn" onclick="moveHole(1)">다음 홀로 →</button>
-    <div class="card" id="scPhotoCard" style="margin-top:14px">
+    <!-- 차수23①: 사진입력 숨김(v3 재도입 예정) — DOM은 유지, 항상 숨김 -->
+    <div class="card" id="scPhotoCard" style="margin-top:14px;display:none">
       <label class="fl" style="margin-top:0">스코어카드 사진 <span class="pill gray" style="margin-left:4px">선택</span></label>
       <p class="sub" style="margin-bottom:10px">이 조 · 이 코스의 스코어카드 사진을 보조 증빙으로 남길 수 있어요. 점수에 자동 반영되지는 않습니다.</p>
       <div id="scPhotoPreview"></div>
       <input type="file" accept="image/*" capture="environment" id="scPhotoInput" style="display:none" onchange="uploadScorecardPhoto(this.files[0]);this.value=''">
       <button class="btn ghost full" onclick="document.getElementById('scPhotoInput').click()">사진 촬영/첨부</button>
     </div>
-    <div class="card" id="periodEntryCard" style="display:none">
-      <label class="fl" style="margin-top:0">참가자 검색</label>
-      <input type="text" id="pePlayerSearch" placeholder="이름 또는 전화번호 뒷자리" oninput="renderPeriodPlayerList()">
-      <div id="pePlayerList" style="max-height:240px;overflow-y:auto;margin-top:8px"></div>
-      <div id="peSelectedInfo" style="margin-top:12px"></div>
-      <label class="fl">총타수</label>
-      <input type="tel" id="peStrokes" placeholder="예: 68">
-      <label class="fl">플레이 매장 <span style="color:var(--muted);font-weight:400">(선택)</span></label>
-      <input type="text" id="peStore" placeholder="예: 강남점">
-      <label class="fl">스코어카드 사진 <span class="pill gray" style="margin-left:4px">선택</span></label>
-      <p class="sub" style="margin-bottom:8px">보조 증빙일 뿐 총타수에 자동 반영되지 않습니다.</p>
-      <div id="pePhotoPreview"></div>
-      <input type="file" accept="image/*" capture="environment" id="pePhotoInput" style="display:none" onchange="pickPeriodPhoto(this.files[0])">
-      <button class="btn ghost full" onclick="document.getElementById('pePhotoInput').click()">사진 촬영/첨부</button>
-      <button class="btn full big" style="margin-top:12px" onclick="submitPlayEntry()">기록 제출</button>
+    <div id="periodEntryCard" style="display:none">
+      <input type="text" id="pePlayerSearch" placeholder="이름 또는 전화번호 뒷자리" style="margin-bottom:12px" oninput="renderPeriodPlayerList()">
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden" id="pePlayerList"></div>
+      <p class="swaphint" id="peHint" style="margin-top:10px">이름 옆 칸에 총타수를 입력하고 확인을 누르세요</p>
     </div>
     <div class="log" style="margin-top:14px"><h4 id="logTitle">실시간 입력 기록 — 전광판에 즉시 반영</h4><div id="logBox"><div style="color:var(--muted)">아직 입력이 없습니다</div></div></div>
   </section>
@@ -1228,6 +1224,17 @@ tr:last-child td{border-bottom:none}
   </section>
 </div>
 
+<!-- 홀별 선수별: 전용 입력 페이지 (차수23④) -->
+<div class="mobile" id="viewGridPage" style="display:none">
+  <div class="backbar"><button onclick="closeGridPlayerPage()">← 뒤로</button><span id="gridPageTitle">—</span></div>
+  <section class="page on" style="padding-top:16px;padding-bottom:90px">
+    <div class="card" id="gridCard"></div>
+  </section>
+  <div style="position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(242,245,249,0),var(--bg) 35%)">
+    <button class="btn full big" onclick="closeGridPlayerPage()">입력 완료 — 목록으로</button>
+  </div>
+</div>
+
 <div class="mobile" id="viewPrivacy" style="display:none">
   <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>개인정보 처리방침</span></div>
   <section class="page on" style="padding-top:16px">
@@ -1272,6 +1279,60 @@ tr:last-child td{border-bottom:none}
       <button class="padbtn clear" style="font-size:17px" onclick="applyCorr('스코어 재확인')">스코어 재확인</button>
       <button class="padbtn clear" style="font-size:17px" onclick="applyCorr('운영자 지시')">운영자 지시</button>
       <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelCorr()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 차수23③: 총점 기록 내역 시트 -->
+<div class="overlay" id="playHistOv" onclick="if(event.target===this)closePlayHistory()">
+  <div class="pad">
+    <h3 id="playHistTitle">기록 내역</h3>
+    <div id="playHistList" style="margin-bottom:14px"></div>
+    <p class="sub" style="margin-bottom:14px">수정·삭제 시 사유가 기록되고 베스트는 자동 재계산됩니다.</p>
+    <button class="btn ghost full" onclick="closePlayHistory()">닫기</button>
+  </div>
+</div>
+
+<!-- 차수23③: 라운드형 총점만 — 같은 칸 재입력(정정) 사유 -->
+<div class="overlay" id="playCorrOv">
+  <div class="pad">
+    <h3>🔁 기록 정정</h3>
+    <p id="playCorrDesc">—</p>
+    <p style="font-weight:600;color:var(--ink);font-size:17px;margin-bottom:12px">정정 사유를 선택하세요 — 정정 이력이 기록됩니다</p>
+    <div class="padgrid" style="grid-template-columns:1fr 1fr">
+      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('오기입')">오기입 수정</button>
+      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('스코어 재확인')">스코어 재확인</button>
+      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('운영자 지시')">운영자 지시</button>
+      <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelPlayCorr()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 차수23③: 기록 내역 개별 항목 수정 -->
+<div class="overlay" id="playEditOv">
+  <div class="pad">
+    <h3>기록 수정</h3>
+    <p id="playEditDesc">—</p>
+    <label class="fl" style="margin-top:0">새 총타수</label>
+    <input type="tel" id="playEditStrokes" placeholder="예: 68">
+    <label class="fl">사유</label>
+    <input type="text" id="playEditReason" placeholder="예: 오기입 수정">
+    <button class="btn full" style="margin-top:16px" onclick="confirmPlayEdit()">저장</button>
+    <button class="btn ghost full" style="margin-top:8px" onclick="closePlayEditSheet()">취소</button>
+  </div>
+</div>
+
+<!-- 차수23③: 기록 내역 개별 항목 삭제(사유 선택) -->
+<div class="overlay" id="playDelOv">
+  <div class="pad">
+    <h3>🗑 기록 삭제</h3>
+    <p id="playDelDesc">—</p>
+    <p style="font-weight:600;color:var(--ink);font-size:17px;margin-bottom:12px">삭제 사유를 선택하세요</p>
+    <div class="padgrid" style="grid-template-columns:1fr 1fr">
+      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('오기입')">오기입</button>
+      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('중복 기록')">중복 기록</button>
+      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('운영자 지시')">운영자 지시</button>
+      <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelPlayDelete()">취소</button>
     </div>
   </div>
 </div>
@@ -1480,7 +1541,19 @@ const SAMPLE=`[솔터공원회 참가 신청합니다~ 8명]
 
 /* ================= helpers ================= */
 const $=s=>document.querySelector(s);
-function toast(m){const t=$('#toastEl');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
+function toast(m){const t=$('#toastEl');t.style.pointerEvents='none';t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
+let toastUndoFn=null;
+function toastUndo(m,fn){
+  toastUndoFn=fn;
+  const t=$('#toastEl');
+  t.innerHTML=`${m} <span class="toastUndoBtn" onclick="runToastUndo()">실행 취소</span>`;
+  t.style.pointerEvents='auto';
+  t.classList.add('on');
+  clearTimeout(t._h);
+  t._h=setTimeout(()=>{t.classList.remove('on');t.style.pointerEvents='none';toastUndoFn=null},4000)}
+function runToastUndo(){
+  if(toastUndoFn)toastUndoFn();
+  const t=$('#toastEl');t.classList.remove('on');t.style.pointerEvents='none';toastUndoFn=null}
 function maskPhone(p){return p.replace(/(\d{3})-?(\d{2})\d{2}-?(\d{4})/,'$1-$2••-$3')}
 function fmtDate(d){const[Y,M,D]=d.split('-');return `${M}.${D}`}
 function dday(d){const diff=Math.ceil((new Date(d)-new Date('2026-07-03'))/86400000);return diff>0?`D-${diff}`:diff===0?'D-DAY':''}
@@ -1492,7 +1565,7 @@ function navGroupFor(page){
   if(page==='opMy')return 'opMy';
   return 'opHome'}
 function renderLoc(){
-  ['Owner','Judge','Board','Apply','Notice','EditInfo','Privacy'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
+  ['Owner','Judge','Board','Apply','Notice','EditInfo','Privacy','GridPage'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
   if(curView==='Owner'){
     const grp=navGroupFor(curPage);
     document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===grp));
@@ -1562,12 +1635,10 @@ async function pendingReviewCount(){
     if(!done)pending++});
   return pending}
 async function renderScoreBadge(){
-  const n=await pendingReviewCount();
+  // 차수23①: 사진입력·검수 UI 전면 숨김(v3 재도입 예정) — pendingReviewCount()는 보존하되 호출하지 않는다.
   const badge=$('#scoreBadge'),todo=$('#scoreTodo');
-  if(badge)badge.style.display=n>0?'block':'none';
-  if(!todo)return;
-  todo.style.display=n>0?'flex':'none';
-  if(n>0)$('#scoreTodoText').textContent=`검수 대기 ${n}건`}
+  if(badge)badge.style.display='none';
+  if(todo)todo.style.display='none'}
 let curPlayersSeg='pList';
 function playersSegShow(seg){
   curPlayersSeg=seg;
@@ -1740,26 +1811,46 @@ function renderGroupScoreList(){
 function renderPlayerGrid(){
   const box=$('#mgScoreBody');
   const active=players.map((p,i)=>i).filter(i=>!isOut(players[i]));
-  if(gridPlayerIdx==null||!active.includes(gridPlayerIdx))gridPlayerIdx=active[0];
-  if(gridPlayerIdx==null){box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>';return}
+  if(!active.length){box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>';return}
   box.innerHTML=`
-    <input type="text" id="gridPlayerSearch" placeholder="선수 검색 (이름)" style="margin-bottom:10px" oninput="renderPlayerSearchList()">
-    <div id="gridPlayerList" style="display:none;margin-bottom:10px"></div>
-    <div class="card" id="gridCard"></div>`;
+    <input type="text" id="gridPlayerSearch" placeholder="선수 검색 (이름)" style="margin-bottom:10px" oninput="renderPlayerListRows()">
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden" id="gridPlayerRows"></div>
+    <p class="swaphint" style="margin-top:10px">이름을 누르면 입력 페이지로 이동합니다</p>`;
+  renderPlayerListRows()}
+function gridProgressFor(pi){
+  const p=players[pi];let filled=0,total=0;
+  for(let h=0;h<HOLES;h++)if(p.scores[h]!=null){filled++;total+=p.scores[h]}
+  return{filled,total}}
+function renderPlayerListRows(){
+  const box=$('#gridPlayerRows');if(!box)return;
+  const q=($('#gridPlayerSearch').value||'').trim();
+  const active=players.map((p,i)=>i).filter(i=>!isOut(players[i])&&(!q||players[i].name.includes(q)));
+  box.innerHTML=active.length?active.map(i=>{
+    const p=players[i];
+    const gIdx=groups.findIndex(gr=>gr.includes(i));
+    const prog=gridProgressFor(i);
+    const done=prog.filled===HOLES;
+    const statusHTML=done?`<span style="color:var(--mint);font-weight:700">완료 · 합계 ${prog.total}</span>`
+      :`<span style="color:var(--muted)">${prog.filled>0?'입력 중':'미입력'}</span>`;
+    return`<div class="toolrow" style="cursor:pointer;padding:14px 16px;margin:0" onclick="openGridPlayerPage(${i})">
+      <div class="avatar">${p.name[0]}</div>
+      <div class="info"><b>${p.name}</b><span class="num">${gIdx>=0?(gIdx+1)+'조 · ':''}${p.club||''}</span></div>
+      <div style="margin-left:auto;text-align:right">
+        <b class="num" style="display:block;font-size:16px">${prog.filled}/${HOLES}</b>
+        ${statusHTML}
+      </div>
+    </div>`}).join('')
+    :'<p class="sub" style="text-align:center;padding:20px 0">일치하는 선수가 없습니다</p>'}
+function openGridPlayerPage(pi){
+  gridPlayerIdx=pi;gridCourseIdx=0;
+  const p=players[pi];if(!p)return;
+  const gIdx=groups.findIndex(gr=>gr.includes(pi));
+  $('#gridPageTitle').textContent=`${p.name} · ${gIdx>=0?(gIdx+1)+'조 · ':''}${p.club||''}`;
+  navTo('GridPage');
   renderGridCard()}
-function renderPlayerSearchList(){
-  const q=$('#gridPlayerSearch').value.trim();
-  const list=$('#gridPlayerList');
-  if(!q){list.style.display='none';return}
-  const matches=players.map((p,i)=>({p,i})).filter(x=>!isOut(x.p)&&x.p.name.includes(q));
-  list.style.display='block';
-  list.innerHTML=matches.length?matches.map(({p,i})=>
-    `<div class="toolrow" style="cursor:pointer" onclick="selectGridPlayer(${i})"><div class="avatar">${p.name[0]}</div><div class="info"><b>${p.name}</b><span class="num">${p.club||''}</span></div></div>`).join('')
-    :'<p class="sub" style="padding:10px 0">일치하는 선수가 없습니다</p>'}
-function selectGridPlayer(pi){gridPlayerIdx=pi;$('#gridPlayerSearch').value='';$('#gridPlayerList').style.display='none';renderGridCard()}
-function focusGridSearch(){const el=$('#gridPlayerSearch');if(el)el.focus()}
+function closeGridPlayerPage(){navBack();renderPlayerListRows()}
 function openGridPad(pi,gi){
-  if(!judges().length){toast('입력 권한이 있는 스탭이 없습니다 — 운영진 탭에서 추가하세요');return}
+  if(!judges().length){toast('입력 권한이 있는 스탭이 있어야 합니다 — 운영진 탭에서 추가하세요');return}
   if(curStaff>=judges().length)curStaff=0;
   openPad(pi,gi)}
 function selectGridCourse(c){gridCourseIdx=c;renderGridCard()}
@@ -1767,9 +1858,7 @@ function renderGridCard(){
   const card=$('#gridCard');if(!card)return;
   const pi=gridPlayerIdx,p=players[pi];
   if(!p){card.innerHTML='';return}
-  const gIdx=groups.findIndex(gr=>gr.includes(pi));
   if(gridCourseIdx>=ROUNDS||gridCourseIdx<0)gridCourseIdx=0;
-  const venue=(config.venues[gridCourseIdx]||'').replace(' 파크골프장','');
 
   const courseStats=Array.from({length:ROUNDS},(_,c)=>{
     let filled=0,total=0;
@@ -1808,11 +1897,6 @@ function renderGridCard(){
   const topar=cs.total-parSum;
 
   card.innerHTML=`
-    <div style="display:flex;align-items:center;gap:11px;margin-bottom:4px">
-      <span class="gav" style="width:40px;height:40px;font-size:15px">${p.name[0]}</span>
-      <div><b style="font-size:17px">${p.name}</b><div class="meta" style="font-size:12px;color:var(--muted)">${gIdx>=0?(gIdx+1)+'조 · ':''}${venue}</div></div>
-      <span style="margin-left:auto;color:var(--muted);font-size:12.5px;cursor:pointer" onclick="focusGridSearch()">선수 변경 ›</span>
-    </div>
     ${summaryHTML}
     ${chipsHTML}
     ${bodyHTML}
@@ -3742,7 +3826,7 @@ const gcardStyle=document.createElement('style');
 gcardStyle.textContent='';document.head.appendChild(gcardStyle);
 
 /* ================= 심판 토큰 링크 (?j=token) ================= */
-let judgeTokenMode=false,judgeStageKind='round',stageRecordMode='hole',peSelectedPlayer=null;
+let judgeTokenMode=false,judgeStageKind='round',stageRecordMode='hole';
 async function enterViaJudgeToken(token){
   const{data:s,error:sErr}=await sb.from('staff').select('*').eq('token',token).single();
   if(sErr||!s){toast('유효하지 않은 링크입니다');return false}
@@ -3829,7 +3913,8 @@ function renderJudge(){
     renderPeriodPlayerList();
     return}
   $('#jGroupLabel').style.display='';$('#jGroupChips').style.display='';
-  $('#jHoleCard').style.display='';$('#holeNextBtn').style.display='';$('#scPhotoCard').style.display='';
+  $('#jHoleCard').style.display='';$('#holeNextBtn').style.display='';
+  $('#scPhotoCard').style.display='none'; // 차수23①: 사진입력 숨김(v3 재도입 예정)
   $('#periodEntryCard').style.display='none';
   $('#logTitle').textContent='실시간 입력 기록 — 전광판에 즉시 반영';
   $('#jGroupChips').innerHTML=groups.map((g,i)=>
@@ -3844,60 +3929,155 @@ function periodPlayerList(){
 function renderPeriodPlayerList(){
   const box=$('#pePlayerList');if(!box)return;
   const list=periodPlayerList();
-  box.innerHTML=list.length?list.map(p=>
-    `<div class="toolrow" style="cursor:pointer" onclick="selectPeriodPlayer('${p.id}')">
-      <div class="avatar">${p.name[0]}</div>
-      <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)} · ${p.club||'무소속'}</span></div>
-      ${peSelectedPlayer===p.id?'<span class="pill">선택됨</span>':''}
-    </div>`).join('')
-    :'<p class="sub">일치하는 참가자가 없습니다</p>'}
-function selectPeriodPlayer(id){
-  peSelectedPlayer=id;
-  const p=players.find(x=>x.id===id);
-  $('#peSelectedInfo').innerHTML=p?`<span class="pill">${p.name} 선택됨</span> <span class="num" style="color:var(--muted)">${maskPhone(p.phone)}</span>`:'';
-  renderPeriodPlayerList()}
-let peSelectedPhotoFile=null;
-function pickPeriodPhoto(file){
-  if(!file)return;
-  peSelectedPhotoFile=file;
-  const url=URL.createObjectURL(file);
-  $('#pePhotoPreview').innerHTML=`<img src="${url}" style="width:100%;border-radius:14px;margin-bottom:10px;display:block">`}
-async function submitPlayEntry(){
-  if(!peSelectedPlayer){toast('참가자를 먼저 선택해 주세요');return}
-  const strokes=+$('#peStrokes').value;
+  box.innerHTML=list.length?list.map(p=>{
+    const val=(p.best&&p.best[jRound]!=null)?p.best[jRound]:null;
+    const saved=val!=null;
+    return`<div class="inrow ${saved?'bestrow':''}">
+      <div class="avatar" style="width:34px;height:34px;font-size:13px">${p.name[0]}</div>
+      <div class="who"><b>${p.name}</b><span>${maskPhone(p.phone)} · ${p.club||'무소속'}</span></div>
+      <input type="tel" class="numbox ${saved?'filled':''}" id="peNum_${p.id}" data-saved="${saved?val:''}" value="${saved?val:''}" placeholder="—" oninput="peOnInput('${p.id}')">
+      <button class="okbtn ${saved?'done':''}" id="peBtn_${p.id}" onclick="peButtonClick('${p.id}')">${saved?'✓ 저장':'확인'}</button>
+    </div>`}).join('')
+    :'<p class="sub" style="padding:16px;text-align:center">일치하는 참가자가 없습니다</p>'}
+function peOnInput(pid){
+  const input=$('#peNum_'+pid),btn=$('#peBtn_'+pid);
+  if(!input||!btn)return;
+  const savedVal=input.dataset.saved;
+  const dirty=input.value.trim()!==savedVal;
+  btn.textContent=(dirty||!savedVal)?'확인':'✓ 저장';
+  btn.className='okbtn'+((!dirty&&savedVal)?' done':'')}
+let pendingPlayCorr=null;
+function peButtonClick(pid){
+  const input=$('#peNum_'+pid);if(!input)return;
+  const savedVal=input.dataset.saved;
+  const dirty=input.value.trim()!==savedVal;
+  if(!dirty&&savedVal){
+    if(judgeStageKind==='period')openPlayHistory(pid);
+    else toast('값을 바꾸고 확인을 누르면 정정할 수 있습니다');
+    return}
+  const strokes=+input.value;
   if(!strokes||strokes<18||strokes>200){toast('총타수를 확인해 주세요');return}
-  const store=$('#peStore').value.trim()||null;
+  if(savedVal&&judgeStageKind!=='period'){
+    const p=players.find(x=>x.id===pid);
+    pendingPlayCorr={pid};
+    $('#playCorrDesc').innerHTML=`<b>${p?p.name:''}</b> 님의 ${jRound+1}코스 기록을 <b>${savedVal}</b>타 → <b>${strokes}</b>타로 정정합니다.`;
+    $('#playCorrOv').classList.add('on');
+    return}
+  submitPlayEntryFor(pid)}
+function cancelPlayCorr(){pendingPlayCorr=null;$('#playCorrOv').classList.remove('on')}
+async function applyPlayCorr(reason){
+  if(!pendingPlayCorr)return;
+  const{pid}=pendingPlayCorr;
+  $('#playCorrOv').classList.remove('on');pendingPlayCorr=null;
+  await submitPlayEntryFor(pid,reason)}
+async function submitPlayEntryFor(pid,correctionReason){
+  const input=$('#peNum_'+pid);if(!input)return;
+  const strokes=+input.value;
+  if(!strokes||strokes<18||strokes>200){toast('총타수를 확인해 주세요');return}
   const token=currentJudgeToken();
   if(!token){toast('심판 인증 정보가 없습니다');return}
-  const p=players.find(x=>x.id===peSelectedPlayer);
+  const p=players.find(x=>x.id===pid);
   const prevBest=p&&p.best?p.best[jRound]:null;
-  let evidenceUrl=null;
-  if(peSelectedPhotoFile){
-    toast('사진 업로드 중…');
-    const path=`${config.id}/plays/${peSelectedPlayer}-${jRound}-${Date.now()}.jpg`;
-    const{error:upErr}=await sb.storage.from('scorecards').upload(path,peSelectedPhotoFile,{contentType:peSelectedPhotoFile.type||'image/jpeg'});
-    if(upErr){toast('사진 업로드 실패: '+upErr.message);console.error(upErr)}
-    else{const{data:pub}=sb.storage.from('scorecards').getPublicUrl(path);evidenceUrl=pub.publicUrl}}
-  const playParams={p_token:token,p_player_id:peSelectedPlayer,p_course_no:jRound,p_strokes_total:strokes,p_store:store,p_evidence_url:evidenceUrl};
+  const playParams={p_token:token,p_player_id:pid,p_course_no:jRound,p_strokes_total:strokes,p_store:null,p_evidence_url:null};
+  let playId=null;
   try{
-    const{error}=await sb.rpc('submit_play',playParams);
+    const{data,error}=await sb.rpc('submit_play',playParams);
     if(error){toast('저장 실패: '+error.message);console.error(error);return}
+    playId=data;
   }catch(e){
     queuePush({type:'play',params:playParams,label:`${p?p.name:''} ${jRound+1}코스 ${strokes}타`});
     toast(`네트워크 연결이 안 돼 로컬에 저장했습니다 — 연결되면 자동 전송됩니다 (대기 ${loadQueue().length}건)`);
-    $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
     return}
-  addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${store?' · '+store:''}${evidenceUrl?' · 사진 첨부':''}`);
-  $('#peStrokes').value='';$('#peStore').value='';$('#pePhotoPreview').innerHTML='';peSelectedPhotoFile=null;
-  if(judgeStageKind==='period'){
-    if(p){p.best=p.best||{};if(prevBest==null||strokes<prevBest)p.best[jRound]=strokes}
-    if(prevBest==null)toast('기록이 저장되었습니다');
-    else if(strokes<prevBest)toast(`베스트 경신! ${prevBest}→${strokes}`);
-    else toast(`기존 베스트(${prevBest}) 유지 — 이번 기록도 보관`)
+  addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${correctionReason?' · 정정: '+correctionReason:''}`);
+  if(correctionReason)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:(judges()[curStaff]||{}).name||'심판',
+    what:`${p?p.name:''} ${jRound+1}코스 기록 정정 ${prevBest!=null?prevBest+'→':''}${strokes}타 — 사유: ${correctionReason}`});
+  if(p){
+    p.best=p.best||{};
+    if(judgeStageKind==='period'){if(prevBest==null||strokes<prevBest)p.best[jRound]=strokes}
+    else p.best[jRound]=strokes}
+  renderPeriodPlayerList();
+  if(judgeStageKind==='period'&&!correctionReason){
+    let msg;
+    if(prevBest==null)msg='기록이 저장되었습니다';
+    else if(strokes<prevBest)msg=`베스트 경신! ${prevBest}→${strokes}`;
+    else msg=`기존 베스트(${prevBest}) 유지 — 이번 기록도 보관`;
+    if(playId)toastUndo(msg,()=>undoPlayEntry(playId,pid));else toast(msg)
   }else{
-    if(p){p.best=p.best||{};p.best[jRound]=strokes}
-    toast('기록이 저장되었습니다')}
+    toast(correctionReason?'기록을 정정했습니다':'기록이 저장되었습니다')}
   await refreshMyTournamentStatus()}
+async function undoPlayEntry(playId,pid){
+  const token=currentJudgeToken();
+  const{error}=await sb.rpc('delete_play',{p_token:token,p_play_id:playId});
+  if(error){toast('취소 중 오류가 발생했습니다');console.error(error);return}
+  toast('입력을 취소했습니다');
+  await refreshPlayerBest(pid,jRound);
+  renderPeriodPlayerList();
+  await refreshMyTournamentStatus()}
+async function refreshPlayerBest(pid,courseNo){
+  const p=players.find(x=>x.id===pid);if(!p)return;
+  const{data}=await sb.from('plays').select('strokes_total').eq('player_id',pid).eq('course_no',courseNo).eq('tournament_id',config.id);
+  p.best=p.best||{};
+  if(data&&data.length)p.best[courseNo]=Math.min(...data.map(r=>r.strokes_total));
+  else delete p.best[courseNo]}
+/* ===== 차수23③: 기간형 기록 내역 시트 ===== */
+let playHistCurrentPid=null,playHistCurrentCourse=null;
+async function openPlayHistory(pid){
+  playHistCurrentPid=pid;playHistCurrentCourse=jRound;
+  const p=players.find(x=>x.id===pid);
+  $('#playHistTitle').textContent=`${p?p.name:''} · ${jRound+1}코스 기록 내역`;
+  const{data,error}=await sb.from('plays').select('id,strokes_total,played_at,created_at')
+    .eq('player_id',pid).eq('course_no',jRound).eq('tournament_id',config.id).order('strokes_total',{ascending:true});
+  if(error||!data||!data.length){
+    $('#playHistList').innerHTML='<p class="sub" style="padding:10px 0">기록이 없습니다</p>';
+    $('#playHistOv').classList.add('on');return}
+  const best=data[0].strokes_total;
+  $('#playHistList').innerHTML=data.map(r=>{
+    const when=new Date(r.created_at||r.played_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return`<div class="toolrow" style="padding:10px 0">
+      <div class="info"><b>${r.strokes_total}타</b><span class="num">${when}${r.strokes_total===best?' · 베스트':''}</span></div>
+      <span style="color:var(--main-deep);font-weight:700;cursor:pointer;margin-right:10px" onclick="openPlayEditSheet('${r.id}',${r.strokes_total})">수정</span>
+      <span style="color:var(--red);font-weight:700;cursor:pointer" onclick="confirmPlayDelete('${r.id}')">삭제</span>
+    </div>`}).join('');
+  $('#playHistOv').classList.add('on')}
+function closePlayHistory(){$('#playHistOv').classList.remove('on');playHistCurrentPid=null}
+let playEditTargetId=null;
+function openPlayEditSheet(playId,curStrokes){
+  playEditTargetId=playId;
+  $('#playEditDesc').textContent=`현재 ${curStrokes}타 — 새 값과 사유를 입력하세요`;
+  $('#playEditStrokes').value=curStrokes;
+  $('#playEditReason').value='';
+  $('#playEditOv').classList.add('on')}
+function closePlayEditSheet(){$('#playEditOv').classList.remove('on');playEditTargetId=null}
+async function confirmPlayEdit(){
+  if(!playEditTargetId)return;
+  const strokes=+$('#playEditStrokes').value;
+  if(!strokes||strokes<18||strokes>200){toast('총타수를 확인해 주세요');return}
+  const reason=$('#playEditReason').value.trim()||'사유 미기재';
+  const token=currentJudgeToken();
+  const{error}=await sb.rpc('update_play_strokes',{p_token:token,p_play_id:playEditTargetId,p_strokes_total:strokes});
+  if(error){toast('수정 중 오류가 발생했습니다');console.error(error);return}
+  await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:(judges()[curStaff]||{}).name||'심판',what:`기록 수정 — 사유: ${reason}`});
+  closePlayEditSheet();
+  if(playHistCurrentPid){await refreshPlayerBest(playHistCurrentPid,playHistCurrentCourse);renderPeriodPlayerList();await openPlayHistory(playHistCurrentPid)}
+  toast('기록을 수정했습니다 — 베스트가 재계산됐습니다');
+  await refreshMyTournamentStatus()}
+let playDelTargetId=null;
+function confirmPlayDelete(playId){
+  playDelTargetId=playId;
+  $('#playDelDesc').textContent='이 기록을 삭제합니다. 삭제 후에는 되돌릴 수 없습니다.';
+  $('#playDelOv').classList.add('on')}
+function cancelPlayDelete(){$('#playDelOv').classList.remove('on');playDelTargetId=null}
+async function doPlayDelete(reason){
+  if(!playDelTargetId)return;
+  const token=currentJudgeToken();
+  const{error}=await sb.rpc('delete_play',{p_token:token,p_play_id:playDelTargetId});
+  $('#playDelOv').classList.remove('on');
+  if(error){toast('삭제 중 오류가 발생했습니다');console.error(error);return}
+  await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:(judges()[curStaff]||{}).name||'심판',what:`기록 삭제 — 사유: ${reason}`});
+  const pid=playHistCurrentPid,course=playHistCurrentCourse;
+  playDelTargetId=null;
+  if(pid){await refreshPlayerBest(pid,course);renderPeriodPlayerList();await openPlayHistory(pid)}
+  toast('기록을 삭제했습니다 — 베스트가 재계산됐습니다')}
 async function loadScorecardPhoto(){
   const box=$('#scPhotoPreview');if(!box)return;
   if(!config.id||curGroup==null||curGroup<0||!groups.length){box.innerHTML='';return}
@@ -4446,7 +4626,7 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
   refreshAll();toast('점수 초기화 완료')}
 
 function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole();
-  if($('#mgScore').classList.contains('on')&&scoreMode==='player')renderGridCard()}
+  if(curView==='GridPage')renderGridCard()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
 (async()=>{
   const qs=new URLSearchParams(location.search);
