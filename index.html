@@ -7,7 +7,7 @@
 <link rel="icon" href="brand/favicon-32.png">
 <link rel="apple-touch-icon" href="brand/apple-touch-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   /* 파스텔 블루 시니어 팔레트 */
@@ -248,7 +248,7 @@ tr:last-child td{border-bottom:none}
 .judgehead .info{flex:1}
 .judgehead .info b{display:block;font-size:19px}
 .judgehead .info span{font-size:14px;color:var(--muted)}
-.chiprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none}
+.chiprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;touch-action:pan-x}
 .chiprow::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:600;font-size:18px}
 .chip.on{background:var(--main);color:#fff;border-color:var(--main)}
@@ -1497,8 +1497,8 @@ function mgShow(id){
   if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge()}
   if(id==='mgPlayers')playersSegShow(curPlayersSeg);
   if(id==='mgStaff')renderTools();
-  if(id==='mgScore'){renderScoreTab();$('#scoreBadge').style.display='none'}
-  if(id==='mgBoard')renderBoardTab();
+  if(id==='mgScore'){scoreStageId=null;renderScoreTab();$('#scoreBadge').style.display='none'}
+  if(id==='mgBoard'){boardStageSel=null;renderBoardTab()}
   if(id==='mgResult')renderResult();
   window.scrollTo(0,0)}
 async function pendingReviewCount(){
@@ -3362,7 +3362,7 @@ async function confirmPaste(){
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
     players.push({...p,id:data.id});added++}
   pending=[];$('#previewCard').style.display='none';$('#pasteBox').value='';
-  syncMine();renderPlayers();await makeGroups(false);refreshAll();
+  syncMine();renderPlayers();refreshAll();
   toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외(전화번호 기준)`:''}`)}
 async function loadDemo(){
   const rows=DEMO.map((n,i)=>({tournament_id:config.id,name:n[0],sex:n[1],age:n[2],phone:genPhone(i),
@@ -3422,8 +3422,11 @@ function setPStatus(st){if(editIdx<0)return;const p=players[editIdx];
   p.st=st;closePEdit();renderPlayers();refreshAll();
   toast(`${p.name} 님을 ${st==='wd'?'기권':'실격'} 처리했습니다 — 리더보드 하단으로 이동`)}
 function delPlayer(){if(editIdx<0)return;const p=players[editIdx];
+  const gi=groups.findIndex(g=>g.includes(editIdx));
+  if(gi>=0)groups[gi].splice(groups[gi].indexOf(editIdx),1);
+  groups.forEach(g=>g.forEach((pi,i)=>{if(pi>editIdx)g[i]=pi-1}));
   players.splice(editIdx,1);closePEdit();
-  makeGroups(false);syncMine();renderPlayers();refreshAll();
+  syncMine();renderPlayers();if(groups.length)renderGroups();refreshAll();
   toast(`${p.name} 님을 삭제했습니다`);promoteHint()}
 function promoteHint(){if(waitlist.length&&players.length<config.cap)toast('빈자리가 생겼습니다 — 대기자를 승격할 수 있어요')}
 
@@ -3441,8 +3444,8 @@ function renderWait(){
     :'<p class="sub" style="text-align:center;padding:20px 0">대기자가 없습니다</p>'}
 function promoteWait(i){
   if(players.length>=config.cap){toast('정원이 가득 찼습니다');return}
-  const p=waitlist.splice(i,1)[0];players.push(p);
-  makeGroups(false);syncMine();renderPlayers();refreshAll();
+  const p=waitlist.splice(i,1)[0];p.group=-1;players.push(p);
+  syncMine();renderPlayers();refreshAll();
   toast(`${p.name} 님을 참가자로 승격했습니다 — 확정 문자 발송(실서비스)`)}
 
 /* ===== 참가자 직접 추가 ===== */
@@ -3503,7 +3506,6 @@ async function doAddPlayer(p,status){
   if(status==='wait')waitlist.push(local);else players.push(local);
   closeAddPlayer();
   syncMine();renderPlayers();renderWait();
-  if(status==='ok')await makeGroups(false);
   refreshAll();
   toast(status==='wait'?`${p.name} 님을 대기자로 등록했습니다`:`${p.name} 님을 참가자로 등록했습니다`)}
 
