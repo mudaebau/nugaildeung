@@ -61,7 +61,7 @@
 
 ## 차수 22 — 브랜드 v3(말풍선 로고) 적용
 
-- **적용**: 앱바 = `logo-appbar.svg`(무풍선 변형), 홈 히어로·요강·신청 페이지 = `logo-main.svg`, 전광판 푸터·앱바 아이콘(`.logo .flag`) = `app-icon.svg`(1-풍선), 파비콘·앱 아이콘은 동일 파일명으로 내용만 교체되어 코드 변경 불필요.
+- **적용**: 앱바 = `logo-light.svg`(흰 풍선 B안, 차수24에서 무풍선 A안 대신 최종 확정 — 아래 차수24 항목 참고), 홈 히어로·요강·신청 페이지 = `logo-main.svg`, 전광판 푸터·앱바 아이콘(`.logo .flag`) = `app-icon.svg`(1-풍선), 파비콘·앱 아이콘은 동일 파일명으로 내용만 교체되어 코드 변경 불필요.
 - **`--navy` 토큰화**: `:root`에 `--navy:#1D3D5C` 등록, 하드코딩돼 있던 `.livecard` 그라디언트의 `#1D3D5C`를 `var(--navy)`로 치환(색상 값 자체는 불변). `--board-bg`(#173350)는 별개 기존 토큰이라 손대지 않음.
 - **구 로고 참조 전수 검색**: `logo-badge`/`logo-symbol`/`logo-horizontal`/`#224670`(구 배지 배경색) 검색 결과 **잔존 0건**. `brand/` 참조 5종(`app-icon.svg`/`apple-touch-icon-180.png`/`favicon-32.png`/`logo-appbar.svg`/`logo-main.svg`) 전부 실제 파일 존재 확인, 브라우저에서 `naturalWidth/naturalHeight`로 4곳(앱바·홈 히어로·요강·신청) 전부 정상 로드 확인.
 - 홈 히어로의 구 v2 배지 인라인 SVG(수기 제작 사각형 조합 + `font-weight="900"` 텍스트)는 완전히 제거되고 `<img src="brand/logo-main.svg">`로 대체 — 이 900 굵기가 코드에 남아있던 유일한 지점이었고, 이번에 제거되며 900 예외 자체가 소멸했다.
