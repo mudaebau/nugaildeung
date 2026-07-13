@@ -451,6 +451,26 @@ tr:last-child td{border-bottom:none}
 .ynctabar .share{width:52px;height:52px;border-radius:14px;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;border:none}
 .ynctabar .go{flex:1;background:var(--main);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:700;border:none}
 .ynctabar .go.disabled{background:var(--line);color:var(--muted)}
+
+/* 차수27: 다음 할 일 카드 */
+.todo3{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px}
+.todo3 h6{font-size:14.5px;font-weight:700;margin-bottom:12px}
+.tstep{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.tstep:last-child{border-bottom:none}
+.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tstep .no.done{background:#E7F5EE;color:#2E8B63}
+.tstep .no.wait{background:#EDF1F6;color:#9AAAB9}
+.tstep b{font-size:14.5px;font-weight:700;display:block}
+.tstep span{font-size:11.5px;color:var(--muted)}
+.tstep .go{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--deep);flex:0 0 auto;cursor:pointer}
+/* 차수27: 내 대회 할 일 뱃지 */
+.todobadge{display:flex;align-items:center;gap:7px;background:#FFF7E0;border:1px solid #F3DD9A;border-radius:11px;padding:8px 12px;font-size:12.5px;font-weight:700;color:#8a6410;margin-top:8px}
+.todobadge.red{background:#FBE9E4;border-color:#F2C4B8;color:#C4523A}
+/* 차수27②: 3인 조 허용 토글 */
+.tglsw{display:inline-block;width:44px;height:26px;border-radius:99px;background:#C9D8E7;position:relative;flex:0 0 auto;cursor:pointer;transition:background .15s}
+.tglsw.on{background:var(--main)}
+.tglsw i{position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;font-style:normal}
+.tglsw.on i{left:21px}
 .modew{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .modew3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
 .modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:15px}
@@ -863,6 +883,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <div class="mgpane on" id="mgHome">
       <div id="scoreTodo" class="todo" style="display:none" onclick="enterMgmt('mgScore')">📋 <span><b id="scoreTodoText">검수 대기 0건</b> — 스코어 탭에서 처리</span><span class="chev">›</span></div>
       <div id="journeyBar"></div>
+      <div id="nextTodoCard"></div>
       <div id="regCard"></div>
       <div id="stageInfoCard"></div>
       <div class="stats" id="opStats"></div>
@@ -964,12 +985,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
           <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#B9CCE0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg>
           <h4 style="font-size:19px;font-weight:700;margin-bottom:8px">아직 조가 없습니다</h4>
           <p class="sub" style="margin-bottom:22px" id="groupsEmptyDesc"></p>
-          <button class="btn full big" onclick="makeGroups(true)">조편성하기</button>
+          <button class="btn full big" onclick="openGroupConfirm()">조편성하기</button>
         </div>
         <div id="groupsFormed" style="display:none">
           <div id="groupsBox"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <button class="btn ghost" onclick="makeGroups(true)">다시 편성하기</button>
+            <button class="btn ghost" onclick="openGroupConfirm()">다시 편성하기</button>
             <button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button>
           </div>
         </div>
@@ -1479,6 +1500,20 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   </div>
 </div>
 
+<!-- 조편성 실행 전 확인 시트 (차수27②) -->
+<div class="overlay" id="groupConfirmOv" onclick="if(event.target===this)closeGroupConfirm()">
+  <div class="pad">
+    <h3>이 기준으로 편성할까요?</h3>
+    <div id="groupConfirmBody" style="margin:10px 0 18px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#F0F5FA;border-radius:13px;padding:12px 15px;margin-bottom:12px;font-size:14px;font-weight:700">
+      <span>3인 조 허용</span>
+      <span class="tglsw" id="groupAllow3Sw" onclick="toggleGroupAllow3()"><i></i></span>
+    </div>
+    <button class="btn full" style="margin-bottom:8px" onclick="confirmGroupPlan()">편성 실행</button>
+    <button class="btn ghost full" onclick="closeGroupConfirm()">취소</button>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -1609,7 +1644,7 @@ function mgShow(id){
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
-  if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge()}
+  if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge();renderNextTodoCard()}
   if(id==='mgNotice')renderNoticeCompletion();
   if(id==='mgPlayers'){playersStageId=null;
     const waitTab=document.querySelector('#playersSeg [data-seg="pWait"]');
@@ -1996,7 +2031,7 @@ function dbToTournament(row,playerCount){
   return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,capUnlimited:!!row.cap_unlimited,
     host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),regClosed:!!row.reg_closed,
-    visibility:row.visibility||'public',noticeExtra:row.notice_extra||{}}}
+    visibility:row.visibility||'public',noticeExtra:row.notice_extra||{},awards:row.awards||{}}}
 async function countStatus(tournamentId,status){
   const{count}=await sb.from('players').select('*',{count:'exact',head:true})
     .eq('tournament_id',tournamentId).eq('status',status);
@@ -2443,14 +2478,48 @@ async function myTournamentStats(t){
   }else if(t.status==='ready'){
     stats.push({v:t.players,l:'참가자'},{v:t.cap,l:'정원'})}
   return stats}
-function myTournamentCardHTML(t,stats){
+/* 차수27③: 내 대회 카드 "할 일 뱃지" — 대회당 1순위 항목 한 줄만.
+   우선순위(위에서부터 확인, 첫 매치만 표시. 문서: nuga1-ux-workorder.md 차수27 검증 보고 참고):
+   1. 🔴긴급 — 오늘(또는 진행 중) 라운드형 단계인데 조편성이 아직 안 됨(시작 자체를 막음)
+   2. 🔴긴급 — 결선 등 2단계 이상 명단이 아직 확정 안 됨(조편성 진입 자체가 막혀 있음)
+   3. 🟡안내 — 접수 마감 임박(D-3 이내)인데 아직 마감 처리 안 함
+   4. 🟡안내 — 요강 완성도 100% 미만(시상·참가비·문의 중 미입력)
+   종료(done) 대회는 검사하지 않음(할 일 없음 = 뱃지 없음). */
+async function computeTodoBadge(t){
+  if(t.status==='done')return null;
+  const stages=await loadAllStages(t.id);
+  if(stages.length){
+    const active=stages.find(s=>s.status==='open')||stages[stages.length-1];
+    const today='2026-07-03'; // dday()와 동일한 데모 기준일
+    const isNowish=t.status==='live'||(active.date_start<=today&&today<=active.date_end);
+    if(active.kind==='round'&&active.use_groups&&isNowish){
+      const{count:okCount}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok');
+      const{count:groupedCount}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok').not('group_no','is',null);
+      if((okCount||0)>0&&(groupedCount||0)===0)
+        return{urgent:true,text:'⚠ 조편성이 아직 안 됐어요 — 시작 전 필수'}}
+    if(active.seq>1&&active.roster_confirmed===false)
+      return{urgent:true,text:'⚠ 결선 명단을 확정해야 조편성할 수 있어요'}}
+  if(!t.regClosed){
+    const diff=Math.ceil((new Date(t.date)-new Date('2026-07-03'))/86400000);
+    if(diff>=0&&diff<=3)
+      return{urgent:false,text:`📅 접수 마감이 임박했어요 (D-${diff===0?'DAY':diff})`}}
+  const ne=t.noticeExtra||{};
+  const awardsFilled=!!(ne.prize_total||(ne.prizes||[]).some(p=>p.label));
+  const items=[awardsFilled,!!ne.fee,!!ne.contact];
+  const pct=Math.round(items.filter(Boolean).length/items.length*100);
+  if(pct<100)
+    return{urgent:false,text:`📝 시상 내역이 비어 있어요 — 요강 완성도 ${pct}%`};
+  return null}
+function myTournamentCardHTML(t,stats,badge){
   const label=t.status==='live'?'진행중 LIVE':t.status==='open'?'접수중':t.status==='done'?'종료':'개설 완료';
   const statsHTML=stats.length?`<div class="mystats">${stats.map(s=>`<div><b class="num">${s.v}</b><span>${s.l}</span></div>`).join('')}</div>`:'';
   const goLabel=t.status==='done'?'결과 보기':'대회 관리 열기';
+  const badgeHTML=badge?`<div class="todobadge${badge.urgent?' red':''}">${badge.text}</div>`:'';
   return`<button class="mycard ${t.status==='live'?'':'plain'}" onclick="enterMyTournament('${t.id}')">
     <div class="myrow1"><span class="stt ${t.status}">${label}</span></div>
     <h4>${t.name}</h4>
     ${statsHTML}
+    ${badgeHTML}
     <div class="mygo ${t.status==='live'?'primary':''}">${goLabel}</div>
   </button>`}
 async function renderMyList(){
@@ -2463,12 +2532,13 @@ async function renderMyList(){
     return}
   if(mine.length===1){await enterMyTournament(mine[0].id);return}
   box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">불러오는 중…</p>';
-  const cards=await Promise.all(mine.map(async t=>myTournamentCardHTML(t,await myTournamentStats(t))));
+  const cards=await Promise.all(mine.map(async t=>myTournamentCardHTML(t,await myTournamentStats(t),await computeTodoBadge(t))));
   box.innerHTML=cards.join('')}
 async function loadMyTournament(tournamentId){
   await loadBoardData(tournamentId,true);
   if(!config.id)return false;
   config.created=true;
+  todoLinkShared=false;
   judgeStageKind=boardStageKind;stageRecordMode=boardStageRecordMode;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
@@ -2697,16 +2767,39 @@ function copyApplyShareLink(){
 
 /* ================= 대회 정보 수정 (3등급) ================= */
 let editInfoSection=null,editStage=null,editStageLocked=false,editCoursePars=[],editWarnCtx=null;
-function renderNoticeCompletion(){
-  const box=$('#noticeCompletionList');if(!box)return;
-  const items=[
+let todoLinkShared=false;
+/* 차수27①: 관리홈 개설 직후 "다음 할 일" 카드 — 첫 단계 시작 전 + 신청 소수(3명 미만)일 때만,
+   신청이 쌓이거나 단계가 시작되면 카드 자체가 사라진다(닫기 버튼 없음). */
+async function renderNextTodoCard(){
+  const box=$('#nextTodoCard');if(!box||!config.id)return;
+  const{data:tRow}=await sb.from('tournaments').select('status').eq('id',config.id).single();
+  const started=!!tRow&&(tRow.status==='live'||tRow.status==='done');
+  if(started||players.length>=3){box.innerHTML='';return}
+  const pct=noticeCompletionPct();
+  const step2Done=pct>=100;
+  box.innerHTML=`
+    <div class="todo3">
+      <h6>🎉 대회가 열렸어요 — 다음 할 일</h6>
+      <div class="tstep"><span class="no done">✓</span><div><b>대회 열기</b><span>완료</span></div></div>
+      <div class="tstep"><span class="no ${step2Done?'done':''}">${step2Done?'✓':'2'}</span><div><b>요강 완성하기</b><span>${step2Done?'완료':`시상·참가비 미입력 (완성도 ${pct}%)`}</span></div>${step2Done?'':`<span class="go" onclick="openEditInfo().then(()=>showEditSection('awards'))">채우기 ›</span>`}</div>
+      <div class="tstep"><span class="no ${todoLinkShared?'done':'wait'}">${todoLinkShared?'✓':'3'}</span><div><b>단톡방에 링크 공유</b><span>${todoLinkShared?'완료':'신청을 받기 시작하세요'}</span></div>${todoLinkShared?'':`<span class="go" onclick="shareTodoLink()">복사 ›</span>`}</div>
+    </div>`}
+function shareTodoLink(){copyApplyShareLink();todoLinkShared=true;renderNextTodoCard()}
+function noticeCompletionItems(){
+  return[
     {label:'🏆 시상 내역',filled:!!(config.prizeTotal||config.prizes.some(p=>p.label)),key:'awards'},
     {label:'💰 참가비',filled:!!config.noticeExtra.fee,key:'awards'},
     {label:'📞 문의처',filled:!!config.noticeExtra.contact,key:'awards'},
     {label:'📅 일정 · 장소',filled:true,key:'schedule'},
-    {label:'👥 참가 자격 · 공개',filled:true,key:'eligibility'}];
+    {label:'👥 참가 자격 · 공개',filled:true,key:'eligibility'}]}
+function noticeCompletionPct(){
+  const items=noticeCompletionItems();
+  return Math.round(items.filter(i=>i.filled).length/items.length*100)}
+function renderNoticeCompletion(){
+  const box=$('#noticeCompletionList');if(!box)return;
+  const items=noticeCompletionItems();
   const filledCount=items.filter(i=>i.filled).length;
-  const pct=Math.round(filledCount/items.length*100);
+  const pct=noticeCompletionPct();
   box.innerHTML=items.map(i=>`<div class="lrow">${i.label} <span class="st3 ${i.filled?'ok':''}" style="cursor:pointer" onclick="openEditInfo().then(()=>showEditSection('${i.key}'))">${i.filled?'완료':'채우기 ›'}</span></div>`).join('');
   const card=$('#noticeCompletionCard');
   if(pct>=100){card.style.display='none';return}
@@ -3595,6 +3688,7 @@ function toggleCapUnlimited(){
 async function createTournament(){
   if(!user.id){toast('로그인이 필요합니다');return}
   config.created=true;
+  todoLinkShared=false;
   config.name=$('#fName').value;config.hostOrg=$('#fHost').value;
   config.dateS=$('#fDateS').value;config.dateE=$('#fDateE').value;
   if(config.dateE<config.dateS)config.dateE=config.dateS;
@@ -3934,14 +4028,71 @@ async function persistGroups(){
     if(p.id)assignments.push({id:p.id,group_no:gi,group_order:order})}));
   if(!assignments.length)return;
   await sb.rpc('set_group_assignments',{t_id:config.id,p_owner_secret:user.secret,p_assignments:assignments})}
-async function makeGroups(announce){
+
+/* 차수27②: 조편성 실행 전 확인 시트 — [조편성하기]/[다시 편성하기] 공통 진입점.
+   "3인 조 허용" ON(기본, 기존 알고리즘과 동일) = 인원을 최대한 고르게 나눠 3·4인 조가 섞임.
+   OFF = 4인 조만 만들고 나머지는 별도의 작은 조 하나로 둔다(그룹 크기가 5 이상이 되지 않게). */
+let groupAllow3=true;
+function computeGroupPlan(count,allow3){
+  if(!count)return{n:0,sizes:[]};
+  if(allow3){
+    const n=Math.ceil(count/4);
+    const base=Math.floor(count/n),extra=count%n;
+    return{n,sizes:Array.from({length:n},(_,i)=>i<extra?base+1:base)}}
+  const full=Math.floor(count/4),rem=count%4;
+  const sizes=Array.from({length:full},()=>4);
+  if(rem>0)sizes.push(rem);
+  return{n:sizes.length,sizes}}
+function renderGroupConfirmBody(){
+  const active=players.filter(p=>!isOut(p));
+  const plan=computeGroupPlan(active.length,groupAllow3);
+  const threeCount=plan.sizes.filter(s=>s===3).length;
+  const fourCount=plan.sizes.filter(s=>s===4).length;
+  const oddSizes=plan.sizes.filter(s=>s!==3&&s!==4);
+  let leftoverLine='';
+  if(!groupAllow3&&oddSizes.length)leftoverLine=`<li><i>✓</i>마지막 조는 ${oddSizes[0]}인으로 남습니다</li>`;
+  else if(groupAllow3&&threeCount)leftoverLine=`<li><i>✓</i>인원을 고르게 나눠 ${threeCount}개 조는 3인으로 구성됩니다</li>`;
+  const reeditWarn=groups.length?`<li class="warn"><i>!</i>다시 편성하면 기존 조 배치는 사라집니다</li>`:'';
+  $('#groupConfirmBody').innerHTML=`<ul>
+    <li><i>✓</i><b>4인 1조 · 총 ${plan.n}개 조</b> (참가 ${active.length}명)</li>
+    <li><i>✓</i>같은 클럽은 다른 조로 분산</li>
+    ${leftoverLine}
+    ${reeditWarn}
+  </ul>`}
+async function openGroupConfirm(){
+  const stages=await loadAllStages(config.id);
+  const stage=playersActiveStage||curActiveStage(stages);
+  if(stage){
+    const{count:scoreCount}=await sb.from('scores').select('*',{count:'exact',head:true}).eq('stage_id',stage.id);
+    const{count:playCount}=await sb.from('plays').select('*',{count:'exact',head:true}).eq('stage_id',stage.id);
+    if((scoreCount||0)+(playCount||0)>0){toast('이미 입력된 점수가 있어 재편성할 수 없습니다');return}}
+  groupAllow3=true;
+  $('#groupAllow3Sw').classList.add('on');
+  renderGroupConfirmBody();
+  $('#groupConfirmOv').classList.add('on')}
+function closeGroupConfirm(){$('#groupConfirmOv').classList.remove('on')}
+function toggleGroupAllow3(){
+  groupAllow3=!groupAllow3;
+  $('#groupAllow3Sw').classList.toggle('on',groupAllow3);
+  renderGroupConfirmBody()}
+async function confirmGroupPlan(){
+  closeGroupConfirm();
+  await makeGroups(true,groupAllow3)}
+async function makeGroups(announce,allow3=true){
   swapSel=null;
   if(!players.length){groups=[];renderGroupsSeg();return}
-  const n=Math.ceil(players.length/4);
+  const activeIdx=players.map((p,i)=>i).filter(i=>!isOut(players[i]));
+  const plan=computeGroupPlan(activeIdx.length,allow3);
+  const n=plan.n||1;
   groups=Array.from({length:n},()=>[]);
-  const byClub={};players.forEach((p,i)=>{(byClub[p.club]=byClub[p.club]||[]).push(i)});
-  Object.values(byClub).forEach(a=>a.sort(()=>Math.random()-.5));
-  let gi=0;Object.values(byClub).flat().forEach(pi=>{groups[gi%n].push(pi);players[pi].group=gi%n;gi++});
+  const byClub={};activeIdx.forEach(i=>{const p=players[i];(byClub[p.club]=byClub[p.club]||[]).push(i)});
+  const clubArrays=Object.values(byClub).map(a=>{a.sort(()=>Math.random()-.5);return a});
+  // 클럽별로 섞은 뒤 클럽 간 라운드로빈으로 끼워 넣어 같은 클럽이 뭉치지 않게 한 다음,
+  // 그 순서 그대로 각 조의 목표 인원수(plan.sizes)만큼 앞에서부터 채운다.
+  const order=[];
+  while(clubArrays.some(a=>a.length))for(const a of clubArrays)if(a.length)order.push(a.shift());
+  let idx=0;
+  plan.sizes.forEach((sz,gi)=>{for(let k=0;k<sz;k++){const pi=order[idx++];if(pi==null)return;groups[gi].push(pi);players[pi].group=gi}});
   renderGroupsSeg();renderPlayers();
   if(announce)toast('조편성 완료');
   await persistGroups()}
