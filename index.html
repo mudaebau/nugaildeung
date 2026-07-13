@@ -413,6 +413,44 @@ tr:last-child td{border-bottom:none}
 .capbar-hero{background:rgba(255,255,255,.22);border-radius:99px;height:14px;margin-top:16px;overflow:hidden}
 .capbar-hero i{display:block;height:100%;background:rgba(255,255,255,.85);border-radius:99px;transition:width .5s}
 .capnote{display:flex;justify-content:space-between;font-size:15px;margin-top:8px;opacity:.95}
+
+/* 차수26: 요강 페이지 카드뉴스 (신청 페이지 .poster와는 별개 — 공유 금지) */
+.ynhero{background:linear-gradient(160deg,#24476B 0%,#1D3D5C 60%,#16304A 100%);border-radius:0 0 30px 30px;padding:26px 22px 24px;color:#fff;position:relative;margin:-16px -16px 0}
+.ynhero img{height:24px;display:block;margin-bottom:14px}
+.ynhero .ynbadge{display:inline-flex;align-items:center;gap:6px;background:var(--sun);color:#22303D;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:99px;margin-bottom:14px}
+.ynhero h2{font-size:25px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.ynhero .ynsub{font-size:13.5px;color:#BCD2E8;margin-bottom:2px}
+.ynhero .ynhost{font-size:11.5px;color:#8FB0CE;margin-top:12px}
+.ynkgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:-18px 0 0;position:relative;z-index:2}
+.ynkcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 14px;box-shadow:0 6px 18px rgba(29,61,92,.08)}
+.ynkcard small{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.ynkcard b{font-size:15.5px;font-weight:700;line-height:1.35}
+.ynkcard .num{font-family:'Oswald',sans-serif;font-size:19px}
+.ynkcard .sm{font-weight:500;font-size:12px;color:var(--muted)}
+.ynkcard .sm.ok{color:#2E8B63}
+.ynprize{margin-top:14px;background:linear-gradient(150deg,#F7CF5C,#F0BE35);border-radius:20px;padding:18px 20px;color:#22303D}
+.ynprize small{font-size:12px;font-weight:700;color:#7a5c0e}
+.ynprize .total{font-size:27px;font-weight:700;font-family:'Oswald',sans-serif;letter-spacing:.01em}
+.ynprize .total em{font-family:'Noto Sans KR';font-style:normal;font-size:17px}
+.ynprize .plist{display:flex;gap:8px;margin-top:12px}
+.ynprize .p1{flex:1;background:rgba(255,255,255,.5);border-radius:12px;padding:8px 10px;text-align:center}
+.ynprize .p1 small{display:block;color:#7a5c0e;font-size:10.5px}
+.ynprize .p1 b{font-size:14.5px}
+.ynsec{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px 18px}
+.ynsec h5{font-size:13px;font-weight:700;color:var(--deep);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ynflow{display:flex;align-items:center;gap:6px}
+.ynfstep{flex:1;background:#F0F5FA;border-radius:12px;padding:10px 8px;text-align:center}
+.ynfstep b{display:block;font-size:13px;font-weight:700}
+.ynfstep span{font-size:10.5px;color:var(--muted)}
+.ynfarr{color:#B4C6D8;font-size:13px}
+.ynqrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.ynqrow:last-child{border-bottom:none}
+.ynqrow span:first-child{color:var(--muted);flex:0 0 auto}
+.ynqrow span:last-child{font-weight:700;text-align:right}
+.ynctabar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:9px;margin:16px -16px -20px}
+.ynctabar .share{width:52px;height:52px;border-radius:14px;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;border:none}
+.ynctabar .go{flex:1;background:var(--main);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:700;border:none}
+.ynctabar .go.disabled{background:var(--line);color:var(--muted)}
 .modew{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .modew3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
 .modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:15px}
@@ -523,6 +561,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 
 <!-- ================= 메인 앱 ================= -->
@@ -1427,6 +1466,16 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     </div>
     <button class="btn full" style="background:#C4523A;margin-bottom:8px" onclick="confirmRegClose()">접수 마감</button>
     <button class="btn ghost full" onclick="closeRegCloseSheet()">취소</button>
+  </div>
+</div>
+
+<!-- 요강 공유 시트 (차수26) -->
+<div class="overlay" id="noticeShareOv" onclick="if(event.target===this)closeNoticeShare()">
+  <div class="pad">
+    <h3>요강 공유</h3>
+    <button class="btn full ghost" style="margin:10px 0" onclick="copyNoticeLink(noticeT&&noticeT.id);closeNoticeShare()">🔗 링크 복사</button>
+    <button class="btn full" id="noticeSaveImgBtn" onclick="saveNoticeImage()">🖼️ 요강 이미지 저장</button>
+    <button class="btn ghost full" style="margin-top:8px" onclick="closeNoticeShare()">닫기</button>
   </div>
 </div>
 
@@ -2475,7 +2524,7 @@ async function logout(){
   await loadTournaments();
   toast('로그아웃되었습니다')}
 
-/* ================= 대회요강 (?notice=) ================= */
+/* ================= 대회요강 (?notice=) — 차수26: 카드뉴스 ================= */
 async function loadNotice(tournamentId){
   const t=await fetchGatedTournament(tournamentId,myCodeFor(tournamentId));
   if(!t){
@@ -2483,65 +2532,149 @@ async function loadNotice(tournamentId){
     return}
   if(t.gated){
     showGate('noticeBody',tournamentId,async(full)=>{
-      const stage=await loadPrimaryStage(tournamentId);renderNotice(full,stage)});
+      const stages=await loadAllStages(tournamentId);
+      const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
+      renderNotice(full,stages,count||0)});
     return}
-  const stage=await loadPrimaryStage(tournamentId);
-  renderNotice(t,stage)}
+  const stages=await loadAllStages(tournamentId);
+  const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
+  renderNotice(t,stages,count||0)}
 function noticeStatusLabel(s){
   return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
-let noticeT=null;
-function renderNotice(t,stage){
-  noticeT=t;
-  const period=t.date_start===t.date_end?(t.date_start||'—').replaceAll('-','.')
-    :`${(t.date_start||'').replaceAll('-','.')} ~ ${(t.date_end||'').replaceAll('-','.')}`;
-  const venuesArr=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
-  const venues=venuesArr.join(', ')||'—';
-  const coursePraArr=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
-  const roundsN=coursePraArr.length||t.rounds||1;
-  const holes=roundsN*18;
-  const parTot=coursePraArr.reduce((a,c)=>a+(Array.isArray(c)?c.reduce((x,y)=>x+y,0):(+c||0)),0);
-  const awardList=['종합 1·2·3위'];
-  if(t.awards){
-    if(t.awards.gender)awardList.push('남녀부');
-    if(t.awards.age)awardList.push('연령부 (60·70·80대)');
-    if(t.awards.club)awardList.push('클럽 대항전')}
-  const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
-  const fieldList=Object.keys(fieldLabels).filter(k=>t.fields&&t.fields[k]).map(k=>fieldLabels[k]);
+let noticeT=null,noticeStages=[];
+function renderNotice(t,stages,playerCount){
+  noticeT=t;noticeStages=stages||[];
+  const first=stages[0]||{};
+  const last=stages[stages.length-1]||first;
   const ne=t.notice_extra||{};
+  const period=first.date_start===first.date_end?(first.date_start||t.date_start||'—').replaceAll('-','.')
+    :`${(first.date_start||t.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||t.date_end||'').replaceAll('-','.')}`;
+  const venuesArr=(first.venues&&first.venues.length?first.venues:t.venues)||[];
+
+  // 상태 뱃지
+  const closed=!!t.reg_closed;
+  const deadline=ne.apply_deadline||t.date_start;
+  const badge=t.status==='done'?'종료'
+    :t.status==='live'?'진행 중'
+    :closed?'접수 마감'
+    :`🔥 접수중${deadline?' · 마감 '+(dday(deadline)||'D-DAY'):''}`;
+  const oneLine=stages.length>1?`${period}${last!==first?` 예선 · ${(last.date_start||'').replaceAll('-','.')} 결승`:''}`:period;
+
+  // 핵심카드①: 일정
+  const isPeriod=first.kind==='period';
+  const kSchedule=isPeriod
+    ?{label:stages.length>1?'📅 예선 기간':'📅 접수 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
+    :{label:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuesArr[0]||''};
+
+  // 핵심카드②: 결승 or 장소
+  let kSecond;
+  if(stages.length>1){
+    const cutStage=stages[stages.length-2];
+    const cut=cutStage&&cutStage.advance_cut;
+    const cutText=cut?(cut.total?`상위 ${cut.total}명 진출`:cut.m||cut.f?`남 ${cut.m||0}·여 ${cut.f||0}명 진출`:''):'';
+    kSecond={label:'🏁 결승',val:(last.date_start||'').replaceAll('-','.'),sub:cutText}
+  }else{
+    kSecond={label:'📍 장소',val:venuesArr[0]||'—',sub:venuesArr.length>1?`외 ${venuesArr.length-1}곳`:''}}
+
+  // 핵심카드③: 참가비
+  const kFee={label:'💰 참가비',val:ne.fee||'미정',sub:''};
+
+  // 핵심카드④: 모집 현황
+  const kCap=t.cap_unlimited
+    ?{label:'👥 모집 현황',val:`${playerCount}명 신청`,sub:'인원 제한 없음',subOk:true}
+    :{label:'👥 모집 현황',val:`${playerCount}/${t.cap}명`,sub:''};
+
+  // 상금 카드 (미입력 시 전체 숨김)
+  const prizes=(ne.prizes||[]).filter(p=>p.label).slice(0,3);
+  const showPrize=!!(ne.prize_total||prizes.length);
+  const prizeHTML=showPrize?`
+    <div class="ynprize">
+      <small>총상금</small>
+      <div class="total">${ne.prize_total||'상금 안내'}</div>
+      ${prizes.length?`<div class="plist">${prizes.map(p=>`<div class="p1"><small>${p.label}</small><b>${p.item||'—'}</b></div>`).join('')}</div>`:''}
+    </div>`:'';
+
+  // 시상 내역 (문답형, 항목 없으면 섹션 자체 숨김)
+  const awardRows=[];
+  if(t.awards){
+    if(t.awards.gender)awardRows.push(['남녀부 시상','부문별 1·2·3위']);
+    if(t.awards.age)awardRows.push(['연령부 시상','60·70·80대 부문 1위']);
+    if(t.awards.club)awardRows.push(['클럽 대항전','상위 4인 합산']);
+  }
+  prizes.forEach(p=>awardRows.push([p.label,p.item||'—']));
+  const awardsSecHTML=awardRows.length?`
+    <div class="ynsec">
+      <h5>🏆 시상 내역</h5>
+      ${awardRows.map(([a,b])=>`<div class="ynqrow"><span>${a}</span><span>${b}</span></div>`).join('')}
+    </div>`:'';
+
+  // 진행 방식 (단계 구조 자동 도해)
+  const stageSteps=stages.map(s=>{
+    const modeTxt=s.kind==='period'?'기간 내 코스 도전<br>베스트 기록 인정':(s.record_mode==='total'?'지정일 · 코스 총점':'지정일 · 홀별 기록');
+    return`<div class="ynfstep"><b>${s.name}</b><span>${modeTxt}</span></div>`});
+  stageSteps.push(`<div class="ynfstep"><b>시상</b><span>${stages.length>1?'결승':'라운드'} 직후<br>현장 시상식</span></div>`);
+  const flowSecHTML=`
+    <div class="ynsec">
+      <h5>⛳ 진행 방식</h5>
+      <div class="ynflow">${stageSteps.map((s,i)=>i>0?`<span class="ynfarr">›</span>${s}`:s).join('')}</div>
+    </div>`;
+
+  // 참가 자격 · 문의 (미입력 문의는 행 숨김)
   const elig=ne.eligibility;
   const eligText=elig&&elig.type==='restricted'?(elig.text||'참가 조건이 있습니다'):'누구나 참가 가능';
-  const prizes=(ne.prizes||[]).filter(p=>p.label);
+  const recordTxt=(first.record_mode==='total'?'코스 총점':'홀별 기록')+(first.kind==='round'?' (심판 입력)':' (매장 직원 입력)');
+  const eligSecHTML=`
+    <div class="ynsec">
+      <h5>👥 참가 자격 · 문의</h5>
+      <div class="ynqrow"><span>참가 자격</span><span>${eligText}</span></div>
+      <div class="ynqrow"><span>기록 방식</span><span>${recordTxt}</span></div>
+      ${ne.contact?`<div class="ynqrow"><span>문의</span><span>${ne.contact}</span></div>`:''}
+    </div>`;
+
+  // 하단 CTA
+  let ctaHTML;
+  if(t.status==='done')ctaHTML=`<button class="go" onclick="location.href='?board=${t.id}'">결과 보기</button>`;
+  else if(closed)ctaHTML=`<button class="go disabled" disabled>접수 마감</button>`;
+  else ctaHTML=`<button class="go" onclick="location.href='?apply=${t.id}'">참가 신청하기</button>`;
+
   $('#noticeBody').innerHTML=`
-    <div class="poster">
-      <img src="brand/logo-main.svg" alt="누가일등" style="height:28px;margin-bottom:12px;display:block">
-      <div class="pdate">${noticeStatusLabel(t.status)}${t.visibility==='private'?' · 🔒 비공개':''}</div>
-      <h3>${t.name}</h3>
-      <div class="pmeta">주최·주관 ${t.host_org||'—'}<br>${period} · ${venues}${ne.prize_total?`<br>${ne.prize_total}`:''}</div>
+    <div id="noticeCapture">
+    <div class="ynhero">
+      <img src="brand/logo-light.svg" alt="누가일등">
+      <span class="ynbadge">${badge}</span>
+      <h2>${t.name}</h2>
+      <p class="ynsub">${oneLine} · ${venuesArr.join(', ')||'—'}</p>
+      <p class="ynhost">주최 ${t.host_org||'—'}</p>
     </div>
-    <div class="card">
-      <label class="fl" style="margin-top:0">경기 방식</label>
-      <p>${holes}홀 스트로크 · ${roundsN}개 코스${parTot?` · PAR ${parTot}`:''}</p>
-      <label class="fl">모집 정원</label>
-      <p>${t.cap}명</p>
-      <label class="fl">동점자 처리</label>
-      <p>${(stage&&stage.tie_rule)||t.tie_rule||'—'}</p>
-      <label class="fl">참가 자격</label>
-      <p>${eligText}</p>
+    <div class="ynkgrid">
+      <div class="ynkcard"><small>${kSchedule.label}</small><b>${kSchedule.val}<br><span class="sm">${kSchedule.sub}</span></b></div>
+      <div class="ynkcard"><small>${kSecond.label}</small><b>${kSecond.val}<br><span class="sm">${kSecond.sub}</span></b></div>
+      <div class="ynkcard"><small>${kFee.label}</small><b class="num">${kFee.val}</b></div>
+      <div class="ynkcard"><small>${kCap.label}</small><b><span class="num">${kCap.val}</span><br><span class="sm${kCap.subOk?' ok':''}">${kCap.sub}</span></b></div>
     </div>
-    <div class="card">
-      <label class="fl" style="margin-top:0">시상 부문</label>
-      <p>${awardList.join(' · ')}</p>
-      ${prizes.length?`<label class="fl">시상 내역</label><p>${prizes.map(p=>`${p.label}${p.item?' — '+p.item:''}`).join('<br>')}</p>`:''}
-      <label class="fl">접수 시 수집 정보</label>
-      <p>${fieldList.join(', ')||'—'}</p>
-      ${ne.contact?`<label class="fl">문의처</label><p>${ne.contact}</p>`:''}
-      ${ne.fee?`<label class="fl">참가비</label><p>${ne.fee}</p>`:''}
-      ${ne.rules?`<label class="fl">게임 규칙</label><p>${ne.rules}</p>`:''}
+    ${prizeHTML}
+    ${awardsSecHTML}
+    ${flowSecHTML}
+    ${eligSecHTML}
+    <p class="swaphint" style="margin-top:12px;padding:0 4px">실시간 순위는 <a href="?board=${t.id}" target="_blank" style="color:var(--main-deep);font-weight:600">대회 전광판</a>에서 · <a href="?privacy=1" target="_blank" style="color:var(--muted)">개인정보 처리방침</a></p>
     </div>
-    <div class="card">
-      <button class="btn full" onclick="copyNoticeLink('${t.id}')">요강 링크 복사</button>
-      ${t.status==='open'?`<button class="btn full ghost" style="margin-top:10px" onclick="location.href='?apply=${t.id}'">참가 신청하기</button>`:''}
-    </div>`}
+    <div class="ynctabar"><button class="share" onclick="openNoticeShare()">↗</button>${ctaHTML}</div>`}
+function openNoticeShare(){$('#noticeShareOv').classList.add('on')}
+function closeNoticeShare(){$('#noticeShareOv').classList.remove('on')}
+async function saveNoticeImage(){
+  const el=document.getElementById('noticeCapture');
+  if(!el||typeof html2canvas==='undefined'){toast('이미지 저장 기능을 불러오지 못했습니다');return}
+  const btn=$('#noticeSaveImgBtn');btn.textContent='이미지 만드는 중…';
+  try{
+    const canvas=await html2canvas(el,{backgroundColor:'#F2F5F9',scale:2});
+    const link=document.createElement('a');
+    link.download=`${(noticeT&&noticeT.name)||'누가일등_요강'}.png`;
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    toast('요강 이미지를 저장했습니다 — 단톡방에 바로 전송하세요')
+  }catch(e){console.error(e);toast('이미지 저장 중 오류가 발생했습니다')}
+  btn.textContent='🖼️ 요강 이미지 저장';
+  closeNoticeShare()}
 function shareLine(kind,src){
   const labels={board:'전광판',apply:'참가 신청',notice:'대회 요강'};
   const link=`${location.origin}${location.pathname}?${kind}=${src.id}`;
