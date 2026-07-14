@@ -1715,7 +1715,7 @@ async function renderPlayersForStage(){
     renderPlayers();
   }else{
     $('#pListCurrent').style.display='none';$('#pListPast').style.display='block';
-    const{data:pastRows}=await sb.from('players').select('*').eq('tournament_id',config.id)
+    const{data:pastRows}=await sb.from('players_public').select('*').eq('tournament_id',config.id)
       .gte('current_stage',sel.seq).neq('status','wait').order('created_at');
     $('#ptablePast').innerHTML=(pastRows||[]).length?pastRows.map(p=>
       `<div class="toolrow" style="${p.status==='wd'||p.status==='dq'?'opacity:.5':''}">
@@ -1733,7 +1733,7 @@ async function confirmStageRoster(){
 let callUpCandidates=[];
 async function openCallUp(){
   if(!playersActiveStage)return;
-  const{data}=await sb.from('players').select('*').eq('tournament_id',config.id)
+  const{data}=await sb.from('players_public').select('*').eq('tournament_id',config.id)
     .lt('current_stage',playersActiveStage.seq).eq('status','ok').order('name');
   callUpCandidates=data||[];
   $('#callUpList').innerHTML=callUpCandidates.length?callUpCandidates.map((p,i)=>
@@ -2033,7 +2033,7 @@ function dbToTournament(row,playerCount){
     host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),regClosed:!!row.reg_closed,
     visibility:row.visibility||'public',noticeExtra:row.notice_extra||{},awards:row.awards||{}}}
 async function countStatus(tournamentId,status){
-  const{count}=await sb.from('players').select('*',{count:'exact',head:true})
+  const{count}=await sb.from('players_public').select('*',{count:'exact',head:true})
     .eq('tournament_id',tournamentId).eq('status',status);
   return count||0}
 async function loadPrimaryStage(tournamentId){
@@ -2381,7 +2381,7 @@ async function viewStageResult(stageId){
   if(stage.kind==='period'||stage.record_mode==='total'){
     const{data:plRows}=await sb.from('plays').select('player_id,course_no,strokes_total').eq('stage_id',stageId);
     const ids=[...new Set((plRows||[]).map(r=>r.player_id))];
-    const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    const{data:pRows}=await sb.from('players_public').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
     const bestMap={};
     (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     ROUNDS=(stage.course_pars||[]).length||1;coursePars=stage.course_pars||[];
@@ -2393,7 +2393,7 @@ async function viewStageResult(stageId){
   }else{
     const{data:sRows}=await sb.from('scores').select('player_id,hole_index,strokes').eq('stage_id',stageId);
     const ids=[...new Set((sRows||[]).map(r=>r.player_id))];
-    const{data:pRows}=await sb.from('players').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    const{data:pRows}=await sb.from('players_public').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
     judgeStageKind='round';boardStageKind='round';stageRecordMode='hole';boardStageRecordMode='hole';
     ROUNDS=(stage.course_pars||[]).length||1;HOLES=ROUNDS*18;coursePars=stage.course_pars||[];
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
@@ -2424,7 +2424,7 @@ async function loadTournaments(){
     .or(`visibility.eq.public,owner_id.eq.${myId}`).order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
   const withCounts=await Promise.all(data.map(async row=>{
-    const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
+    const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
     const t=dbToTournament(row,count||0);
     if(t.status==='live'){
       const{data:top3,error:t3Err}=await sb.rpc('top3_standings',{p_tournament_id:row.id});
@@ -2493,8 +2493,8 @@ async function computeTodoBadge(t){
     const today='2026-07-03'; // dday()와 동일한 데모 기준일
     const isNowish=t.status==='live'||(active.date_start<=today&&today<=active.date_end);
     if(active.kind==='round'&&active.use_groups&&isNowish){
-      const{count:okCount}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok');
-      const{count:groupedCount}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok').not('group_no','is',null);
+      const{count:okCount}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok');
+      const{count:groupedCount}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok').not('group_no','is',null);
       if((okCount||0)>0&&(groupedCount||0)===0)
         return{urgent:true,text:'⚠ 조편성이 아직 안 됐어요 — 시작 전 필수'}}
     if(active.seq>1&&active.roster_confirmed===false)
@@ -2552,10 +2552,10 @@ async function loadMyTournament(tournamentId){
     const ne=tRow.notice_extra||{};config.eligibility=ne.eligibility||config.eligibility;
     config.prizeTotal=ne.prize_total||'';config.prizes=ne.prizes||[];
     config.noticeExtra={contact:ne.contact||'',fee:ne.fee||'',rules:ne.rules||'',apply_deadline:ne.apply_deadline||''}}
-  const{data:wRows}=await sb.from('players').select('*').eq('tournament_id',tournamentId).eq('status','wait');
+  const{data:wRows}=await sb.from('players_public').select('*').eq('tournament_id',tournamentId).eq('status','wait');
   waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
     club:r.club||'',region:r.region||'',nick:r.nick||''}));
-  const{data:sRows}=await sb.from('staff').select('*').eq('tournament_id',tournamentId);
+  const{data:sRows}=await sb.rpc('get_staff_owner',{t_id:tournamentId,p_owner_secret:user.secret});
   staff=(sRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,duty:r.duty,canScore:r.can_score,token:r.token,link_opened_at:r.link_opened_at}));
   curStaff=0;jRound=0;curHole=0;curGroup=0;judgeTokenMode=false;
   const uv=[...new Set(config.venues)];
@@ -2603,11 +2603,11 @@ async function loadNotice(tournamentId){
   if(t.gated){
     showGate('noticeBody',tournamentId,async(full)=>{
       const stages=await loadAllStages(tournamentId);
-      const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
+      const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
       renderNotice(full,stages,count||0)});
     return}
   const stages=await loadAllStages(tournamentId);
-  const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
+  const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
   renderNotice(t,stages,count||0)}
 function noticeStatusLabel(s){
   return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
@@ -3040,12 +3040,12 @@ async function saveEditCap(){
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     config.cap=newCap;config.capUnlimited=unlimited;
     if(overflow>0){
-      const{data:overflowRows}=await sb.from('players').select('id,name').eq('tournament_id',config.id).eq('status','ok').order('created_at',{ascending:false}).limit(overflow);
+      const{data:overflowRows}=await sb.from('players_public').select('id,name').eq('tournament_id',config.id).eq('status','ok').order('created_at',{ascending:false}).limit(overflow);
       const ids=(overflowRows||[]).map(r=>r.id);
       if(ids.length){
         await Promise.all(ids.map(id=>sb.rpc('update_player',{t_id:config.id,player_id:id,p_owner_secret:user.secret,p_status:'wait'})));
         players=players.filter(p=>!ids.includes(p.id));
-        const{data:wRows}=await sb.from('players').select('*').in('id',ids);
+        const{data:wRows}=await sb.from('players_public').select('*').in('id',ids);
         waitlist.push(...(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',region:r.region||'',nick:r.nick||''})));
         renderPlayers();renderWait();syncMine()}
       toast(`정원을 ${newCap}명으로 줄이고 ${ids.length}명을 대기로 전환했습니다`)
@@ -3536,7 +3536,7 @@ async function openApply(id){
         $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
         await openApply(id)});
       return}
-    const{count}=await sb.from('players').select('*',{count:'exact',head:true}).eq('tournament_id',id).eq('status','ok');
+    const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',id).eq('status','ok');
     applyT=dbToTournament(row,count||0)}
   $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
   const t=applyT;
@@ -3777,8 +3777,8 @@ async function createTournament(){
   if(stErr)console.error(stErr);
 
   if(staff.length){
-    const staffRows=staff.map(s=>({tournament_id:tournamentId,name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
-    const{data:sData,error:sErr}=await sb.from('staff').insert(staffRows).select('id,token,phone');
+    const staffRows=staff.map(s=>({name:s.name,phone:s.phone,duty:s.duty,can_score:s.canScore}));
+    const{data:sData,error:sErr}=await sb.rpc('create_staff_batch',{t_id:tournamentId,p_owner_secret:user.secret,p_staff:staffRows});
     if(sErr)console.error(sErr);
     else sData.forEach(row=>{const s=staff.find(x=>x.phone===row.phone);if(s){s.id=row.id;s.token=row.token;s.link_opened_at=null}})}
 
@@ -4121,7 +4121,8 @@ gcardStyle.textContent='';document.head.appendChild(gcardStyle);
 /* ================= 심판 토큰 링크 (?j=token) ================= */
 let judgeTokenMode=false,judgeStageKind='round',stageRecordMode='hole';
 async function enterViaJudgeToken(token){
-  const{data:s,error:sErr}=await sb.from('staff').select('*').eq('token',token).single();
+  const{data:sRows,error:sErr}=await sb.rpc('get_staff_by_token',{p_token:token});
+  const s=sRows&&sRows[0];
   if(sErr||!s){toast('유효하지 않은 링크입니다');return false}
   const{data:t,error:tErr}=await sb.from('tournaments').select('id,owner_id,name,host_org,date_start,date_end,rounds,venues,course_pars,tie_rule,cap,fields,awards,status,created_at,type,visibility,notice_extra,reg_closed').eq('id',s.tournament_id).single();
   if(tErr||!t){toast('대회 정보를 불러오지 못했습니다');return false}
@@ -4142,7 +4143,7 @@ async function enterViaJudgeToken(token){
     ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
 
-  const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',t.id)
+  const{data:pRows,error:pErr}=await sb.from('players_public').select('*').eq('tournament_id',t.id)
     .eq('current_stage',stage?stage.seq:1)
     .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return false}
@@ -4571,7 +4572,7 @@ async function loadBoardData(tournamentId,trusted){
   $('#boardTitle').textContent=t.name;
   const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
 
-  const{data:pRows,error:pErr}=await sb.from('players').select('*').eq('tournament_id',tournamentId)
+  const{data:pRows,error:pErr}=await sb.from('players_public').select('*').eq('tournament_id',tournamentId)
     .eq('current_stage',stage?stage.seq:1)
     .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return}
@@ -4834,7 +4835,7 @@ function renderResult(){
      <div class="sc num">${fmt(s)}</div></div>`).join('');
 
   /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) ---- */
-  const awarded=new Set(done.slice(0,3).map(s=>s.p.phone));
+  const awarded=new Set(done.slice(0,3).map(s=>s.p.id));
   let aw='';
   const podRow=(label,s,color)=>s?`<div class="pod"><div class="medal">🏅</div>
       <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''} · ${s.p.sex} ${s.p.age}세</span></div>
@@ -4843,14 +4844,14 @@ function renderResult(){
     :`<div class="pod" style="opacity:.55"><div class="medal">🏅</div>
       <div class="pi"><b>해당자 없음</b><span>${label}</span></div></div>`;
   if(config.awards.gender&&config.fields.sex&&done.length){
-    const m=done.find(s=>s.p.sex==='남'&&!awarded.has(s.p.phone));if(m)awarded.add(m.p.phone);
-    const f=done.find(s=>s.p.sex==='여'&&!awarded.has(s.p.phone));if(f)awarded.add(f.p.phone);
+    const m=done.find(s=>s.p.sex==='남'&&!awarded.has(s.p.id));if(m)awarded.add(m.p.id);
+    const f=done.find(s=>s.p.sex==='여'&&!awarded.has(s.p.id));if(f)awarded.add(f.p.id);
     aw+=`<div class="secttl">남녀부 시상</div>`+podRow('남자부 1위',m,'var(--main)')+podRow('여자부 1위',f,'var(--coral)')}
   if(config.awards.age&&config.fields.age&&done.length){
     aw+=`<div class="secttl">연령부 시상</div>`;
     [['60대부',60,69],['70대부',70,79],['80세 이상부',80,150]].forEach(([lb,lo,hi])=>{
-      const w=done.find(s=>s.p.age>=lo&&s.p.age<=hi&&!awarded.has(s.p.phone));
-      if(w)awarded.add(w.p.phone);
+      const w=done.find(s=>s.p.age>=lo&&s.p.age<=hi&&!awarded.has(s.p.id));
+      if(w)awarded.add(w.p.id);
       aw+=podRow(lb+' 1위',w,'var(--mint)')})}
   if(config.awards.club&&config.fields.club&&done.length){
     const byClub={};done.forEach(s=>{(byClub[s.p.club||'무소속']=byClub[s.p.club||'무소속']||[]).push(s)});
