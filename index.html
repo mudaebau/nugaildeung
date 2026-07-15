@@ -1718,8 +1718,9 @@ async function renderPlayersForStage(){
     renderPlayers();
   }else{
     $('#pListCurrent').style.display='none';$('#pListPast').style.display='block';
-    const{data:pastRows}=await sb.from('players_public').select('*').eq('tournament_id',config.id)
-      .gte('current_stage',sel.seq).neq('status','wait').order('created_at');
+    const allRows=await fetchPlayers(config.id);
+    const pastRows=allRows.filter(p=>p.current_stage>=sel.seq&&p.status!=='wait')
+      .sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
     $('#ptablePast').innerHTML=(pastRows||[]).length?pastRows.map(p=>
       `<div class="toolrow" style="${p.status==='wd'||p.status==='dq'?'opacity:.5':''}">
         <div class="info"><b>${p.name}${p.status==='wd'?' <span class="pill red">기권</span>':p.status==='dq'?' <span class="pill red">실격</span>':''}</b>
@@ -1736,9 +1737,9 @@ async function confirmStageRoster(){
 let callUpCandidates=[];
 async function openCallUp(){
   if(!playersActiveStage)return;
-  const{data}=await sb.from('players_public').select('*').eq('tournament_id',config.id)
-    .lt('current_stage',playersActiveStage.seq).eq('status','ok').order('name');
-  callUpCandidates=data||[];
+  const allRows=await fetchPlayers(config.id);
+  callUpCandidates=allRows.filter(p=>p.current_stage<playersActiveStage.seq&&p.status==='ok')
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   $('#callUpList').innerHTML=callUpCandidates.length?callUpCandidates.map((p,i)=>
     `<div class="toolrow" style="cursor:pointer" onclick="callUpPlayer(${i})">
       <div class="avatar">${p.name[0]}</div>
@@ -2035,10 +2036,11 @@ function dbToTournament(row,playerCount){
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,capUnlimited:!!row.cap_unlimited,
     host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),regClosed:!!row.reg_closed,
     visibility:row.visibility||'public',noticeExtra:row.notice_extra||{},awards:row.awards||{}}}
-async function countStatus(tournamentId,status){
-  const{count}=await sb.from('players_public').select('*',{count:'exact',head:true})
-    .eq('tournament_id',tournamentId).eq('status',status);
-  return count||0}
+async function countStatus(tournamentId,status,ownerSecret){
+  const rows=ownerSecret
+    ?(await sb.rpc('get_players_owner',{t_id:tournamentId,p_owner_secret:ownerSecret})).data||[]
+    :await fetchPlayers(tournamentId);
+  return rows.filter(p=>p.status===status).length}
 async function loadPrimaryStage(tournamentId){
   const{data,error}=await sb.from('stages').select('*').eq('tournament_id',tournamentId).order('seq',{ascending:true});
   if(error||!data||!data.length){if(error)console.error(error);return null}
@@ -2082,7 +2084,7 @@ async function renderStageHome(){
 
   if(stage.kind==='period'){
     const total=(stage.course_pars||[]).length||ROUNDS;
-    const{data:plRows}=await sb.from('plays').select('player_id,course_no').eq('stage_id',stage.id);
+    const plRows=(await fetchPlays(config.id)).filter(r=>r.stage_id===stage.id);
     const byPlayer={};(plRows||[]).forEach(r=>{(byPlayer[r.player_id]=byPlayer[r.player_id]||new Set()).add(r.course_no)});
     const finished=Object.values(byPlayer).filter(s=>s.size>=total).length;
     const periodTxt=stage.date_start===stage.date_end?(stage.date_start||'').replaceAll('-','.')
@@ -2382,9 +2384,9 @@ async function viewStageResult(stageId){
   const snap={players,groups,ROUNDS,HOLES,coursePars,PAR_TOT,judgeStageKind,boardStageKind,stageRecordMode,boardStageRecordMode};
 
   if(stage.kind==='period'||stage.record_mode==='total'){
-    const{data:plRows}=await sb.from('plays').select('player_id,course_no,strokes_total').eq('stage_id',stageId);
-    const ids=[...new Set((plRows||[]).map(r=>r.player_id))];
-    const{data:pRows}=await sb.from('players_public').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    const plRows=(await fetchPlays(config.id)).filter(r=>r.stage_id===stageId);
+    const ids=new Set(plRows.map(r=>r.player_id));
+    const pRows=(await fetchPlayers(config.id)).filter(p=>ids.has(p.id));
     const bestMap={};
     (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     ROUNDS=(stage.course_pars||[]).length||1;coursePars=stage.course_pars||[];
@@ -2394,9 +2396,9 @@ async function viewStageResult(stageId){
     groups=[];judgeStageKind=stage.kind;boardStageKind=stage.kind;
     stageRecordMode=stage.record_mode||'hole';boardStageRecordMode=stage.record_mode||'hole'
   }else{
-    const{data:sRows}=await sb.from('scores').select('player_id,hole_index,strokes').eq('stage_id',stageId);
-    const ids=[...new Set((sRows||[]).map(r=>r.player_id))];
-    const{data:pRows}=await sb.from('players_public').select('*').in('id',ids.length?ids:['00000000-0000-0000-0000-000000000000']);
+    const sRows=(await fetchScores(config.id)).filter(r=>r.stage_id===stageId);
+    const ids=new Set(sRows.map(r=>r.player_id));
+    const pRows=(await fetchPlayers(config.id)).filter(p=>ids.has(p.id));
     judgeStageKind='round';boardStageKind='round';stageRecordMode='hole';boardStageRecordMode='hole';
     ROUNDS=(stage.course_pars||[]).length||1;HOLES=ROUNDS*18;coursePars=stage.course_pars||[];
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
@@ -2427,8 +2429,10 @@ async function loadTournaments(){
     .or(`visibility.eq.public,owner_id.eq.${myId}`).order('created_at',{ascending:false});
   if(error){toast('대회 목록을 불러오지 못했습니다');console.error(error);return}
   const withCounts=await Promise.all(data.map(async row=>{
-    const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',row.id);
-    const t=dbToTournament(row,count||0);
+    const rows=row.owner_id===user.id
+      ?(await sb.rpc('get_players_owner',{t_id:row.id,p_owner_secret:user.secret})).data||[]
+      :await fetchPlayers(row.id);
+    const t=dbToTournament(row,rows.length);
     if(t.status==='live'){
       const{data:top3,error:t3Err}=await sb.rpc('top3_standings',{p_tournament_id:row.id});
       if(t3Err)console.error(t3Err);else t.top3=top3}
@@ -2466,17 +2470,59 @@ async function submitGateCode(){
   saveCode(id,code);gateState=null;
   onSuccess(data)}
 
+/* ================= 참가자/점수/기록 통합 로더(차수28-B) =================
+   players/scores/plays는 비공개 대회일 때 RLS가 직접 select를 막는다(0038).
+   호출부마다 손대지 않고 이 3개 래퍼로 수렴 — 현재 컨텍스트(심판 토큰 보유 →
+   운영자 secret 보유 → 그 외 게이트 코드) 순으로 알맞은 RPC를 자동 선택한다.
+   추정이 틀려도(예: 로그인한 운영자가 남의 공개 대회를 구경 중) 서버의
+   assert_owner가 거부하면 다음 단계로 자연히 넘어가므로 안전하다 — 서버 판정이
+   최종 권한이고 여기 순서는 그저 최적화다. */
+function isOwnerContext(t_id){return config.id===t_id&&config.created&&!!user.secret&&!judgeTokenMode}
+function isJudgeContext(t_id){return judgeTokenMode&&config.id===t_id}
+async function fetchPlayers(t_id){
+  if(isJudgeContext(t_id)){
+    const{data,error}=await sb.rpc('get_players_for_staff',{p_token:currentJudgeToken()});
+    if(!error)return data||[];
+    console.error(error)}
+  if(isOwnerContext(t_id)){
+    const{data,error}=await sb.rpc('get_players_owner',{t_id,p_owner_secret:user.secret});
+    if(!error)return data||[];
+    console.error(error)}
+  const{data,error}=await sb.rpc('get_players_gated',{t_id,p_code:myCodeFor(t_id)||null});
+  if(error){console.error(error);return[]}
+  return data||[]}
+async function fetchScores(t_id){
+  if(isOwnerContext(t_id)){
+    const{data,error}=await sb.rpc('get_scores_owner',{t_id,p_owner_secret:user.secret});
+    if(!error)return data||[];
+    console.error(error)}
+  const{data,error}=await sb.rpc('get_scores_gated',{t_id,p_code:myCodeFor(t_id)||null});
+  if(error){console.error(error);return[]}
+  return data||[]}
+async function fetchPlays(t_id){
+  if(isJudgeContext(t_id)){
+    const{data,error}=await sb.rpc('get_plays_for_staff',{p_token:currentJudgeToken()});
+    if(!error)return data||[];
+    console.error(error)}
+  if(isOwnerContext(t_id)){
+    const{data,error}=await sb.rpc('get_plays_owner',{t_id,p_owner_secret:user.secret});
+    if(!error)return data||[];
+    console.error(error)}
+  const{data,error}=await sb.rpc('get_plays_gated',{t_id,p_code:myCodeFor(t_id)||null});
+  if(error){console.error(error);return[]}
+  return data||[]}
+
 /* ================= 내 대회 / MY ================= */
 async function myTournamentStats(t){
   const stats=[];
   if(t.status==='live'){
-    const wait=await countStatus(t.id,'wait');
+    const wait=await countStatus(t.id,'wait',user.secret);
     const{data:sRows}=await sb.from('staff').select('can_score,link_opened_at').eq('tournament_id',t.id);
     const js=(sRows||[]).filter(s=>s.can_score);
     const opened=js.filter(s=>s.link_opened_at).length;
     stats.push({v:t.players,l:'참가자'},{v:wait,l:'대기자'},{v:`${opened}/${js.length}`,l:'심판 접속'})
   }else if(t.status==='open'){
-    const wait=await countStatus(t.id,'wait');
+    const wait=await countStatus(t.id,'wait',user.secret);
     stats.push({v:t.players,l:'접수'},{v:wait,l:'대기'},{v:t.cap,l:'정원'})
   }else if(t.status==='ready'){
     stats.push({v:t.players,l:'참가자'},{v:t.cap,l:'정원'})}
@@ -2496,9 +2542,10 @@ async function computeTodoBadge(t){
     const today='2026-07-03'; // dday()와 동일한 데모 기준일
     const isNowish=t.status==='live'||(active.date_start<=today&&today<=active.date_end);
     if(active.kind==='round'&&active.use_groups&&isNowish){
-      const{count:okCount}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok');
-      const{count:groupedCount}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',t.id).eq('status','ok').not('group_no','is',null);
-      if((okCount||0)>0&&(groupedCount||0)===0)
+      const{data:rows}=await sb.rpc('get_players_owner',{t_id:t.id,p_owner_secret:user.secret});
+      const okRows=(rows||[]).filter(p=>p.status==='ok');
+      const groupedCount=okRows.filter(p=>p.group_no!=null).length;
+      if(okRows.length>0&&groupedCount===0)
         return{urgent:true,text:'⚠ 조편성이 아직 안 됐어요 — 시작 전 필수'}}
     if(active.seq>1&&active.roster_confirmed===false)
       return{urgent:true,text:'⚠ 결선 명단을 확정해야 조편성할 수 있어요'}}
@@ -2555,8 +2602,8 @@ async function loadMyTournament(tournamentId){
     const ne=tRow.notice_extra||{};config.eligibility=ne.eligibility||config.eligibility;
     config.prizeTotal=ne.prize_total||'';config.prizes=ne.prizes||[];
     config.noticeExtra={contact:ne.contact||'',fee:ne.fee||'',rules:ne.rules||'',apply_deadline:ne.apply_deadline||''}}
-  const{data:wRows}=await sb.from('players_public').select('*').eq('tournament_id',tournamentId).eq('status','wait');
-  waitlist=(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
+  const wRows=(await fetchPlayers(tournamentId)).filter(p=>p.status==='wait');
+  waitlist=wRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
     club:r.club||'',region:r.region||'',nick:r.nick||''}));
   const{data:sRows}=await sb.rpc('get_staff_owner',{t_id:tournamentId,p_owner_secret:user.secret});
   staff=(sRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,duty:r.duty,canScore:r.can_score,token:r.token,link_opened_at:r.link_opened_at}));
@@ -2602,12 +2649,12 @@ async function loadNotice(tournamentId){
   if(t.gated){
     showGate('noticeBody',tournamentId,async(full)=>{
       const stages=await loadAllStages(tournamentId);
-      const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
-      renderNotice(full,stages,count||0)});
+      const count=(await fetchPlayers(tournamentId)).filter(p=>p.status==='ok').length;
+      renderNotice(full,stages,count)});
     return}
   const stages=await loadAllStages(tournamentId);
-  const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',tournamentId).eq('status','ok');
-  renderNotice(t,stages,count||0)}
+  const count=(await fetchPlayers(tournamentId)).filter(p=>p.status==='ok').length;
+  renderNotice(t,stages,count)}
 function noticeStatusLabel(s){
   return s==='live'?'진행중 LIVE':s==='open'?'접수중':s==='done'?'종료':'개설 완료'}
 let noticeT=null,noticeStages=[];
@@ -2832,9 +2879,9 @@ async function renderEditInfoList(){
   box.innerHTML='<p class="sub" style="text-align:center;padding:20px 0">불러오는 중…</p>';
   const stages=await loadAllStages(config.id);
   editStage=curActiveStage(stages);
-  const{count:scoreCount}=await sb.from('scores').select('*',{count:'exact',head:true}).eq('stage_id',editStage.id);
-  const{count:playCount}=await sb.from('plays').select('*',{count:'exact',head:true}).eq('stage_id',editStage.id);
-  editStageLocked=((scoreCount||0)+(playCount||0))>0;
+  const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
+  const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
+  editStageLocked=(scoreCount+playCount)>0;
   box.innerHTML=`
     <p class="sub" style="margin-bottom:6px;font-weight:700">자유 — 즉시 저장</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
@@ -3039,13 +3086,15 @@ async function saveEditCap(){
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     config.cap=newCap;config.capUnlimited=unlimited;
     if(overflow>0){
-      const{data:overflowRows}=await sb.from('players_public').select('id,name').eq('tournament_id',config.id).eq('status','ok').order('created_at',{ascending:false}).limit(overflow);
-      const ids=(overflowRows||[]).map(r=>r.id);
+      const okRows=(await fetchPlayers(config.id)).filter(p=>p.status==='ok')
+        .sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,overflow);
+      const ids=okRows.map(r=>r.id);
       if(ids.length){
         await Promise.all(ids.map(id=>sb.rpc('update_player',{t_id:config.id,player_id:id,p_owner_secret:user.secret,p_status:'wait'})));
         players=players.filter(p=>!ids.includes(p.id));
-        const{data:wRows}=await sb.from('players_public').select('*').in('id',ids);
-        waitlist.push(...(wRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',region:r.region||'',nick:r.nick||''})));
+        const idSet=new Set(ids);
+        const wRows=(await fetchPlayers(config.id)).filter(p=>idSet.has(p.id));
+        waitlist.push(...wRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',region:r.region||'',nick:r.nick||''})));
         renderPlayers();renderWait();syncMine()}
       toast(`정원을 ${newCap}명으로 줄이고 ${ids.length}명을 대기로 전환했습니다`)
     }else if(unlimited&&waitlist.length){
@@ -3553,8 +3602,8 @@ async function openApply(id){
         $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
         await openApply(id)});
       return}
-    const{count}=await sb.from('players_public').select('*',{count:'exact',head:true}).eq('tournament_id',id).eq('status','ok');
-    applyT=dbToTournament(row,count||0)}
+    const count=(await fetchPlayers(id)).filter(p=>p.status==='ok').length;
+    applyT=dbToTournament(row,count)}
   $('#applyGate').style.display='none';$('#applyPoster').style.display='block';
   const t=applyT;
   $('#applyUrlHint').textContent=t.name;
@@ -3650,7 +3699,7 @@ async function submitSingle(){
   renderCap();renderHome();
 
   if(willWait){
-    const waitNo=await countStatus(applyT.id,'wait');
+    const waitNo=row.wait_no;
     rcptShow('대기 '+waitNo+'번',`<b>${name}</b> 님, 정원(${applyT.cap}명)이 마감되어<br><b>대기 ${waitNo}번</b>으로 접수되었습니다.<br>빈자리가 나면 순서대로 확정 문자가 발송됩니다.`)}
   else rcptShow(rcptNo(),`<b>${name}</b> 님, ${applyT.name}<br>접수가 완료되었습니다.<br>대회 안내와 조편성표가 문자로 발송됩니다.`)}
 function apParse(){
@@ -3890,6 +3939,7 @@ function renderPlayers(){
       <span class="ckc ${p.ci?'on':''}" onclick="toggleCheckin(${i})">${p.ci?'✓':''}</span>
       <div class="info" style="cursor:pointer" onclick="openPEdit(${i})"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
       <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}${p.group>=0?' · '+(p.group+1)+'조':''}</span></div>
+      <span title="전화 걸기" style="font-size:17px;padding:4px 8px;cursor:pointer" onclick="event.stopPropagation();callPlayer(${i})">📞</span>
       <span class="pill2 ${p.paid?'pay':'nopay'}" style="margin-left:auto" onclick="openPEdit(${i})">${p.paid?'입금':'미입금'}</span>
     </div>`).join('')
     :'<p class="sub" style="text-align:center;padding:26px 0">등록된 참가자가 없습니다</p>';
@@ -3903,6 +3953,13 @@ async function toggleCheckin(i){
   const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_checked_in:next});
   if(error){toast('출석 처리 중 오류가 발생했습니다');console.error(error);return}
   p.ci=next;renderPlayers()}
+// 노쇼 전화 걸기(차수28-B ③) — 명단은 항상 마스킹본만 다루고, 통화가 필요한 순간에만
+// assert_owner 검증 단건 RPC로 원문을 받아 즉시 tel: 로 넘긴다(원문을 배열에 남기지 않음).
+async function callPlayer(i){
+  const p=players[i];if(!p||!p.id)return;
+  const{data,error}=await sb.rpc('get_player_phone',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret});
+  if(error||!data){toast('전화번호를 불러오지 못했습니다');console.error(error);return}
+  location.href='tel:'+data}
 async function togglePaid(){
   if(editIdx<0)return;const p=players[editIdx];if(!p.id)return;const next=!p.paid;
   const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_paid:next});
@@ -4091,9 +4148,9 @@ async function openGroupConfirm(){
   const stages=await loadAllStages(config.id);
   const stage=playersActiveStage||curActiveStage(stages);
   if(stage){
-    const{count:scoreCount}=await sb.from('scores').select('*',{count:'exact',head:true}).eq('stage_id',stage.id);
-    const{count:playCount}=await sb.from('plays').select('*',{count:'exact',head:true}).eq('stage_id',stage.id);
-    if((scoreCount||0)+(playCount||0)>0){toast('이미 입력된 점수가 있어 재편성할 수 없습니다');return}}
+    const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===stage.id).length;
+    const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===stage.id).length;
+    if(scoreCount+playCount>0){toast('이미 입력된 점수가 있어 재편성할 수 없습니다');return}}
   groupAllow3=true;
   $('#groupAllow3Sw').classList.add('on');
   renderGroupConfirmBody();
@@ -4171,14 +4228,13 @@ async function enterViaJudgeToken(token){
     ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
     PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
 
-  const{data:pRows,error:pErr}=await sb.from('players_public').select('*').eq('tournament_id',t.id)
-    .eq('current_stage',stage?stage.seq:1)
-    .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
+  const{data:pRowsAll,error:pErr}=await sb.rpc('get_players_for_staff',{p_token:token});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return false}
+  const pRows=(pRowsAll||[]).filter(r=>r.current_stage===(stage?stage.seq:1)&&r.status!=='wait')
+    .sort((a,b)=>(a.group_no??1e9)-(b.group_no??1e9)||(a.group_order??1e9)-(b.group_order??1e9));
   if(judgeStageKind==='period'||stageRecordMode==='total'){
-    let plQuery=sb.from('plays').select('player_id,course_no,strokes_total').eq('tournament_id',t.id);
-    if(judgeStageKind==='round')plQuery=plQuery.eq('stage_id',stage.id);
-    const{data:plRows}=await plQuery;
+    const{data:plRowsAll}=await sb.rpc('get_plays_for_staff',{p_token:token});
+    const plRows=judgeStageKind==='round'?(plRowsAll||[]).filter(r=>r.stage_id===stage.id):(plRowsAll||[]);
     const bestMap={};
     (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
@@ -4339,9 +4395,9 @@ async function undoPlayEntry(playId,pid){
   await refreshMyTournamentStatus()}
 async function refreshPlayerBest(pid,courseNo){
   const p=players.find(x=>x.id===pid);if(!p)return;
-  const{data}=await sb.from('plays').select('strokes_total').eq('player_id',pid).eq('course_no',courseNo).eq('tournament_id',config.id);
+  const data=(await fetchPlays(config.id)).filter(r=>r.player_id===pid&&r.course_no===courseNo);
   p.best=p.best||{};
-  if(data&&data.length)p.best[courseNo]=Math.min(...data.map(r=>r.strokes_total));
+  if(data.length)p.best[courseNo]=Math.min(...data.map(r=>r.strokes_total));
   else delete p.best[courseNo]}
 /* ===== 차수23③: 기간형 기록 내역 시트 ===== */
 let playHistCurrentPid=null,playHistCurrentCourse=null;
@@ -4349,9 +4405,9 @@ async function openPlayHistory(pid){
   playHistCurrentPid=pid;playHistCurrentCourse=jRound;
   const p=players.find(x=>x.id===pid);
   $('#playHistTitle').textContent=`${p?p.name:''} · ${jRound+1}코스 기록 내역`;
-  const{data,error}=await sb.from('plays').select('id,strokes_total,played_at,created_at')
-    .eq('player_id',pid).eq('course_no',jRound).eq('tournament_id',config.id).order('strokes_total',{ascending:true});
-  if(error||!data||!data.length){
+  const data=(await fetchPlays(config.id)).filter(r=>r.player_id===pid&&r.course_no===jRound)
+    .sort((a,b)=>a.strokes_total-b.strokes_total);
+  if(!data.length){
     $('#playHistList').innerHTML='<p class="sub" style="padding:10px 0">기록이 없습니다</p>';
     $('#playHistOv').classList.add('on');return}
   const best=data[0].strokes_total;
@@ -4625,10 +4681,8 @@ async function loadBoardData(tournamentId,trusted){
   $('#boardTitle').textContent=t.name;
   const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
 
-  const{data:pRows,error:pErr}=await sb.from('players_public').select('*').eq('tournament_id',tournamentId)
-    .eq('current_stage',stage?stage.seq:1)
-    .neq('status','wait').order('group_no',{ascending:true}).order('group_order',{ascending:true});
-  if(pErr){toast('참가자 정보를 불러오지 못했습니다');return}
+  const pRows=(await fetchPlayers(tournamentId)).filter(p=>p.current_stage===(stage?stage.seq:1)&&p.status!=='wait')
+    .sort((a,b)=>(a.group_no??1e9)-(b.group_no??1e9)||(a.group_order??1e9)-(b.group_order??1e9));
 
   if(boardStageKind==='period'||boardStageRecordMode==='total'){
     ROUNDS=stageCoursePars.length||1;HOLES=0;coursePars=stageCoursePars;
@@ -4636,9 +4690,8 @@ async function loadBoardData(tournamentId,trusted){
     $('#boardSub').textContent=boardStageKind==='period'
       ?`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`
       :`총점만 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`;
-    let plQuery=sb.from('plays').select('player_id,course_no,strokes_total').eq('tournament_id',tournamentId);
-    if(boardStageKind==='round')plQuery=plQuery.eq('stage_id',stage.id);
-    const{data:plRows}=await plQuery;
+    const plAll=await fetchPlays(tournamentId);
+    const plRows=boardStageKind==='round'?plAll.filter(r=>r.stage_id===stage.id):plAll;
     const bestMap={};
     (plRows||[]).forEach(r=>{
       bestMap[r.player_id]=bestMap[r.player_id]||{};
@@ -4654,9 +4707,8 @@ async function loadBoardData(tournamentId,trusted){
   ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
   PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
   $('#boardSub').textContent=`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${t.host_org||''}`;
-  let scoresQuery=sb.from('scores').select('player_id,hole_index,strokes').eq('tournament_id',tournamentId);
-  if(stage)scoresQuery=scoresQuery.eq('stage_id',stage.id);
-  const{data:sRows}=await scoresQuery;
+  const scoresAll=await fetchScores(tournamentId);
+  const sRows=stage?scoresAll.filter(r=>r.stage_id===stage.id):scoresAll;
   const scoreMap={};
   (sRows||[]).forEach(r=>{(scoreMap[r.player_id]=scoreMap[r.player_id]||{})[r.hole_index]=r.strokes});
   players=pRows.map(r=>{
