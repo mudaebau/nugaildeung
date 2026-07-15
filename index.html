@@ -852,6 +852,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <div style="padding:18px 4px 0">
           <button class="btn full big" style="margin-bottom:14px" onclick="copyApplyShareLink()">신청 링크 복사 — 단톡방에 공유</button>
           <div class="laterlist">
+            <div class="lrow" style="cursor:pointer" onclick="enterMgmt('mgStaff')">심판 등록 <span class="st3">나중에 입력 ›</span></div>
             <div class="lrow">시상 내역 <span class="st3">나중에 입력</span></div>
             <div class="lrow">참가비 · 문의처 <span class="st3">나중에 입력</span></div>
             <div class="lrow">참여 대상 <span class="st3 ok">누구나 (기본)</span></div>
@@ -1013,7 +1014,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
           <span class="pill gray" id="linkStat">미발송</span></label>
         <p class="sub" style="margin-bottom:6px">스탭에게 각자의 입력 링크를 문자로 보냅니다.</p>
         <div id="toolStaff"></div>
-        <button class="btn full" style="margin-top:12px" id="sendAllBtn" onclick="sendLinks()">전체 발송</button>
+        <button class="btn ghost full" style="margin-top:12px" onclick="openAddStaff()">+ 심판 추가</button>
+        <button class="btn full" style="margin-top:8px" id="sendAllBtn" onclick="sendLinks()">전체 발송</button>
         <button class="btn ghost full" style="margin-top:8px" onclick="openJudge(0)">내가 직접 입력하기</button>
       </div>
     </div>
@@ -1270,9 +1272,9 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 <!-- 정보 수정 경고 확인 -->
 <div class="overlay" id="warnEditOv" onclick="if(event.target===this)closeWarnEdit()">
   <div class="pad">
-    <h3>⚠️ 참가자 공지가 필요해요</h3>
+    <h3 id="warnEditTitle">⚠️ 참가자 공지가 필요해요</h3>
     <p id="warnEditDesc" style="margin:10px 0 18px">—</p>
-    <button class="btn full" style="margin-bottom:8px" onclick="confirmWarnEdit()">알고 있어요, 저장</button>
+    <button class="btn full" style="margin-bottom:8px" onclick="confirmWarnEdit()" id="warnEditConfirmBtn">알고 있어요, 저장</button>
     <button class="btn ghost full" onclick="closeWarnEdit()">취소</button>
   </div>
 </div>
@@ -1399,6 +1401,37 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <label class="fl" style="margin-top:0">인식 결과</label>
         <div id="prevList"></div>
         <button class="btn full" id="confirmBtn" style="margin-top:12px" onclick="confirmPaste()">등록 확정</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 심판 추가 -->
+<div class="overlay" id="staffAddOv" onclick="if(event.target===this)closeAddStaff()">
+  <div class="pad">
+    <h3>심판 추가</h3>
+    <div class="seg" id="addStaffModeSeg">
+      <div class="on" data-m="single" onclick="setAddStaffMode('single')">개인 추가</div>
+      <div data-m="group" onclick="setAddStaffMode('group')">일괄 추가</div>
+    </div>
+    <div id="asdSinglePane">
+      <label class="fl" style="margin-top:0">이름</label><input type="text" id="asdName">
+      <label class="fl">전화번호</label><input type="tel" id="asdPhone">
+      <label class="fl">담당(선택)</label><input type="text" id="asdDuty" placeholder="예: 1코스 심판">
+      <label class="fl" style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <input type="checkbox" id="asdCanScore" checked style="width:18px;height:18px">점수 입력 권한
+      </label>
+      <button class="btn full" style="margin-top:16px" onclick="submitAddStaff()">추가</button>
+    </div>
+    <div id="asdGroupPane" style="display:none">
+      <label class="fl" style="margin-top:0">명단 붙여넣기</label>
+      <p class="sub" style="margin-bottom:6px">한 줄에 이름·전화번호(카톡 명단 붙여넣기 가능). 전원 점수 입력 권한으로 등록됩니다.</p>
+      <textarea id="staffPasteBox" rows="6"></textarea>
+      <button class="btn full" style="margin-top:12px" onclick="parseStaffPaste()">명단 인식</button>
+      <div class="card" id="staffPreviewCard" style="display:none;margin-top:12px">
+        <label class="fl" style="margin-top:0">인식 결과</label>
+        <div id="staffPrevList"></div>
+        <button class="btn full" id="staffConfirmBtn" style="margin-top:12px" onclick="confirmStaffPaste()">등록 확정</button>
       </div>
     </div>
   </div>
@@ -1544,12 +1577,9 @@ const config={created:false,id:null,pendingId:null,type:'field',stageCount:1,pre
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
   prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:'',apply_deadline:''},recordModes:{1:'hole',2:'hole',3:'hole'},regClosed:false};
 const user={loggedIn:false,name:'',phone:'',id:null,secret:null};
-const DEFAULT_STAFF=[
-  {name:'박민지',phone:'010-2211-4832',duty:'1코스 심판 (솔터공원)',canScore:true},
-  {name:'이도현',phone:'010-8873-0294',duty:'2코스 심판 (미사한강)',canScore:true},
-  {name:'최유라',phone:'010-4419-7765',duty:'예비 심판 · 전 코스',canScore:true},
-  {name:'정우성',phone:'010-6640-2381',duty:'본부석·시상',canScore:false}];
-let staff=DEFAULT_STAFF.map(s=>({...s}));
+// 차수28-B2: 대회 개설 시 데모 심판 자동 삽입 폐지(실사용 대회에 가짜 심판이
+// 섞이는 문제) — 신규 대회는 항상 심판 0명으로 시작, 운영진 탭에서 직접 등록.
+let staff=[];
 let players=[],groups=[],curGroup=0,curStaff=0,curHole=0,padTarget=null,simTimer=null,logEntries=[],pending=[],curFilter='all';
 
 /* 공개 대회 리스트 — Supabase tournaments 테이블에서 로드 (loadTournaments 참고) */
@@ -1621,6 +1651,7 @@ window.addEventListener('popstate',()=>{
 function navBack(){if(navStack.length)history.back()}
 function backToOwner(){navBack()}
 function openJudge(i){
+  if(!judges().length){toast('먼저 운영진 탭에서 심판을 등록해 주세요');return}
   const needsGroups=judgeStageKind==='round'&&stageRecordMode!=='total';
   if(needsGroups&&!groups.length){toast('참가자 등록·조편성 후 이용할 수 있습니다');return}
   curStaff=Math.min(i,judges().length-1);
@@ -2909,7 +2940,11 @@ async function renderEditHistory(){
   box.innerHTML='<label class="fl" style="margin-top:0">수정 이력</label>'+
     (data&&data.length?data.map(l=>`<p class="sub" style="margin-bottom:6px">${new Date(l.created_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${l.who} · ${l.what}</p>`).join('')
     :'<p class="sub">수정 이력이 없습니다</p>')}
-function openWarnEdit(desc,fn){editWarnCtx=fn;$('#warnEditDesc').textContent=desc;$('#warnEditOv').classList.add('on')}
+function openWarnEdit(desc,fn,title,confirmLabel){
+  editWarnCtx=fn;$('#warnEditDesc').textContent=desc;
+  $('#warnEditTitle').textContent=title||'⚠️ 참가자 공지가 필요해요';
+  $('#warnEditConfirmBtn').textContent=confirmLabel||'알고 있어요, 저장';
+  $('#warnEditOv').classList.add('on')}
 function closeWarnEdit(){$('#warnEditOv').classList.remove('on');editWarnCtx=null}
 async function confirmWarnEdit(){
   if(!editWarnCtx)return;const fn=editWarnCtx;
@@ -3325,7 +3360,7 @@ function resetWizardState(){
   config.prizeTotal='';config.prizes=[];config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:''};
   config.recordModes={1:'hole',2:'hole',3:'hole'};config.regClosed=false;
   players=[];groups=[];waitlist=[];pending=[];logEntries=[];
-  staff=DEFAULT_STAFF.map(s=>({...s}));
+  staff=[];
   curGroup=0;curStaff=0;curHole=0;curFilter='all';padTarget=null;
   ROUNDS=2;HOLES=36;PAR_TOT=132;coursePars=[];coursePars2=[];coursePars3=[];
   wizCapUnlimited=false;wStepIdx=0;todoLinkShared=false}
@@ -3568,9 +3603,12 @@ async function renderTools(){
       :`<button class="btn sm ghost" onclick="copyJudgeLink(${i})">${s.sentLocally?'다시 복사':'링크 복사'}</button>`;
     return`<div class="toolrow">
       <div class="avatar">${s.name[0]}</div>
-      <div class="info"><b>${s.name}</b><span class="num">${maskPhone(s.phone)} · ${s.duty}</span></div>
-      ${st}${act}</div>`}).join('')
-    ||'<p class="sub">점수 입력 권한이 있는 스탭이 없습니다 — 대회 개설 시 추가하세요.</p>';
+      <div class="info"><b>${s.name}</b><span class="num">${maskPhone(s.phone)} · ${s.duty||'담당 미지정'}</span></div>
+      ${st}${act}
+      <span style="color:var(--main-deep);font-weight:700;cursor:pointer;margin-left:8px;white-space:nowrap" onclick="reissueStaffToken(${i})">재발급</span>
+      <span style="color:var(--red);font-weight:700;cursor:pointer;margin-left:8px" onclick="confirmDeleteStaff(${i})">삭제</span>
+    </div>`}).join('')
+    ||'<p class="sub" style="text-align:center;padding:20px 0">아직 등록된 심판이 없어요 — 아래 [+ 심판 추가]로 등록하세요.</p>';
   $('#sendAllBtn').style.display=sent===js.length&&js.length?'none':'block'}
 function sendLinks(){
   const js=judges();
@@ -3584,6 +3622,69 @@ async function copyJudgeLink(i){
   s.sentLocally=true;renderTools();
   toast(`${s.name} 님 링크가 복사되었습니다 — 카톡으로 전달하세요`)}
 function resend(i){copyJudgeLink(i)}
+
+/* ===== 심판 추가/삭제/재발급(차수28-B2) — create_staff_batch 재사용, 삭제·재발급만 신규 ===== */
+let staffPending=[];
+function setAddStaffMode(m){
+  document.querySelectorAll('#addStaffModeSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.m===m));
+  $('#asdSinglePane').style.display=m==='single'?'block':'none';
+  $('#asdGroupPane').style.display=m==='group'?'block':'none'}
+function openAddStaff(){
+  $('#asdName').value='';$('#asdPhone').value='';$('#asdDuty').value='';$('#asdCanScore').checked=true;
+  $('#staffPasteBox').value='';$('#staffPreviewCard').style.display='none';staffPending=[];
+  setAddStaffMode('single');
+  $('#staffAddOv').classList.add('on')}
+function closeAddStaff(){$('#staffAddOv').classList.remove('on')}
+async function submitAddStaff(){
+  const name=$('#asdName').value.trim();
+  const phone=$('#asdPhone').value.trim().replace(/[\s.]/g,'').replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
+  if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
+  const duty=$('#asdDuty').value.trim();
+  const canScore=$('#asdCanScore').checked;
+  const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,
+    p_staff:[{name,phone,duty,can_score:canScore}]});
+  if(error){toast('추가 중 오류가 발생했습니다: '+(error.code==='23505'?'이미 등록된 전화번호입니다':error.message));console.error(error);return}
+  const row=data[0];
+  staff.push({id:row.id,name,phone:row.phone,duty,canScore,token:row.token,link_opened_at:null});
+  closeAddStaff();renderTools();
+  toast(`${name} 님을 등록했습니다`)}
+function parseStaffPaste(){
+  staffPending=$('#staffPasteBox').value.split('\n').map(parseLine).filter(Boolean).map(p=>({name:p.name,phone:p.phone}));
+  if(!staffPending.length){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
+  $('#staffPrevList').innerHTML=staffPending.map(p=>
+    `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
+     <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}</span></div></div>`).join('');
+  $('#staffConfirmBtn').textContent=`${staffPending.length}명 등록 확정`;
+  $('#staffPreviewCard').style.display='block';
+  toast(`${staffPending.length}명 인식 — 확인 후 등록하세요`)}
+async function confirmStaffPaste(){
+  if(!staffPending.length)return;
+  const staffRows=staffPending.map(p=>({name:p.name,phone:p.phone,duty:'',can_score:true}));
+  const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,p_staff:staffRows});
+  if(error){toast('등록 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  let added=0;
+  data.forEach(row=>{const p=staffPending.find(x=>x.phone===row.phone);
+    if(p){staff.push({id:row.id,name:p.name,phone:row.phone,duty:'',canScore:true,token:row.token,link_opened_at:null});added++}});
+  staffPending=[];closeAddStaff();renderTools();
+  toast(`${added}명 등록했습니다${added<staffRows.length?` · 중복 ${staffRows.length-added}명 제외(전화번호 기준)`:''}`)}
+async function reissueStaffToken(i){
+  const s=judges()[i];if(!s||!s.id)return;
+  const{data,error}=await sb.rpc('reissue_staff_token',{t_id:config.id,p_staff_id:s.id,p_owner_secret:user.secret});
+  if(error){toast('재발급 중 오류가 발생했습니다');console.error(error);return}
+  s.token=data;s.link_opened_at=null;s.sentLocally=false;
+  renderTools();
+  toast(`${s.name} 님 링크를 재발급했습니다 — 기존 링크는 무효화됐습니다. 새 링크를 다시 전달해 주세요`)}
+function confirmDeleteStaff(i){
+  const s=judges()[i];if(!s)return;
+  openWarnEdit(`${s.name} 님을 명단에서 삭제합니다. 이미 발송된 링크는 즉시 무효화됩니다.`,
+    async()=>{await deleteStaffConfirmed(s.id)},'🗑️ 심판을 삭제할까요?','삭제')}
+async function deleteStaffConfirmed(staffId){
+  const s=staff.find(x=>x.id===staffId);if(!s)return;
+  const{data,error}=await sb.rpc('delete_staff',{t_id:config.id,p_staff_id:staffId,p_owner_secret:user.secret});
+  if(error){toast('삭제 중 오류가 발생했습니다');console.error(error);return}
+  staff=staff.filter(x=>x.id!==staffId);
+  renderTools();
+  toast(data==='deactivated'?`${s.name} 님은 이미 입력한 기록이 있어 완전 삭제 대신 접속을 차단했습니다`:`${s.name} 님을 삭제했습니다`)}
 
 /* ================= 참가 신청 페이지 ================= */
 let applyT=null,applyMode='single',apPending=[];
