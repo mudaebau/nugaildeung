@@ -530,7 +530,7 @@ tr:last-child td{border-bottom:none}
 .brow.top1 .name{font-weight:700}
 .brow.flash{background:rgba(247,207,92,.24)}
 .bchip{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#C9DCEF;border-radius:99px;padding:6px 12px;font-weight:500;font-size:14px;position:relative}
-.bchip::before{content:'';position:absolute;inset:-5px} /* 칩 자체 크기는 유지하고 터치 히트영역만 44px로 확장(전광판 행 수 유지 목적) */
+.bchip::before{content:'';position:absolute;inset:-3px} /* 칩 자체 크기는 유지하고 터치 히트영역만 확장 — 간격(6px)과 정확히 맞춰 인접 칩과 겹치지 않게 함 */
 .bchip.on{background:#fff;color:var(--main-deep);border-color:#fff;font-weight:700}
 .fchips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 20px 0}
 .boardfoot{padding:10px 20px;color:#A9C4DE;font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
