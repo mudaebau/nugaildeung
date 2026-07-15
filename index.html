@@ -2692,11 +2692,17 @@ function confirmReissueSecret(){
   openWarnEdit('지금 재발급하면 이 대회 관리에 로그인돼 있는 다른 모든 기기(브라우저)는 즉시 접속이 끊깁니다. 이 기기만 새 값으로 자동 갱신됩니다.',
     reissueSecretConfirmed,'🔑 보안키를 재발급할까요?','재발급')}
 async function reissueSecretConfirmed(){
-  const{data,error}=await sb.rpc('reissue_operator_secret',{p_phone:user.phone});
-  if(error||!data||!data.length){toast('재발급 중 오류가 발생했습니다');console.error(error);return}
+  // 무효화(reissue_operator_secret)는 새 값을 응답으로 주지 않는다 — phone만으로
+  // secret이 그대로 노출되는 걸 막기 위한 설계(사용자 리뷰로 확정). 새 값은
+  // 반드시 기존 로그인 경로(operator_signup)를 다시 통과해야만 받을 수 있다 —
+  // 이 기기는 "이미 로그인된 세션"이지만 그 특권을 쓰지 않고 똑같이 재로그인한다.
+  const{error:rErr}=await sb.rpc('reissue_operator_secret',{p_phone:user.phone});
+  if(rErr){toast(rErr.message||'재발급 중 오류가 발생했습니다');console.error(rErr);return}
+  const{data,error}=await sb.rpc('operator_signup',{p_phone:user.phone,p_name:user.name});
+  if(error||!data||!data.length){toast('재발급은 됐지만 새 값 수신에 실패했습니다 — 다시 로그인해 주세요');console.error(error);logout();return}
   user.secret=data[0].secret;
   saveOwnerSecret(user.phone,user.secret);
-  toast('보안키를 재발급했습니다 — 이 기기는 계속 정상 이용 가능합니다')}
+  toast('보안키를 재발급했습니다 — 이 기기는 계속 정상 이용 가능합니다, 다른 기기는 로그아웃됩니다')}
 async function logout(){
   user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;
   resetWizardState();

@@ -34,8 +34,8 @@ function loadAggregation() {
   const src = [
     extractBlock(lines, 1587, 1594, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
     extractBlock(lines, 2221, 2269, 'function cutCompetitors'),  // cutCompetitors ~ resolveCut(+courseSeries/courseCompare/ageCompare/tieGroupAt)
-    extractBlock(lines, 4771, 4789, 'function sums'),            // sums, standings
-    extractBlock(lines, 4966, 4991, 'function periodStandings'), // periodStandings
+    extractBlock(lines, 4777, 4795, 'function sums'),            // sums, standings
+    extractBlock(lines, 4972, 4997, 'function periodStandings'), // periodStandings
     computeBestMapFn,
   ].join('\n\n');
 
