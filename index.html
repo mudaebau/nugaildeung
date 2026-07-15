@@ -337,6 +337,18 @@ tr:last-child td{border-bottom:none}
 .trow .chev{color:#B7C6D5;font-size:18px;transition:transform .2s;flex:0 0 auto}
 .trow.open .chev{transform:rotate(90deg)}
 .tooldetail{display:none;padding:0 18px 18px}
+
+/* 운영진(심판) 행 — 차수28-B2 */
+.jrow{display:flex;align-items:center;gap:12px;padding:14px 18px}
+.jrow:not(:last-child){border-bottom:1px solid var(--line)}
+.jrow.dis{opacity:.5}
+.jrow .who{flex:1;min-width:0}
+.jrow .who b{display:block;font-size:15.5px;font-weight:700}
+.jrow .who span{font-size:12.5px;color:var(--muted)}
+.jst{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;flex:0 0 auto}
+.jst.on{background:#E7F5EE;color:#2E8B63}
+.jst.off{background:var(--main-soft);color:var(--muted)}
+.jmore{width:32px;height:32px;border-radius:10px;background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;margin-left:2px;cursor:pointer}
 .tooldetail.on{display:block}
 
 /* ===== 대회 관리공간 ===== */
@@ -1009,15 +1021,13 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 
     <!-- 운영진 -->
     <div class="mgpane" id="mgStaff">
-      <div class="card">
-        <label class="fl" style="margin-top:0;display:flex;align-items:center;gap:8px">심판 링크 발송
-          <span class="pill gray" id="linkStat">미발송</span></label>
-        <p class="sub" style="margin-bottom:6px">스탭에게 각자의 입력 링크를 문자로 보냅니다.</p>
+      <button class="btn full" style="margin-bottom:14px" onclick="openAddStaff()">＋ 심판 추가</button>
+      <div class="card" style="padding:0">
         <div id="toolStaff"></div>
-        <button class="btn ghost full" style="margin-top:12px" onclick="openAddStaff()">+ 심판 추가</button>
-        <button class="btn full" style="margin-top:8px" id="sendAllBtn" onclick="sendLinks()">전체 발송</button>
-        <button class="btn ghost full" style="margin-top:8px" onclick="openJudge(0)">내가 직접 입력하기</button>
       </div>
+      <button class="btn ghost full" id="sendAllBtn" style="margin-top:4px" onclick="sendLinks()">📨 전체 발송 문구 복사</button>
+      <p class="swaphint">심판은 문자 링크로 접속해요 — 가입 필요 없음</p>
+      <button class="btn ghost full" onclick="openJudge(0)">내가 직접 입력하기</button>
     </div>
 
     <!-- 스코어입력 -->
@@ -1434,6 +1444,19 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <button class="btn full" id="staffConfirmBtn" style="margin-top:12px" onclick="confirmStaffPaste()">등록 확정</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 심판 관리(⋯) 시트 -->
+<div class="overlay" id="staffActionOv" onclick="if(event.target===this)closeStaffAction()">
+  <div class="pad">
+    <h3 id="staffActionTitle">—</h3>
+    <div style="margin:12px 0 18px">
+      <p class="sheetli" id="staffActionCopy" style="cursor:pointer"><b>🔗</b><span><b>내 링크 복사</b> — 문자로 다시 보내기</span></p>
+      <p class="sheetli" id="staffActionReissue" style="cursor:pointer"><b>🔄</b><span><b>링크 재발급</b> — 기존 링크는 즉시 사용 불가</span></p>
+      <p class="sheetli warn" id="staffActionDelete" style="cursor:pointer"><b>🗑</b><span><b>삭제</b> — 입력 기록이 있으면 삭제 대신 비활성화됩니다</span></p>
+    </div>
+    <button class="btn ghost full" onclick="closeStaffAction()">닫기</button>
   </div>
 </div>
 
@@ -3590,38 +3613,31 @@ async function refreshStaffStatus(){
 async function renderTools(){
   await refreshStaffStatus();
   const js=judges();
-  const opened=js.filter(s=>s.link_opened_at).length;
   const sent=js.filter(s=>s.sentLocally||s.link_opened_at).length;
-  $('#linkStat').textContent=sent===0?'미발송':opened===js.length?'전원 접속 ✓':`발송 ${sent} · 접속 ${opened}/${js.length}`;
-  $('#linkStat').className='st2 '+(sent===0?'gray':opened===js.length?'':'warn');
-  $('#toolStaff').innerHTML=js.map((s,i)=>{
-    const st=s.link_opened_at?'<span class="pill">✓ 접속함</span>'
-      :s.sentLocally?'<span class="pill amber">미접속</span>'
-      :'<span class="pill gray">미발송</span>';
-    const act=!s.token?''
-      :s.link_opened_at?`<button class="btn sm ghost" onclick="openJudge(${i})">화면 보기</button>`
-      :`<button class="btn sm ghost" onclick="copyJudgeLink(${i})">${s.sentLocally?'다시 복사':'링크 복사'}</button>`;
-    return`<div class="toolrow">
+  if(curMgTab==='mgStaff')$('#mgSub').textContent=`심판 ${staff.length}명 (활동 ${js.length})`;
+  $('#toolStaff').innerHTML=staff.map(s=>{
+    const st=!s.canScore?'<span class="jst off">비활성</span>'
+      :s.link_opened_at?'<span class="jst on">접속함</span>'
+      :'<span class="jst off">대기 중</span>';
+    return`<div class="jrow${s.canScore?'':' dis'}">
       <div class="avatar">${s.name[0]}</div>
-      <div class="info"><b>${s.name}</b><span class="num">${maskPhone(s.phone)} · ${s.duty||'담당 미지정'}</span></div>
-      ${st}${act}
-      <span style="color:var(--main-deep);font-weight:700;cursor:pointer;margin-left:8px;white-space:nowrap" onclick="reissueStaffToken(${i})">재발급</span>
-      <span style="color:var(--red);font-weight:700;cursor:pointer;margin-left:8px" onclick="confirmDeleteStaff(${i})">삭제</span>
+      <div class="who"><b>${s.name}</b><span>${s.duty||'담당 미지정'} · ${maskPhone(s.phone)}</span></div>
+      ${st}
+      <span class="jmore" onclick="openStaffAction('${s.id}')">⋯</span>
     </div>`}).join('')
-    ||'<p class="sub" style="text-align:center;padding:20px 0">아직 등록된 심판이 없어요 — 아래 [+ 심판 추가]로 등록하세요.</p>';
+    ||'<p class="sub" style="text-align:center;padding:20px 0">아직 등록된 심판이 없어요 — 위 [＋ 심판 추가]로 등록하세요.</p>';
   $('#sendAllBtn').style.display=sent===js.length&&js.length?'none':'block'}
 function sendLinks(){
   const js=judges();
   js.forEach(s=>{if(!s.sentLocally&&!s.link_opened_at)s.sentLocally=true});
   renderTools();
-  toast('발송 표시 완료 — 아래 각 심판의 "링크 복사" 버튼으로 실제 링크를 복사해 카톡으로 전달하세요')}
-async function copyJudgeLink(i){
-  const s=judges()[i];if(!s||!s.token)return;
+  toast('발송 표시 완료 — ⋯ 메뉴의 "링크 복사"로 실제 링크를 복사해 카톡으로 전달하세요')}
+async function copyJudgeLinkById(id){
+  const s=staff.find(x=>x.id===id);if(!s||!s.token)return;
   const link=judgeLink(s);
   try{await navigator.clipboard.writeText(link)}catch(e){}
   s.sentLocally=true;renderTools();
   toast(`${s.name} 님 링크가 복사되었습니다 — 카톡으로 전달하세요`)}
-function resend(i){copyJudgeLink(i)}
 
 /* ===== 심판 추가/삭제/재발급(차수28-B2) — create_staff_batch 재사용, 삭제·재발급만 신규 ===== */
 let staffPending=[];
@@ -3667,24 +3683,37 @@ async function confirmStaffPaste(){
     if(p){staff.push({id:row.id,name:p.name,phone:row.phone,duty:'',canScore:true,token:row.token,link_opened_at:null});added++}});
   staffPending=[];closeAddStaff();renderTools();
   toast(`${added}명 등록했습니다${added<staffRows.length?` · 중복 ${staffRows.length-added}명 제외(전화번호 기준)`:''}`)}
-async function reissueStaffToken(i){
-  const s=judges()[i];if(!s||!s.id)return;
+async function reissueStaffToken(id){
+  const s=staff.find(x=>x.id===id);if(!s)return;
   const{data,error}=await sb.rpc('reissue_staff_token',{t_id:config.id,p_staff_id:s.id,p_owner_secret:user.secret});
   if(error){toast('재발급 중 오류가 발생했습니다');console.error(error);return}
   s.token=data;s.link_opened_at=null;s.sentLocally=false;
   renderTools();
   toast(`${s.name} 님 링크를 재발급했습니다 — 기존 링크는 무효화됐습니다. 새 링크를 다시 전달해 주세요`)}
-function confirmDeleteStaff(i){
-  const s=judges()[i];if(!s)return;
+function confirmDeleteStaff(id){
+  const s=staff.find(x=>x.id===id);if(!s)return;
   openWarnEdit(`${s.name} 님을 명단에서 삭제합니다. 이미 발송된 링크는 즉시 무효화됩니다.`,
-    async()=>{await deleteStaffConfirmed(s.id)},'🗑️ 심판을 삭제할까요?','삭제')}
+    async()=>{await deleteStaffConfirmed(id)},'🗑️ 심판을 삭제할까요?','삭제')}
 async function deleteStaffConfirmed(staffId){
   const s=staff.find(x=>x.id===staffId);if(!s)return;
   const{data,error}=await sb.rpc('delete_staff',{t_id:config.id,p_staff_id:staffId,p_owner_secret:user.secret});
   if(error){toast('삭제 중 오류가 발생했습니다');console.error(error);return}
-  staff=staff.filter(x=>x.id!==staffId);
+  if(data==='deactivated'){s.canScore=false;s.sentLocally=false} // 행은 유지, 흐림+비활성 표시로 전환(목업 장면1)
+  else staff=staff.filter(x=>x.id!==staffId);
   renderTools();
   toast(data==='deactivated'?`${s.name} 님은 이미 입력한 기록이 있어 완전 삭제 대신 접속을 차단했습니다`:`${s.name} 님을 삭제했습니다`)}
+
+/* ===== 심판 관리 ⋯ 시트(차수28-B2 표현 정리) ===== */
+let staffActionTargetId=null;
+function openStaffAction(id){
+  const s=staff.find(x=>x.id===id);if(!s)return;
+  staffActionTargetId=id;
+  $('#staffActionTitle').textContent=`${s.name} · ${s.duty||'담당 미지정'}`;
+  $('#staffActionCopy').onclick=()=>{closeStaffAction();copyJudgeLinkById(id)};
+  $('#staffActionReissue').onclick=()=>{closeStaffAction();reissueStaffToken(id)};
+  $('#staffActionDelete').onclick=()=>{closeStaffAction();confirmDeleteStaff(id)};
+  $('#staffActionOv').classList.add('on')}
+function closeStaffAction(){$('#staffActionOv').classList.remove('on');staffActionTargetId=null}
 
 /* ================= 참가 신청 페이지 ================= */
 let applyT=null,applyMode='single',apPending=[];
