@@ -1,0 +1,8 @@
+{
+  "name": "nuga1-tests",
+  "private": true,
+  "description": "누가일등 — 집계 로직(순위·컷·동점·기간형 베스트) 단위 테스트. 앱 자체는 바닐라 JS 단일 파일(index.html)로 빌드 스텝이 없음 — 이 package.json은 테스트 러너 전용.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
