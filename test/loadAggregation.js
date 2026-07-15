@@ -26,16 +26,16 @@ function loadAggregation() {
   const lines = html.split('\n');
 
   // 기간형 "베스트 합산"(재도전 시 더 낮은 타수만 반영)은 별도 named 함수가 아니라
-  // loadBoardData 등 3곳에 반복되는 인라인 forEach다(index.html:2444-2445 등, 동일 텍스트).
+  // loadBoardData 등 3곳에 반복되는 인라인 forEach다(index.html:2450-2451 등, 동일 텍스트).
   // 로직 자체(최소값 갱신 조건문)는 그대로 재사용하고, 호출 가능한 함수로만 감싼다.
-  const bestMapBody = extractBlock(lines, 2444, 2445, 'const bestMap={}');
+  const bestMapBody = extractBlock(lines, 2450, 2451, 'const bestMap={}');
   const computeBestMapFn = `function computeBestMap(plRows){\n${bestMapBody}\nreturn bestMap}`;
 
   const src = [
-    extractBlock(lines, 1587, 1594, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
-    extractBlock(lines, 2221, 2269, 'function cutCompetitors'),  // cutCompetitors ~ resolveCut(+courseSeries/courseCompare/ageCompare/tieGroupAt)
-    extractBlock(lines, 4777, 4795, 'function sums'),            // sums, standings
-    extractBlock(lines, 4972, 4997, 'function periodStandings'), // periodStandings
+    extractBlock(lines, 1593, 1600, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
+    extractBlock(lines, 2227, 2275, 'function cutCompetitors'),  // cutCompetitors ~ resolveCut(+courseSeries/courseCompare/ageCompare/tieGroupAt)
+    extractBlock(lines, 4783, 4801, 'function sums'),            // sums, standings
+    extractBlock(lines, 4978, 5003, 'function periodStandings'), // periodStandings
     computeBestMapFn,
   ].join('\n\n');
 

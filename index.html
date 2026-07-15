@@ -49,6 +49,7 @@ button{font-family:inherit;cursor:pointer}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
 .queueBadge{background:#F2E3B4;color:#6f5a13;font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px;display:none;align-items:center;gap:6px}
+#jQueueBadge{font-size:14px} /* 심판 화면(시니어) 전용 가중 — 운영자 화면의 mgQueueBadge는 기존 13px 유지 */
 .queueBadge.err{background:var(--coral);color:#fff}
 .reconnectBadge{background:rgba(239,131,104,.9);color:#fff;font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;display:none;align-items:center;gap:6px;margin-bottom:10px}
 .reconnectBadge .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
@@ -499,7 +500,7 @@ tr:last-child td{border-bottom:none}
 /* ===== 전광판 (TV용 · 소프트 블루 B안 · 차수24 콤팩트) ===== */
 .boardwrap{max-width:1100px;margin:0 auto;padding:14px 12px}
 .boardctl{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.bico{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px;font-weight:700;cursor:pointer;position:relative}
+.bico{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px;font-weight:700;cursor:pointer;position:relative}
 .bico svg{width:16px;height:16px;stroke:#C9DCEF}
 .bico.on{background:#fff;color:var(--main-deep)}
 .bico.on svg{stroke:var(--main-deep)}
@@ -519,16 +520,17 @@ tr:last-child td{border-bottom:none}
 .brow .name small{font-family:'Noto Sans KR',sans-serif;font-weight:400;color:#A9C4DE;font-size:11.5px;margin-left:7px}
 .brow .topar{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:#fff;text-align:right}
 .brow .topar.minus{color:#FFB49E}
-.brow .thru{color:#B9D0E6;text-align:center;font-size:13px}
+.brow .thru{color:#B9D0E6;text-align:center;font-size:14px}
 .brow .thru b{font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;color:#DCE9F5;margin-right:2px}
-.brow .thru.done{color:#8FE0C8;font-weight:700;font-size:13px}
+.brow .thru.done{color:#8FE0C8;font-weight:700;font-size:14px}
 .brow .total{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:#fff;text-align:right}
 .brow .rsc{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;color:#B9D0E6;text-align:right}
 .brow.top1{background:linear-gradient(90deg,rgba(247,207,92,.22),transparent 75%);border-left:5px solid var(--sun)}
 .brow.top1 .rank,.brow.top1 .total{color:var(--sun)}
 .brow.top1 .name{font-weight:700}
 .brow.flash{background:rgba(247,207,92,.24)}
-.bchip{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#C9DCEF;border-radius:99px;padding:6px 12px;font-weight:500;font-size:12.5px}
+.bchip{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#C9DCEF;border-radius:99px;padding:6px 12px;font-weight:500;font-size:14px;position:relative}
+.bchip::before{content:'';position:absolute;inset:-5px} /* 칩 자체 크기는 유지하고 터치 히트영역만 44px로 확장(전광판 행 수 유지 목적) */
 .bchip.on{background:#fff;color:var(--main-deep);border-color:#fff;font-weight:700}
 .fchips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 20px 0}
 .boardfoot{padding:10px 20px;color:#A9C4DE;font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
@@ -980,6 +982,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
           <div class="card" style="padding:0 18px">
             <div id="ptable"></div>
           </div>
+          <button class="btn ghost full" style="margin-top:10px" onclick="exportPlayersCSV()">📄 참가자 명단 CSV 내보내기</button>
         </div>
         <div id="pListPast" style="display:none">
           <p class="sub" style="margin-bottom:10px">이전 단계 명단 — 조회 전용입니다.</p>
@@ -1007,6 +1010,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
             <button class="btn ghost" onclick="openGroupConfirm()">다시 편성하기</button>
             <button class="btn ghost" onclick="toast('실서비스: 조편성표가 참가자 전원에게 발송됩니다')">조편성표 발송</button>
           </div>
+          <button class="btn ghost full" style="margin-top:10px" onclick="exportGroupsCSV()">📄 조편성 CSV 내보내기</button>
         </div>
       </div>
 
@@ -1034,6 +1038,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <div class="mgpane" id="mgScore">
       <div class="stagechips" id="scoreStageChips"></div>
       <span class="queueBadge" id="mgQueueBadge" style="margin-bottom:10px">0건 전송 대기</span>
+      <button class="btn ghost full" style="margin-bottom:10px" onclick="exportScoresCSV()">📄 점수 CSV 내보내기</button>
       <div id="scorePastNotice" class="card" style="display:none;text-align:center;padding:40px 20px"></div>
       <div id="scoreLiveArea">
         <!-- 차수23①: 스코어카드 사진 입력 진입 행 숨김(v3 재도입 예정) -->
@@ -1067,7 +1072,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <thead><tr><th class="tac">순위</th><th>이름</th><th>클럽</th><th class="tac">합계</th><th class="tac">타수차</th></tr></thead>
         <tbody></tbody>
       </table>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
+      <button class="btn ghost full" style="margin-top:12px" onclick="exportResultCSV()">📄 최종 순위 CSV 내보내기</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
     </div>
   </section>
 
@@ -1182,15 +1188,15 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="card" id="apEligCard" style="display:none;background:var(--main-soft);border:none">
         <label class="fl" style="margin-top:0">참가 조건</label>
         <p class="sub" id="apEligText" style="margin-bottom:10px">—</p>
-        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">
-          <input type="checkbox" id="apEligCheck" style="width:20px;height:20px">참가 조건을 확인했습니다
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;min-height:44px">
+          <input type="checkbox" id="apEligCheck" style="width:22px;height:22px;flex:0 0 auto">참가 조건을 확인했습니다
         </label>
       </div>
       <div class="card" id="apPrivacyCard" style="background:var(--main-soft);border:none">
         <label class="fl" style="margin-top:0">개인정보 수집·이용 동의</label>
         <p class="sub" id="apPrivacyText" style="margin-bottom:10px">—</p>
-        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">
-          <input type="checkbox" id="apPrivacyCheck" style="width:20px;height:20px">개인정보 수집·이용에 동의합니다
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;min-height:44px">
+          <input type="checkbox" id="apPrivacyCheck" style="width:22px;height:22px;flex:0 0 auto">개인정보 수집·이용에 동의합니다
         </label>
         <p class="sub" style="margin-top:8px"><a href="?privacy=1" target="_blank" style="color:var(--main-deep);font-weight:600">처리방침 전문 보기 ›</a></p>
       </div>
@@ -4461,7 +4467,7 @@ function renderPeriodPlayerList(){
     const val=(p.best&&p.best[jRound]!=null)?p.best[jRound]:null;
     const saved=val!=null;
     return`<div class="inrow ${saved?'bestrow':''}">
-      <div class="avatar" style="width:34px;height:34px;font-size:13px">${p.name[0]}</div>
+      <div class="avatar" style="width:34px;height:34px;font-size:14px">${p.name[0]}</div>
       <div class="who"><b>${p.name}</b><span>${maskPhone(p.phone)} · ${p.club||'무소속'}</span></div>
       <input type="tel" class="numbox ${saved?'filled':''}" id="peNum_${p.id}" data-saved="${saved?val:''}" value="${saved?val:''}" placeholder="—" oninput="peOnInput('${p.id}')">
       <button class="okbtn ${saved?'done':''}" id="peBtn_${p.id}" onclick="peButtonClick('${p.id}')">${saved?'✓ 저장':'확인'}</button>
@@ -5154,6 +5160,70 @@ function renderResult(){
     `<tr style="opacity:.5"><td class="tac"><span class="pill red">${s.p.st==='wd'?'WD':'DQ'}</span></td><td><b>${s.p.name}</b></td><td>${s.p.club||''}</td>
      ${s.rt.map((v,r)=>`<td class="tac num">${s.rc[r]?v:'–'}</td>`).join('')}
      <td class="tac num">${s.thru?s.tot:'–'}</td><td class="tac">—</td></tr>`).join('')}
+
+/* ================= CSV 내보내기(CH28-C2 ③) ================= */
+function csvEscape(v){
+  const s=String(v??'');
+  return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function downloadCSV(filename,rows){
+  const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const csvWithBom=String.fromCharCode(0xFEFF)+csv;
+  const blob=new Blob([csvWithBom],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url)}
+function exportPlayersCSV(){
+  if(!players.length){toast('참가자가 없습니다');return}
+  const rows=[['이름','전화번호','성별','나이','소속','지역','조','상태','체크인','입금']];
+  players.forEach(p=>{
+    rows.push([p.name,maskPhone(p.phone||''),p.sex||'',p.age||'',p.club||'',p.region||'',
+      p.group!=null&&p.group>=0?(p.group+1)+'조':'',
+      p.st==='wd'?'기권':p.st==='dq'?'실격':'정상',
+      p.ci?'O':'',p.paid?'O':''])});
+  downloadCSV(`${config.name||'참가자'}_참가자명단.csv`,rows)}
+function exportGroupsCSV(){
+  if(!groups.length||!groups.some(g=>g.length)){toast('조편성 결과가 없습니다');return}
+  const rows=[['조','이름','소속','전화번호']];
+  groups.forEach((g,gi)=>{
+    g.forEach(pi=>{const p=players[pi];if(!p)return;
+      rows.push([(gi+1)+'조',p.name,p.club||'',maskPhone(p.phone||'')])})});
+  downloadCSV(`${config.name||'대회'}_조편성.csv`,rows)}
+function exportScoresCSV(){
+  if(!players.length){toast('참가자가 없습니다');return}
+  const isPeriod=judgeStageKind==='period'||stageRecordMode==='total';
+  const rows=[];
+  if(isPeriod){
+    rows.push(['이름',...Array.from({length:ROUNDS},(_,r)=>`${r+1}코스`),'합계']);
+    players.forEach(p=>{
+      const best=p.best||{};
+      const vals=Array.from({length:ROUNDS},(_,r)=>best[r]??'');
+      const complete=vals.every(v=>v!=='');
+      const sum=complete?vals.reduce((a,b)=>a+b,0):'';
+      rows.push([p.name,...vals,sum])})
+  }else{
+    rows.push(['이름',...Array.from({length:HOLES},(_,h)=>`${Math.floor(h/18)+1}C-${h%18+1}H`),'합계']);
+    players.forEach(p=>{
+      const sc=p.scores||[];
+      const vals=sc.map(v=>v??'');
+      const sum=sc.reduce((a,b)=>a+(b||0),0);
+      rows.push([p.name,...vals,sum])})}
+  downloadCSV(`${config.name||'대회'}_점수.csv`,rows)}
+function exportResultCSV(){
+  if(!players.length){toast('참가자가 없습니다');return}
+  const rows=[['순위','이름','소속','성별','나이','합계','투파','상태']];
+  const toparStr=t=>t==null?'':(t===0?'E':(t>0?'+':'')+t);
+  if(boardStageKind==='period'||boardStageRecordMode==='total'){
+    const st=periodStandings();
+    const done=st.filter(s=>s.completed>0&&!s.out),outs=st.filter(s=>s.out);
+    done.forEach((s,i)=>rows.push([i+1,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.tot??'(진행중)',toparStr(s.topar),'']));
+    outs.forEach(s=>rows.push(['',s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'','','',s.p.st==='wd'?'기권':'실격']))
+  }else{
+    const st=standings();
+    const done=st.filter(s=>s.thru>0&&!s.out),outs=st.filter(s=>s.out);
+    done.forEach((s,i)=>rows.push([i+1,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.tot,toparStr(s.topar),'']));
+    outs.forEach(s=>rows.push(['',s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.thru?s.tot:'','',s.p.st==='wd'?'기권':'실격']))}
+  downloadCSV(`${config.name||'대회'}_최종순위.csv`,rows)}
 
 /* ================= 시뮬레이션 ================= */
 function genScore(gi){const par=parAt(gi);const r=Math.random();
