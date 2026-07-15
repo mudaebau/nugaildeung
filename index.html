@@ -4677,6 +4677,7 @@ async function loadBoardData(tournamentId,trusted){
   config.id=t.id;config.name=t.name;config.hostOrg=t.host_org;
   config.venues=(stage&&stage.venues&&stage.venues.length?stage.venues:t.venues)||[];
   config.cap=t.cap;config.created=true;
+  boardVisibility=t.visibility||'public';
   const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
   $('#boardTitle').textContent=t.name;
   const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
@@ -4723,13 +4724,22 @@ async function loadBoardData(tournamentId,trusted){
   players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
   renderBoard();renderResult()}
 let boardChannel=null,boardWasDown=false,boardReconnectId=null,boardReconnectTimer=null;
+let boardVisibility='public',boardPollTimer=null;
 function setReconnectBadge(show){
   document.querySelectorAll('.reconnectBadge').forEach(el=>{el.style.display=show?'inline-flex':'none'})}
 function subscribeBoardRealtime(tournamentId){
   clearTimeout(boardReconnectTimer);
+  clearInterval(boardPollTimer);boardPollTimer=null;
   if(boardChannel){sb.removeChannel(boardChannel);boardChannel=null}
   if(!tournamentId)return;
   boardReconnectId=tournamentId;
+  // 비공개 대회(차수28-B): scores/plays의 RLS가 이제 visibility='public'만 허용해
+  // Realtime postgres_changes도 anon 구독자에게 조용히 전달되지 않는다(에러 없이
+  // 그냥 안 옴 — 게이트 코드는 애플리케이션 레벨 개념이라 RLS가 알지 못함).
+  // 구독은 그대로 두되(끊김 감지·재연결 배지는 여전히 유효) 짧은 폴링으로 보정한다
+  // (기존에 문서화된 "장애 시 폴링 fallback"과 동일 메커니즘, 비공개는 상시 적용).
+  if(boardVisibility==='private'){
+    boardPollTimer=setInterval(()=>{if(boardReconnectId===tournamentId)loadBoardData(tournamentId,true)},6000)}
   boardChannel=sb.channel('scores-'+tournamentId)
     .on('postgres_changes',{event:'*',schema:'public',table:'scores',filter:'tournament_id=eq.'+tournamentId},payload=>{
       const row=(payload.eventType==='DELETE')?payload.old:payload.new;
