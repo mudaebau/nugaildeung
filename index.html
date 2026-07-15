@@ -2682,7 +2682,21 @@ function renderMyPage(){
     <label class="fl" style="margin-top:0">이름</label><p>${user.name}</p>
     <label class="fl">전화번호</label><p>${maskPhone(user.phone)}</p>
   </div>
+  <div class="card">
+    <label class="fl" style="margin-top:0">보안</label>
+    <p class="sub" style="margin-bottom:12px">기기를 분실했거나 접속 정보가 새어나갔다고 의심되면 즉시 재발급하세요 — 재발급 순간 기존 값은 다른 모든 기기에서 즉시 무효가 됩니다.</p>
+    <button class="btn ghost full" onclick="confirmReissueSecret()">보안키 긴급 재발급</button>
+  </div>
   <button class="btn ghost full" onclick="logout()">로그아웃</button>`}
+function confirmReissueSecret(){
+  openWarnEdit('지금 재발급하면 이 대회 관리에 로그인돼 있는 다른 모든 기기(브라우저)는 즉시 접속이 끊깁니다. 이 기기만 새 값으로 자동 갱신됩니다.',
+    reissueSecretConfirmed,'🔑 보안키를 재발급할까요?','재발급')}
+async function reissueSecretConfirmed(){
+  const{data,error}=await sb.rpc('reissue_operator_secret',{p_phone:user.phone});
+  if(error||!data||!data.length){toast('재발급 중 오류가 발생했습니다');console.error(error);return}
+  user.secret=data[0].secret;
+  saveOwnerSecret(user.phone,user.secret);
+  toast('보안키를 재발급했습니다 — 이 기기는 계속 정상 이용 가능합니다')}
 async function logout(){
   user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;
   resetWizardState();
