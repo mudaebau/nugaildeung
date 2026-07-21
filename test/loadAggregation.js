@@ -32,10 +32,10 @@ function loadAggregation() {
   const computeBestMapFn = `function computeBestMap(plRows){\n${bestMapBody}\nreturn bestMap}`;
 
   const src = [
-    extractBlock(lines, 1593, 1600, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
+    extractBlock(lines, 1592, 1599, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
     extractBlock(lines, 2228, 2276, 'function cutCompetitors'),  // cutCompetitors ~ resolveCut(+courseSeries/courseCompare/ageCompare/tieGroupAt)
-    extractBlock(lines, 4815, 4833, 'function sums'),            // sums, standings
-    extractBlock(lines, 5018, 5043, 'function periodStandings'), // periodStandings
+    extractBlock(lines, 4846, 4864, 'function sums'),            // sums, standings
+    extractBlock(lines, 5049, 5074, 'function periodStandings'), // periodStandings
     computeBestMapFn,
   ].join('\n\n');
 
