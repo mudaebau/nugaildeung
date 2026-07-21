@@ -643,28 +643,27 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 
   <!-- 대회개설: 로그인 게이트 → 위저드 -->
   <section class="page" id="opCreate">
-    <!-- 로그인 -->
+    <!-- 장면 1 — 시작하기(신규·재방문 공용 단일 화면). 가입/로그인 분기와 가짜 인증번호
+         화면(SIGNIN 차수 이전 authStep2/3)을 폐지 — 전화+이름 → [시작하기] 하나뿐. -->
     <div id="authStep1" class="authbox">
       <img src="brand/logo-main.svg" alt="누가일등" class="badge-logo">
-      <h2>대회를 개설하려면<br>회원 확인이 필요해요</h2>
-      <p>운영자만 가입합니다.<br>스탭·참가자는 가입 없이 링크로 참여해요.</p>
+      <h2>전화번호로 시작해요</h2>
+      <p>가입 절차 없음 — 전화번호가 곧 내 계정이에요.<br>참가자·심판은 이 과정 없이 링크로 참여합니다.</p>
       <input type="tel" id="loginPhone" placeholder="전화번호 (010-1234-5678)" style="text-align:center">
-      <button class="btn full big" style="margin-top:12px" onclick="sendCode()">인증번호 받기</button>
+      <input type="text" id="loginName" placeholder="이름 (예: 홍길동)" style="text-align:center;margin-top:10px">
+      <p class="swaphint" style="text-align:left">하이픈은 넣어도 안 넣어도 괜찮아요</p>
+      <button class="btn full big" style="margin-top:12px" onclick="startSignIn()">시작하기</button>
     </div>
+    <!-- 장면 2 — 재방문 자동 인식. 저장된 secret이 유효하면(또는 장면 1에서 서버가
+         기존 번호를 알아보면) 이 화면으로 바로 옴 — "처음 오셨네요!" 오문구·3단계 재입력 없음. -->
     <div id="authStep2" class="authbox" style="display:none">
       <img src="brand/logo-main.svg" alt="누가일등" class="badge-logo">
-      <h2>인증번호 입력</h2>
-      <p id="codeSentTo"></p>
-      <input type="tel" id="loginCode" class="codeinput" maxlength="4" placeholder="0000">
-      <p style="margin-top:8px;font-size:.75rem">데모: <b>0000</b> 입력</p>
-      <button class="btn full big" onclick="verifyCode()">확인</button>
-    </div>
-    <div id="authStep3" class="authbox" style="display:none">
-      <img src="brand/logo-main.svg" alt="누가일등" class="badge-logo">
-      <h2>처음 오셨네요!</h2>
-      <p>운영자 이름만 입력하면 가입 완료입니다.</p>
-      <input type="text" id="loginName" placeholder="이름 (예: 리얼스톤)" style="text-align:center" value="리얼스톤">
-      <button class="btn full big" style="margin-top:12px" onclick="finishSignup()">가입하고 대회 개설하기</button>
+      <div class="card" style="text-align:center;border:2px solid var(--mint)">
+        <h2 id="welcomeName" style="margin-bottom:6px">다시 오셨네요 👋</h2>
+        <p id="welcomeCount" class="sub" style="margin-bottom:0">—</p>
+      </div>
+      <button class="btn full big" style="margin-top:14px" onclick="goToMyTournaments()">내 대회로 가기</button>
+      <p class="swaphint" style="cursor:pointer" onclick="useOtherPhone()">다른 번호로 시작하기</p>
     </div>
 
     <!-- 위저드 -->
@@ -1696,7 +1695,8 @@ function goTab(id){
   navTo('Owner',id);
   if(id==='opMine')renderMyList()
   if(id==='opMy')renderMyPage()
-  if(id==='opMgmt')mgShow(curMgTab)}
+  if(id==='opMgmt')mgShow(curMgTab)
+  if(id==='opCreate')enterAuthGate()}
 function enterMgmt(mgId){curMgTab=mgId;goTab('opMgmt');mgShow(mgId)}
 let curMgTab='mgHome';
 function mgShow(id){
@@ -2710,11 +2710,12 @@ async function reissueSecretConfirmed(){
   saveOwnerSecret(user.phone,user.secret);
   toast('보안키를 재발급했습니다 — 이 기기는 계속 정상 이용 가능합니다, 다른 기기는 로그아웃됩니다')}
 async function logout(){
+  clearSavedLogin(user.phone);
   user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;
   resetWizardState();
-  $('#authStep1').style.display='block';$('#authStep2').style.display='none';$('#authStep3').style.display='none';
+  $('#authStep1').style.display='block';$('#authStep2').style.display='none';
   $('#wizBox').style.display='none';
-  $('#loginPhone').value='';$('#loginCode').value='';
+  $('#loginPhone').value='';$('#loginName').value='';
   whoRender();
   goTab('opHome');
   await loadTournaments();
@@ -3393,16 +3394,60 @@ async function saveEditCourse(){
 /* ================= auth ================= */
 function whoRender(){
   $('#whoBox').innerHTML=user.loggedIn?`<b>${user.name}</b> 님 · 운영자`:'둘러보는 중 · 로그인 안 함'}
-function sendCode(){
-  const p=$('#loginPhone').value.trim();
-  if(!/01[016789]/.test(p.replace(/\D/g,''))){toast('전화번호를 확인해 주세요');return}
-  user.phone=p;
-  $('#codeSentTo').innerHTML=`<b class="num">${p}</b> 로 인증번호를 보냈습니다`;
-  $('#authStep1').style.display='none';$('#authStep2').style.display='block';
-  toast('인증번호 발송 (데모: 0000)')}
-function verifyCode(){
-  if($('#loginCode').value!=='0000'){toast('인증번호가 일치하지 않습니다 (데모: 0000)');return}
-  $('#authStep2').style.display='none';$('#authStep3').style.display='block'}
+// SIGNIN 차수: 전화번호 표기(하이픈 유무·공백·점)를 하나로 통일 — 참가자 신청 경로
+// (submitSingle)의 정규화 규칙과 동일한 3-4-4/3-3-4 하이픈 형식으로 맞춘다.
+// 서버(operator_signup/operator_session_check)도 동일 규칙으로 한 번 더 정규화하므로
+// 이건 방어선 한 겹 — 서버 쪽이 최종 기준이다.
+function normalizePhone(raw){
+  return raw.trim().replace(/[\s.\-]/g,'').replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3')}
+function lastUsedPhone(){try{return localStorage.getItem('nuga1_last_phone')||''}catch(e){return ''}}
+function saveLastUsedPhone(phone){try{localStorage.setItem('nuga1_last_phone',phone)}catch(e){}}
+function clearSavedLogin(phone){try{localStorage.removeItem('nuga1_ownersecret_'+phone);localStorage.removeItem('nuga1_last_phone')}catch(e){}}
+// 장면 1 진입 시 자동 로그인 시도 — 저장된 (전화, secret) 쌍이 아직 유효하면(재발급 등으로
+// 무효화되지 않았으면) 서버에 이름 갱신 없이 조회만 해서 장면 2로 바로 보낸다.
+async function enterAuthGate(){
+  if(user.loggedIn){$('#authStep1').style.display='none';$('#authStep2').style.display='none';$('#wizBox').style.display='block';return}
+  const phone=lastUsedPhone();
+  const secret=phone?savedOwnerSecret(phone):'';
+  if(!phone||!secret){$('#authStep1').style.display='block';$('#authStep2').style.display='none';return}
+  const{data,error}=await sb.rpc('operator_session_check',{p_phone:phone,p_secret:secret});
+  if(error||!data||!data.length){clearSavedLogin(phone);$('#authStep1').style.display='block';$('#authStep2').style.display='none';return}
+  const row=data[0];
+  user.id=row.id;user.name=row.name;user.phone=phone;user.secret=secret;user.loggedIn=true;
+  whoRender();
+  showWelcomeBack(row.name,row.active_count)}
+function showWelcomeBack(name,activeCount){
+  $('#authStep1').style.display='none';
+  $('#welcomeName').textContent=`다시 오셨네요, ${name}님 👋`;
+  $('#welcomeCount').innerHTML=activeCount>0?`진행 중인 대회 <b class="num">${activeCount}개</b>가 있어요`:'내 대회에서 확인해 주세요';
+  $('#authStep2').style.display='block'}
+async function goToMyTournaments(){
+  await loadTournaments();
+  goTab('opMine')}
+function useOtherPhone(){
+  clearSavedLogin(user.phone);
+  user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';
+  $('#loginPhone').value='';$('#loginName').value='';
+  whoRender();
+  $('#authStep2').style.display='none';$('#authStep1').style.display='block'}
+async function startSignIn(){
+  const phone=normalizePhone($('#loginPhone').value);
+  const name=$('#loginName').value.trim();
+  if(!/01[016789]/.test(phone.replace(/\D/g,''))){toast('전화번호를 확인해 주세요');return}
+  if(!name){toast('이름을 입력해 주세요');return}
+  const{data,error}=await sb.rpc('operator_signup',{p_phone:phone,p_name:name});
+  if(error||!data||!data.length){toast('처리 중 오류가 발생했습니다');console.error(error);return}
+  const row=data[0];
+  user.id=row.id;user.name=row.name;user.secret=row.secret;user.phone=phone;user.loggedIn=true;
+  saveOwnerSecret(phone,row.secret);saveLastUsedPhone(phone);
+  whoRender();
+  if(row.is_new){
+    resetWizardState();
+    $('#authStep1').style.display='none';$('#wizBox').style.display='block';
+    wizShow(0);
+    toast(`${user.name} 님, 가입 완료! 이제 대회를 개설하세요`)
+  }else{
+    showWelcomeBack(row.name,row.active_count)}}
 /* 개설 진입 시 전역 상태 전체 리셋(CH28-A ②) — 같은 탭 안에서 이전 대회의
    config/players/staff 등 잔여 상태가 새 대회로 새어드는 것(BUG-8) 방지 */
 function resetWizardState(){
@@ -3420,20 +3465,6 @@ function resetWizardState(){
   curGroup=0;curStaff=0;curHole=0;curFilter='all';padTarget=null;
   ROUNDS=2;HOLES=36;PAR_TOT=132;coursePars=[];coursePars2=[];coursePars3=[];
   wizCapUnlimited=false;wStepIdx=0;todoLinkShared=false}
-async function finishSignup(){
-  const n=$('#loginName').value.trim();
-  if(!n){toast('이름을 입력해 주세요');return}
-  const{data,error}=await sb.rpc('operator_signup',{p_phone:user.phone,p_name:n});
-  if(error||!data||!data.length){toast('가입 처리 중 오류가 발생했습니다');console.error(error);return}
-  const row=data[0];
-  user.id=row.id;user.name=row.name;user.secret=row.secret;user.loggedIn=true;
-  saveOwnerSecret(user.phone,user.secret);
-  whoRender();
-  resetWizardState();
-  $('#authStep3').style.display='none';$('#wizBox').style.display='block';
-  wizShow(0);
-  toast(`${user.name} 님, 가입 완료! 이제 대회를 개설하세요`)}
-
 /* ================= wizard ================= */
 function setStageFieldsFor(n,t){
   if(config.stageCount<n)return;
