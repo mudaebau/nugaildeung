@@ -391,6 +391,15 @@ tr:last-child td{border-bottom:none}
 .seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
 .psegpane{display:none}
 .psegpane.on{display:block}
+/* CH30-B②: 일괄 입력 — 컬럼 선언 칩 + 예시 줄 */
+.colchip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.colchip span{font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.colchip span.req{border-color:var(--ink);background:var(--ink);color:#fff}
+.colchip span.on{border-color:var(--main);background:#F4F9FE;color:var(--main-deep)}
+.exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
+.exline b{font-weight:700}
+/* CH30-B④: 점수 목록 조별 스티키 헤더 */
+.pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
 .stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
 .stagechips::-webkit-scrollbar{display:none}
 .stagechip{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 15px;font-size:13.5px;font-weight:500;color:var(--muted)}
@@ -575,6 +584,20 @@ tr:last-child td{border-bottom:none}
 .rrow .info b{display:block;font-size:17px}
 .rrow .info span{color:var(--muted);font-size:13px}
 .rrow .sc{text-align:right;flex:0 0 auto}
+
+/* CH30-B①: 대회기간·총점만 결과 — 단일 리스트형(포디움 없음) */
+.presrow{display:grid;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.presrow:last-child{border-bottom:none}
+.presrow.head{background:var(--bg);font-size:11px;font-weight:700;color:var(--muted)}
+.presrow .r{font-family:'Oswald',sans-serif;font-weight:600;color:var(--muted);text-align:center}
+.presrow .v{font-family:'Oswald',sans-serif;font-weight:600;text-align:right}
+.presrow.rank1{background:#FEF7E0;border-left:4px solid var(--sun)}
+.presrow.rank1 .r{color:#C9930A;font-weight:700}
+.presrow.rank1 .v.tot{color:#C9930A;font-weight:700}
+.presrow.rank23 .r{color:var(--ink);font-weight:700}
+.presrow.rank23 .v.tot{font-weight:700}
+.presrow .nm b{display:block}
+.presrow .nm small{color:var(--muted);font-size:11.5px}
 .rrow .sc b{display:block;font-size:17px}
 .rrow .sc span{font-size:13px;color:var(--muted)}
 .rrow .sc span.minus{color:var(--red)}
@@ -1087,17 +1110,27 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <!-- 결과 -->
     <div class="mgpane" id="mgResult">
       <p class="sub" id="resultSub">경기 진행 전입니다.</p>
-      <div class="podium" id="podium"></div>
-      <div id="awardsBox"></div>
-      <div class="card" style="padding:0 18px">
-        <div id="rankList"></div>
+      <div id="roundResultBox">
+        <div class="podium" id="podium"></div>
+        <div id="awardsBox"></div>
+        <div class="card" style="padding:0 18px">
+          <div id="rankList"></div>
+        </div>
+        <table id="rtablePrint" class="printonly">
+          <thead><tr><th class="tac">순위</th><th>이름</th><th>클럽</th><th class="tac">합계</th><th class="tac">타수차</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <table id="rtablePrint" class="printonly">
-        <thead><tr><th class="tac">순위</th><th>이름</th><th>클럽</th><th class="tac">합계</th><th class="tac">타수차</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <!-- CH30-B①: 대회기간·총점만 결과 — 포디움 없이 순위 리스트 하나로(전광판과 같은 문법) -->
+      <div id="periodResultBox" style="display:none">
+        <p class="sub" style="margin-bottom:8px" id="periodResultCaption">최종 순위 — 코스별 베스트 합산</p>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="periodResultList"></div>
+        </div>
+        <div class="card" id="periodAwardsBox" style="display:none;font-size:13.5px;line-height:2"></div>
+      </div>
       <button class="btn ghost full" style="margin-top:12px" onclick="exportResultCSV()">📄 최종 순위 CSV 내보내기</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
+      <div id="roundResultActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
     </div>
   </section>
 
@@ -1147,9 +1180,27 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="btn ghost full" onclick="document.getElementById('scPhotoInput').click()">사진 촬영/첨부</button>
     </div>
     <div id="periodEntryCard" style="display:none">
-      <input type="text" id="pePlayerSearch" placeholder="이름 또는 전화번호 뒷자리" style="margin-bottom:12px" oninput="renderPeriodPlayerList()">
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden" id="pePlayerList"></div>
-      <p class="swaphint" id="peHint" style="margin-top:10px">이름 옆 칸에 총타수를 입력하고 확인을 누르세요</p>
+      <div class="seg" id="peModeSeg">
+        <div class="on" data-m="single" onclick="setPeMode('single')">한 명씩 입력</div>
+        <div data-m="bulk" onclick="setPeMode('bulk')">여러 명 입력</div>
+      </div>
+      <div id="peSinglePane">
+        <input type="text" id="pePlayerSearch" placeholder="이름 또는 전화번호 뒷자리" style="margin-bottom:12px" oninput="renderPeriodPlayerList()">
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden" id="pePlayerList"></div>
+        <p class="swaphint" id="peHint" style="margin-top:10px">이름 옆 칸에 총타수를 입력하고 확인을 누르세요</p>
+      </div>
+      <div id="peBulkPane" style="display:none">
+        <p class="sub" style="font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
+        <div id="peBulkChips"></div>
+        <div id="peBulkExline"></div>
+        <p class="sub" style="margin-bottom:6px">📋 매장 기록지·카톡을 그대로 복사해 붙여넣어도 괜찮아요</p>
+        <textarea id="peBulkPaste" rows="6"></textarea>
+        <button class="btn full" style="margin-top:12px" onclick="scoreBulkParse()">명단 인식</button>
+        <div id="peBulkPreview" style="display:none;margin-top:12px">
+          <div id="peBulkPrevList"></div>
+          <button class="btn full big" id="peBulkConfirmBtn" style="margin-top:12px" onclick="scoreBulkSave()">기록 저장</button>
+        </div>
+      </div>
     </div>
     <div class="log" style="margin-top:14px"><h4 id="logTitle">실시간 입력 기록 — 전광판에 즉시 반영</h4><div id="logBox"><div style="color:var(--muted)">아직 입력이 없습니다</div></div></div>
   </section>
@@ -1235,10 +1286,11 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       </div>
 
       <div class="card" id="groupPane" style="display:none">
-        <label class="fl">클럽명</label>
-        <input type="text" id="apClub" placeholder="예: 솔터공원회">
-        <label class="fl">명단 붙여넣기 <span style="color:var(--muted);font-weight:400">— 카톡에서 복사한 그대로</span></label>
-        <textarea id="apPaste" rows="6" placeholder="김영수 010-2314-5678 남 71&#10;박순자, 010-9982-1123, 여, 68&#10;..."></textarea>
+        <p class="sub" style="font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
+        <div id="apColChips"></div>
+        <div id="apExline"></div>
+        <p class="sub" style="margin-bottom:6px">📋 카톡 명단이나 엑셀 표를 그대로 복사해 붙여넣어도 괜찮아요 — 띄어쓰기·쉼표가 섞여 있어도 알아서 읽어요</p>
+        <textarea id="apPaste" rows="6"></textarea>
         <button class="btn full" style="margin-top:12px" onclick="apParse()">명단 인식</button>
         <div id="apPreview" style="display:none;margin-top:12px">
           <div id="apPrevList"></div>
@@ -1420,8 +1472,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <h3>참가자 추가</h3>
     <p class="sub" style="margin-bottom:14px">접수 마감 여부와 관계없이 바로 등록됩니다</p>
     <div class="seg" id="addPlayerModeSeg">
-      <div class="on" data-m="single" onclick="setAddPlayerMode('single')">개인 추가</div>
-      <div data-m="group" onclick="setAddPlayerMode('group')">단체 추가</div>
+      <div class="on" data-m="single" onclick="setAddPlayerMode('single')">한 명씩 입력</div>
+      <div data-m="group" onclick="setAddPlayerMode('group')">여러 명 입력</div>
     </div>
     <div id="apdSinglePane">
       <label class="fl" style="margin-top:0">이름</label><input type="text" id="apdName">
@@ -1430,10 +1482,10 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="btn full" style="margin-top:16px" onclick="submitAddPlayer()">추가</button>
     </div>
     <div id="apdGroupPane" style="display:none">
-      <label class="fl" style="margin-top:0">이 명단의 소속 클럽</label>
-      <select id="pasteClub"><option>솔터공원회</option><option>한강은빛회</option><option>청솔클럽</option><option>미사리파크</option><option>무소속</option></select>
-      <label class="fl">명단 붙여넣기</label>
-      <p class="sub" style="margin-bottom:6px">카톡 명단을 그대로 붙여넣으면 자동 인식합니다.</p>
+      <p class="sub" style="font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
+      <div id="apdColChips"></div>
+      <div id="apdExline"></div>
+      <p class="sub" style="margin-bottom:6px">📋 카톡 명단이나 엑셀 표를 그대로 복사해 붙여넣어도 괜찮아요 — 띄어쓰기·쉼표가 섞여 있어도 알아서 읽어요</p>
       <textarea id="pasteBox" rows="6"></textarea>
       <button class="btn full" style="margin-top:12px" onclick="parsePaste()">명단 인식</button>
       <button class="btn sm ghost full" style="margin-top:8px" onclick="loadDemo()">데모 32명 불러오기</button>
@@ -1651,15 +1703,17 @@ const DEMO=[["김영수","남",71],["박순자","여",68],["이철호","남",74]
 ["민병호","남",71],["석계향","여",70],["차두현","남",69],["방옥련","여",72],
 ["함준호","남",75],["도연실","여",67],["엄기석","남",66],["피천옥","여",71]];
 const CLUBS=["솔터공원회","한강은빛회","청솔클럽","미사리파크"];
-const SAMPLE=`[솔터공원회 참가 신청합니다~ 8명]
-김영수 010-2314-5678 남 71
-박순자, 010-9982-1123, 여, 68
-이철호 010 4451 2093 남 74세
-최금례 010-7768-3341 (여/70)
-정만식 010-3324-8810 남 69
-한옥분 010-5561-9902 여 72
-오세창 010-8890-1174 남 66
-윤정님 010-2203-6647 여 65`;
+// CH30-B②: 컬럼 선언형 파서는 순서가 고정이라 예시 텍스트도 선언된 컬럼 수에 맞춰 동적으로 만든다.
+const BULK_SAMPLE_ROWS=[
+  {name:'김영수',phone:'010-2314-5678',sex:'남',age:'71',club:'솔터공원회'},
+  {name:'박순자',phone:'010-9982-1123',sex:'여',age:'68',club:'솔터공원회'},
+  {name:'이철호',phone:'010-4451-2093',sex:'남',age:'74',club:'솔터공원회'},
+  {name:'최금례',phone:'010-7768-3341',sex:'여',age:'70',club:'솔터공원회'},
+  {name:'정만식',phone:'010-3324-8810',sex:'남',age:'69',club:'솔터공원회'},
+  {name:'한옥분',phone:'010-5561-9902',sex:'여',age:'72',club:'솔터공원회'},
+  {name:'오세창',phone:'010-8890-1174',sex:'남',age:'66',club:'솔터공원회'},
+  {name:'윤정님',phone:'010-2203-6647',sex:'여',age:'65',club:'솔터공원회'}];
+function bulkSampleText(cols){return BULK_SAMPLE_ROWS.map(r=>cols.map(c=>r[c.k]).join(' ')).join('\n')}
 
 /* ================= helpers ================= */
 const $=s=>document.querySelector(s);
@@ -3911,7 +3965,7 @@ async function openApply(id){
   }else{
     $('#apClosedCard').style.display='none';
     $('#applyForm').style.display='block';$('#applyDone').style.display='none';
-    $('#apPaste').value='';$('#apPreview').style.display='none';$('#apClub').value='';
+    $('#apPaste').value='';$('#apPreview').style.display='none';
     setApplyMode('single')}
   navTo('Apply');window.scrollTo(0,0)}
 function eligibilityOk(){
@@ -3933,7 +3987,11 @@ function setApplyMode(m){applyMode=m;
   $('#mSingle').classList.toggle('on',m==='single');
   $('#mGroup').classList.toggle('on',m==='group');
   $('#singlePane').style.display=m==='single'?'block':'none';
-  $('#groupPane').style.display=m==='group'?'block':'none'}
+  $('#groupPane').style.display=m==='group'?'block':'none';
+  if(m==='group'){
+    const cols=bulkColumns(applyFields(applyT));
+    $('#apColChips').innerHTML=colChipsHTML(cols);
+    $('#apExline').innerHTML=exampleLineHTML(cols)}}
 function renderSingleFields(){
   const f=applyFields(applyT);
   let h=`<label class="fl">이름 <span style="color:var(--red)">*</span></label><input type="text" id="apiName" placeholder="홍길동">
@@ -3980,23 +4038,24 @@ async function submitSingle(){
     rcptShow('대기 '+waitNo+'번',`<b>${name}</b> 님, 정원(${applyT.cap}명)이 마감되어<br><b>대기 ${waitNo}번</b>으로 접수되었습니다.<br>빈자리가 나면 순서대로 확정 문자가 발송됩니다.`)}
   else rcptShow(rcptNo(),`<b>${name}</b> 님, ${applyT.name}<br>접수가 완료되었습니다.<br>대회 안내와 조편성표가 문자로 발송됩니다.`)}
 function apParse(){
-  const{parsed,failed,total}=parseBulkLines($('#apPaste').value);
+  const cols=bulkColumns(applyFields(applyT));
+  const{parsed,failed,total}=bulkParseAll($('#apPaste').value,cols);
   apPending=parsed;
-  if(!total){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
+  if(!total){toast('입력된 줄이 없습니다');return}
   $('#apPrevList').innerHTML=(apPending.map(p=>
     `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
-     <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${p.sex||p.age?' · '+[p.sex,p.age?p.age+'세':''].filter(Boolean).join(' '):''}</span></div></div>`).join(''))
-    +failedLinesHTML(failed);
+     <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${p.sex||p.age||p.club?' · '+[p.sex,p.age?p.age+'세':'',p.club].filter(Boolean).join(' '):''}</span></div></div>`).join(''))
+    +failedLinesHTML(failed,'위 칩 순서(이름·전화번호'+(cols.length>2?'·'+cols.slice(2).map(c=>c.label).join('·'):'')+')와 다릅니다');
   $('#apConfirmBtn').textContent=`${apPending.length}명 단체 신청하기`;
   $('#apConfirmBtn').style.display=apPending.length?'block':'none';
   $('#apPreview').style.display='block';
   toast(failed.length?`${total}줄 중 ${apPending.length}명 인식 — ${failed.length}줄 확인 필요`:`${apPending.length}명 인식 — 확인 후 신청하세요`)}
 async function submitGroup(){
   if(!eligibilityOk()||!privacyOk())return;
-  const club=$('#apClub').value.trim()||'무소속';
   let added=0,dup=0,waited=0;
   const p_code=myCodeFor(applyT.id)||null;
   for(const r of apPending){
+    const club=r.club||'무소속';
     const{data,error}=await sb.rpc('apply_to_tournament',{
       t_id:applyT.id,p_code,p_name:r.name,p_phone:r.phone,
       p_sex:r.sex||null,p_age:r.age||null,p_club:club,p_region:null,p_nick:null});
@@ -4007,7 +4066,7 @@ async function submitGroup(){
   apPending=[];
   if(applyT.mine){renderPlayers();syncMine();updateApplyStat()}
   renderCap();renderHome();
-  rcptShow(rcptNo(),`<b>${club}</b> ${added}명 접수 완료${waited?` · 정원 마감으로 <b>${waited}명 대기</b> 전환`:''}${dup?` · 중복 ${dup}명 제외`:''}.<br>총무님 번호로 접수 명단이 문자 발송되며,<br>운영자 참가자 명단에 실시간 반영되었습니다.`)}
+  rcptShow(rcptNo(),`단체 신청 ${added}명 접수 완료${waited?` · 정원 마감으로 <b>${waited}명 대기</b> 전환`:''}${dup?` · 중복 ${dup}명 제외`:''}.<br>대표 번호로 접수 명단이 문자 발송되며,<br>운영자 참가자 명단에 실시간 반영되었습니다.`)}
 function resetApply(){openApply(applyT.id)}
 function updateApplyStat(){const el=$('#applyStat');if(el){el.textContent='접수 '+players.length+'명';el.className='st2'+(players.length?'':' gray')}}
 function toggleTool(name){
@@ -4147,7 +4206,7 @@ async function createTournamentInner(){
     ?`대회기간 라운드 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${config.hostOrg}`
     :`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${config.hostOrg}`;
   renderMgmtHeader();
-  $('#pasteBox').value=SAMPLE;
+  $('#pasteBox').value=bulkSampleText(bulkColumns(config.fields||{}));
   renderHome();renderPlayers();renderTools();drawQR();
   $('#doneSub').textContent=`${config.name} · 접수 시작됨`;
   wizNext()}
@@ -4178,13 +4237,46 @@ function parseBulkLines(text){
   const parsed=[],failed=[];
   lines.forEach(line=>{const r=parseLine(line);if(r)parsed.push(r);else failed.push(line)});
   return{parsed,failed,total:lines.length}}
-function failedLinesHTML(failed){
+function failedLinesHTML(failed,reason){
   if(!failed.length)return'';
   return`<div class="card" style="background:#FBE9E4;border:none;margin-top:10px">
-    <label class="fl" style="margin-top:0;color:#C4523A">확인 필요 ${failed.length}줄 — 전화번호를 못 찾았습니다</label>
+    <label class="fl" style="margin-top:0;color:#C4523A">확인 필요 ${failed.length}줄 — ${reason||'전화번호를 못 찾았습니다'}</label>
     ${failed.map(l=>`<p class="sub" style="margin-bottom:4px">${l}</p>`).join('')}
     <p class="sub" style="margin-top:6px">위 줄은 자동 등록되지 않았습니다 — 개인 추가로 직접 입력해 주세요.</p>
   </div>`}
+/* CH30-B②: 컬럼 선언형 일괄 입력 — 추측 없이 "선언한 순서로 자르기만" 한다 */
+function bulkColumns(fields){
+  const f=fields||{};
+  const cols=[{k:'name',label:'이름',req:true},{k:'phone',label:'전화번호',req:true}];
+  if(f.sex)cols.push({k:'sex',label:'성별'});
+  if(f.age)cols.push({k:'age',label:'나이'});
+  if(f.club)cols.push({k:'club',label:'소속'});
+  return cols}
+function colChipsHTML(cols){
+  return`<div class="colchip">${cols.map(c=>`<span class="${c.req?'req':'on'}">${c.label}</span>`).join('')}</div>`}
+function exampleLineHTML(cols){
+  return`<div class="exline">예시 — 한 줄에 한 명씩:<br><b>${cols.map(c=>BULK_SAMPLE_ROWS[0][c.k]).join(' ')}</b></div>`}
+function parseDeclaredLine(line,cols){
+  const tokens=line.split(/[,\t]+|\s+/).map(t=>t.trim()).filter(Boolean);
+  if(tokens.length!==cols.length)return null;
+  const row={};
+  for(let i=0;i<cols.length;i++){
+    const k=cols[i].k,v=tokens[i];
+    if(k==='phone'){
+      const digits=v.replace(/\D/g,'');
+      if(!/^01[016789]\d{7,8}$/.test(digits))return null;
+      row.phone=digits.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');continue}
+    if(k==='sex'){if(v!=='남'&&v!=='여')return null;row.sex=v;continue}
+    if(k==='age'){if(!/^\d{2,3}세?$/.test(v))return null;row.age=+v.replace('세','');continue}
+    if(k==='name'){row.name=v.slice(0,5);continue}
+    row[k]=v}
+  if(!row.name)return null;
+  return row}
+function bulkParseAll(text,cols){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length);
+  const parsed=[],failed=[];
+  lines.forEach(line=>{const r=parseDeclaredLine(line,cols);if(r)parsed.push(r);else failed.push(line)});
+  return{parsed,failed,total:lines.length}}
 function activeCols(){
   const c=[{k:'name',label:'이름'},{k:'phone',label:'전화번호'}];
   if(config.fields.nick)c.push({k:'nick',label:'닉네임'});
@@ -4194,15 +4286,15 @@ function activeCols(){
   if(config.fields.region)c.push({k:'region',label:'지역'});
   return c}
 function parsePaste(){
-  const club=$('#pasteClub').value;
-  const{parsed,failed,total}=parseBulkLines($('#pasteBox').value);
-  pending=parsed.map(r=>({...r,club,region:'하남',nick:'',scores:Array(HOLES).fill(null),group:-1}));
-  if(!total){toast('전화번호가 포함된 줄을 찾지 못했습니다');return}
+  const bcols=bulkColumns(config.fields||{});
+  const{parsed,failed,total}=bulkParseAll($('#pasteBox').value,bcols);
+  pending=parsed.map(r=>({...r,region:'하남',nick:'',scores:Array(HOLES).fill(null),group:-1}));
+  if(!total){toast('입력된 줄이 없습니다');return}
   const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
   $('#prevList').innerHTML=(pending.map(p=>
     `<div class="toolrow"><div class="avatar">${p.name[0]}</div>
      <div class="info"><b>${p.name}</b><span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}</span></div></div>`).join(''))
-    +failedLinesHTML(failed);
+    +failedLinesHTML(failed,'위 칩 순서(이름·전화번호'+(bcols.length>2?'·'+bcols.slice(2).map(c=>c.label).join('·'):'')+')와 다릅니다');
   $('#confirmBtn').textContent=`${pending.length}명 등록 확정`;
   $('#confirmBtn').style.display=pending.length?'block':'none';
   $('#previewCard').style.display='block';
@@ -4356,7 +4448,11 @@ function addPlayerFieldsHTML(){
 function setAddPlayerMode(m){
   document.querySelectorAll('#addPlayerModeSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.m===m));
   $('#apdSinglePane').style.display=m==='single'?'block':'none';
-  $('#apdGroupPane').style.display=m==='group'?'block':'none'}
+  $('#apdGroupPane').style.display=m==='group'?'block':'none';
+  if(m==='group'){
+    const cols=bulkColumns(config.fields||{});
+    $('#apdColChips').innerHTML=colChipsHTML(cols);
+    $('#apdExline').innerHTML=exampleLineHTML(cols)}}
 function openAddPlayer(){
   $('#apdName').value='';$('#apdPhone').value='';
   $('#apdFields').innerHTML=addPlayerFieldsHTML();
@@ -4590,6 +4686,7 @@ function renderJudge(){
     $('#jHoleCard').style.display='none';$('#holeNextBtn').style.display='none';$('#scPhotoCard').style.display='none';
     $('#periodEntryCard').style.display='block';
     $('#logTitle').textContent='최근 제출 기록';
+    setPeMode('single');
     renderPeriodPlayerList();
     return}
   $('#jGroupLabel').style.display='';$('#jGroupChips').style.display='';
@@ -4601,24 +4698,114 @@ function renderJudge(){
     `<button class="chip ${i===curGroup?'on':''}" onclick="curGroup=${i};renderJudge()">${i+1}조</button>`).join('')
     ||'<span class="sub">메인 앱에서 참가자 등록·조편성을 먼저 해주세요</span>';
   renderHole();loadScorecardPhoto()}
+function periodBestAt(p){return(p.best&&p.best[jRound]!=null)?p.best[jRound]:null}
+// CH30-B④: 검색 중엔 필터가 우선 — 조편성 없으면 가나다순, 있으면 조별(조 내 타순)+미배정 맨 아래
 function periodPlayerList(){
   const q=($('#pePlayerSearch').value||'').trim().toLowerCase();
   const list=players.filter(p=>!isOut(p));
-  if(!q)return list.slice(0,20);
-  return list.filter(p=>p.name.toLowerCase().includes(q)||p.phone.replace(/-/g,'').includes(q.replace(/-/g,''))).slice(0,20)}
+  if(q)return list.filter(p=>p.name.toLowerCase().includes(q)||p.phone.replace(/-/g,'').includes(q.replace(/-/g,''))).slice(0,20);
+  const hasGroups=list.some(p=>p.group>=0);
+  if(!hasGroups)return list.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  return list.slice().sort((a,b)=>{
+    const ga=a.group>=0?a.group:Infinity,gb=b.group>=0?b.group:Infinity;
+    if(ga!==gb)return ga-gb;
+    const va=periodBestAt(a),vb=periodBestAt(b);
+    if(va==null&&vb==null)return 0;
+    if(va==null)return 1;if(vb==null)return-1;
+    return va-vb})}
 function renderPeriodPlayerList(){
   const box=$('#pePlayerList');if(!box)return;
   const list=periodPlayerList();
-  box.innerHTML=list.length?list.map(p=>{
-    const val=(p.best&&p.best[jRound]!=null)?p.best[jRound]:null;
+  const searching=!!($('#pePlayerSearch').value||'').trim();
+  const grouped=!searching&&list.some(p=>p.group>=0);
+  if(!list.length){box.innerHTML='<p class="sub" style="padding:16px;text-align:center">일치하는 참가자가 없습니다</p>';return}
+  let lastGroup,html='';
+  list.forEach(p=>{
+    if(grouped){
+      const g=p.group>=0?p.group:null;
+      if(g!==lastGroup){html+=`<div class="pgHead">${g!=null?(g+1)+'조':'미배정'}</div>`;lastGroup=g}}
+    const val=periodBestAt(p);
     const saved=val!=null;
-    return`<div class="inrow ${saved?'bestrow':''}">
+    html+=`<div class="inrow ${saved?'bestrow':''}">
       <div class="avatar" style="width:34px;height:34px;font-size:14px">${p.name[0]}</div>
       <div class="who"><b>${p.name}</b><span>${maskPhone(p.phone)} · ${p.club||'무소속'}</span></div>
       <input type="tel" class="numbox ${saved?'filled':''}" id="peNum_${p.id}" data-saved="${saved?val:''}" value="${saved?val:''}" placeholder="—" oninput="peOnInput('${p.id}')">
       <button class="okbtn ${saved?'done':''}" id="peBtn_${p.id}" onclick="peButtonClick('${p.id}')">${saved?'✓ 저장':'확인'}</button>
-    </div>`}).join('')
-    :'<p class="sub" style="padding:16px;text-align:center">일치하는 참가자가 없습니다</p>'}
+    </div>`});
+  box.innerHTML=html}
+/* CH30-B③: 점수 여러 명 입력 (총점 모드 전용) — W5와 같은 컬럼 선언·실패 줄 문법을 재사용 */
+function setPeMode(m){
+  document.querySelectorAll('#peModeSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.m===m));
+  $('#peSinglePane').style.display=m==='single'?'block':'none';
+  $('#peBulkPane').style.display=m==='bulk'?'block':'none';
+  if(m==='bulk'){
+    $('#peBulkChips').innerHTML='<div class="colchip"><span class="req">이름</span><span class="on">전화 뒷자리</span><span class="req">스코어</span></div>';
+    $('#peBulkExline').innerHTML='<div class="exline">예시 — 한 줄에 한 명씩:<br><b>홍길동 5678 71</b></div>';
+    $('#peBulkPaste').value='';$('#peBulkPreview').style.display='none';scoreBulkPending=[]}}
+function parseScoreLine(line){
+  const tokens=line.split(/[,\t]+|\s+/).map(t=>t.trim()).filter(Boolean);
+  if(tokens.length<2||tokens.length>3)return null;
+  const name=tokens[0];
+  const score=+tokens[tokens.length-1];
+  if(!name||!Number.isFinite(score)||score<18||score>200)return null;
+  const phone4=tokens.length===3?tokens[1]:'';
+  if(phone4&&!/^\d{4}$/.test(phone4))return null;
+  return{name,phone4,score}}
+function matchScoreRow(row){
+  const pool=players.filter(p=>!isOut(p)&&p.name===row.name);
+  if(!pool.length)return{error:'참가자 명단에서 이름을 찾을 수 없습니다'};
+  if(pool.length===1)return{player:pool[0]};
+  if(!row.phone4)return{error:`동명이인 ${pool.length}명 — 전화 뒷자리를 포함해주세요`};
+  const matched=pool.filter(p=>(p.phone||'').replace(/\D/g,'').slice(-4)===row.phone4);
+  if(matched.length!==1)return{error:`동명이인 ${pool.length}명 — 전화 뒷자리가 일치하는 사람이 없습니다`};
+  return{player:matched[0]}}
+let scoreBulkPending=[];
+function scoreFailedRowsHTML(failed){
+  if(!failed.length)return'';
+  return`<div class="card" style="background:#FBE9E4;border:none;margin-top:10px">
+    <label class="fl" style="margin-top:0;color:#C4523A">확인 필요 ${failed.length}줄</label>
+    ${failed.map(f=>`<p class="sub" style="margin-bottom:4px"><b>"${f.line}"</b> — ${f.reason}</p>`).join('')}
+    <p class="sub" style="margin-top:6px">위 줄은 저장되지 않았습니다 — 한 명씩 입력에서 개별 등록·수정해 주세요.</p>
+  </div>`}
+function scoreBulkParse(){
+  const lines=($('#peBulkPaste').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  const rows=[],failed=[];
+  lines.forEach(line=>{
+    const parsed=parseScoreLine(line);
+    if(!parsed){failed.push({line,reason:'형식을 확인해 주세요(이름 [전화 뒷자리] 스코어)'});return}
+    const m=matchScoreRow(parsed);
+    if(m.error){failed.push({line,reason:m.error});return}
+    const p=m.player;
+    const existing=(p.best&&p.best[jRound]!=null)?p.best[jRound]:null;
+    if(judgeStageKind!=='period'&&existing!=null){failed.push({line,reason:`이미 ${existing}타 기록이 있습니다 — 개별 수정 이용`});return}
+    rows.push({player:p,score:parsed.score,prevBest:existing})});
+  scoreBulkPending=rows;
+  $('#peBulkPrevList').innerHTML=(rows.map(r=>
+    `<div class="toolrow"><div class="avatar">${r.player.name[0]}</div>
+     <div class="info"><b>${r.player.name}</b><span class="num">${r.score}타${r.prevBest!=null?` · 기존 ${r.prevBest}타`:''}</span></div></div>`).join(''))
+    +scoreFailedRowsHTML(failed);
+  $('#peBulkConfirmBtn').textContent=`${rows.length}명 기록 저장`;
+  $('#peBulkConfirmBtn').style.display=rows.length?'block':'none';
+  $('#peBulkPreview').style.display='block';
+  toast(failed.length?`${lines.length}줄 중 ${rows.length}명 인식 — ${failed.length}줄 확인 필요`:`${rows.length}명 인식 — 확인 후 저장하세요`)}
+async function scoreBulkSave(){
+  const token=currentJudgeToken();
+  if(!token){toast('심판 인증 정보가 없습니다');return}
+  let saved=0,bestUpdates=0;
+  for(const r of scoreBulkPending){
+    const playParams={p_token:token,p_player_id:r.player.id,p_course_no:jRound,p_strokes_total:r.score,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()};
+    const{data,error}=await sb.rpc('submit_play',playParams);
+    if(error){console.error(error);continue}
+    saved++;
+    r.player.best=r.player.best||{};
+    if(r.prevBest==null||r.score<r.prevBest){bestUpdates++;r.player.best[jRound]=r.score}
+    addLog(`${jRound+1}코스 <b>${r.player.name}</b> 총 ${r.score}타 제출(일괄)`)}
+  scoreBulkPending=[];$('#peBulkPaste').value='';$('#peBulkPreview').style.display='none';
+  renderPeriodPlayerList();
+  toast(judgeStageKind==='period'
+    ?`${saved}명 기록 저장${bestUpdates?` · 베스트 경신 ${bestUpdates}건`:''}`
+    :`${saved}명 기록 저장`);
+  await refreshMyTournamentStatus()}
 function peOnInput(pid){
   const input=$('#peNum_'+pid),btn=$('#peBtn_'+pid);
   if(!input||!btn)return;
@@ -4996,14 +5183,17 @@ async function loadBoardData(tournamentId,trusted){
     const plAll=await fetchPlays(tournamentId);
     const plRows=boardStageKind==='round'?plAll.filter(r=>r.stage_id===stage.id):plAll;
     const bestMap={};
+    // CH30-B①: 도전왕(최다 플레이) 집계용 — 베스트값과 별개로 제출 횟수 전체를 센다.
+    const playCountMap={};
     (plRows||[]).forEach(r=>{
       bestMap[r.player_id]=bestMap[r.player_id]||{};
       const cur=bestMap[r.player_id][r.course_no];
-      if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
+      if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total;
+      playCountMap[r.player_id]=(playCountMap[r.player_id]||0)+1});
     players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
       region:r.region||'',nick:r.nick||'',st:(r.status==='wd'||r.status==='dq')?r.status:undefined,
       ci:!!r.checked_in_at,paid:!!r.paid,
-      best:bestMap[r.id]||{}}));
+      best:bestMap[r.id]||{},playCount:playCountMap[r.id]||0}));
     groups=[];
     renderBoard();renderResult();return}
 
@@ -5236,13 +5426,60 @@ function fullBoard(){const el=$('#boardShell');
   else el.requestFullscreen?.().catch(()=>toast('이 브라우저는 전체 화면 미지원'))}
 
 /* ================= 결과 ================= */
+function renderPeriodResult(){
+  const st=periodStandings();
+  const done=st.filter(s=>s.completed>0&&!s.out);
+  const outs=st.filter(s=>s.out);
+  const fullyDone=done.filter(s=>s.completed>=ROUNDS);
+  $('#resultSub').textContent=!players.length?'참가자 등록 후 이용할 수 있습니다.'
+    :done.length===0?'경기 진행 전입니다.'
+    :`참가자 ${players.length}명 · 전 코스 완료 ${fullyDone.length}명 — 코스별 베스트 합산.`;
+  const cols=`34px minmax(0,1fr) repeat(${ROUNDS},52px) 60px`;
+  const headHTML=`<div class="presrow head" style="grid-template-columns:${cols}">
+    <span></span><span>선수</span>${Array.from({length:ROUNDS},(_,r)=>`<span class="v">${vShort(r)}</span>`).join('')}<span class="v">합계</span></div>`;
+  const rowHTML=(s,i)=>{
+    const rk=i===0?'rank1':i<=2?'rank23':'';
+    const totCell=s.tot!=null?s.tot:`${s.sumSoFar||'·'}<small style="display:block;font-weight:400;color:var(--muted)">진행중</small>`;
+    return`<div class="presrow ${rk}" style="grid-template-columns:${cols}">
+      <span class="r">${i+1}</span>
+      <span class="nm"><b>${s.p.name}</b><small>${s.p.club||''}${config.fields.sex?' · '+s.p.sex:''}${config.fields.age?' '+s.p.age+'세':''}</small></span>
+      ${s.bestArr.map(v=>`<span class="v">${v!=null?v:'·'}</span>`).join('')}
+      <span class="v tot">${totCell}</span></div>`};
+  const outRowHTML=s=>`<div class="presrow" style="grid-template-columns:${cols};opacity:.5">
+      <span class="r">${s.p.st==='wd'?'기권':'실격'}</span>
+      <span class="nm"><b>${s.p.name}</b><small>${s.p.club||''}</small></span>
+      ${s.bestArr.map(v=>`<span class="v">${v!=null?v:'·'}</span>`).join('')}
+      <span class="v tot">—</span></div>`;
+  $('#periodResultList').innerHTML=headHTML
+    +(done.map(rowHTML).join('')||'<p class="sub" style="text-align:center;padding:26px 0">아직 순위가 없습니다</p>')
+    +outs.map(outRowHTML).join('');
+
+  let aw='';
+  if(config.awards.gender&&config.fields.sex&&fullyDone.length){
+    const m=fullyDone.find(s=>s.p.sex==='남'),f=fullyDone.find(s=>s.p.sex==='여');
+    aw+=`남자부 1위 ${m?m.p.name:'해당자 없음'} · 여자부 1위 ${f?f.p.name:'해당자 없음'}<br>`}
+  if(config.awards.age&&config.fields.age&&fullyDone.length){
+    const bands=[['60대부',60,69],['70대부',70,79],['80세 이상부',80,150]];
+    aw+=bands.map(([lb,lo,hi])=>{
+      const w=fullyDone.find(s=>s.p.age>=lo&&s.p.age<=hi);
+      return`${lb} 1위 ${w?w.p.name:'해당자 없음'}`}).join(' · ')+'<br>'}
+  if(config.awards.club&&config.fields.club&&fullyDone.length){
+    const byClub={};fullyDone.forEach(s=>{(byClub[s.p.club||'무소속']=byClub[s.p.club||'무소속']||[]).push(s)});
+    const teams=Object.entries(byClub).filter(([c,a])=>a.length>=4)
+      .map(([c,a])=>({club:c,sum:a.slice(0,4).reduce((x,s)=>x+s.tot,0)})).sort((x,y)=>x.sum-y.sum);
+    aw+=`클럽 대항전 1위 ${teams.length?teams[0].club:'해당자 없음'}<br>`}
+  if(players.length){
+    const top=[...players].sort((a,b)=>(b.playCount||0)-(a.playCount||0))[0];
+    aw+=`<span style="color:var(--muted)">도전왕 (최다 플레이 ${top?.playCount||0}회) ${top&&top.playCount?top.name:'해당자 없음'}</span>`}
+  $('#periodAwardsBox').style.display=aw?'block':'none';
+  $('#periodAwardsBox').innerHTML=aw?`<b style="font-size:13px;color:var(--deep)">🏆 부문 수상</b><br>${aw}`:'';
+}
 function renderResult(){
-  if(boardStageKind==='period'||boardStageRecordMode==='total'){
-    $('#resultSub').textContent=boardStageKind==='period'
-      ?'대회기간 라운드의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.'
-      :'총점만 단계의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.';
-    $('#podium').innerHTML='';
-    return}
+  const isPeriod=boardStageKind==='period'||boardStageRecordMode==='total';
+  $('#roundResultBox').style.display=isPeriod?'none':'block';
+  $('#roundResultActions').style.display=isPeriod?'none':'grid';
+  $('#periodResultBox').style.display=isPeriod?'block':'none';
+  if(isPeriod){renderPeriodResult();return}
   const st=standings();
   const done=st.filter(s=>s.thru>0&&!s.out);
   const outs=st.filter(s=>s.out);
