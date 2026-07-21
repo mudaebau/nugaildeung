@@ -132,6 +132,23 @@ textarea{resize:vertical;line-height:1.65;font-size:17px}
 .preset .pic{width:46px;height:46px;border-radius:14px;background:var(--main-soft);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
 .preset b{display:block;font-size:16.5px;font-weight:700}
 .preset span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* CH30-A: 단계 요약 카드 */
+.stagecard{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:17px 19px;margin-bottom:12px}
+.stagecard.ok{border-color:var(--mint)}
+.stagecard-head{font-size:16px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kbadge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--main-soft);color:var(--main-deep)}
+.kbadge.period{background:#E7F5EE;color:#2E8B63}
+.specgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.spec{background:var(--bg);border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px}
+.spec i{font-style:normal;font-size:19px;flex:0 0 auto}
+.spec b{display:block;font-size:14px;font-weight:700;line-height:1.25}
+.spec small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+.expand{font-size:13px;font-weight:700;color:var(--main-deep);margin-top:9px;display:inline-block;cursor:pointer}
+.stagecard-detail{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
+.segk{display:flex;background:var(--bg);border-radius:12px;padding:3.5px}
+.segk div{flex:1;text-align:center;font-size:13.5px;font-weight:700;padding:9px 4px;border-radius:9px;color:var(--muted);cursor:pointer}
+.segk div.on{background:var(--paper);color:var(--main-deep);box-shadow:0 1px 4px rgba(43,58,74,.12)}
 .scheduleblock{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
 .scheduleblock .stitle{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
 .donehero{background:linear-gradient(170deg,var(--sun),#F3C23B);border-radius:0 0 30px 30px;padding:30px 24px 26px;text-align:center;color:#22303D;margin:-20px -16px 16px}
@@ -670,12 +687,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <div id="wizBox" style="display:none">
       <div class="wprog" id="wizProg"></div>
 
-      <div class="wpane on" id="wpPreset">
+      <div class="wpane on" id="wpStructure">
         <h2 class="wq">어떤 대회인가요?</h2>
-        <p class="wsub">자주 여는 방식은 한 번에 준비해드려요</p>
-        <div class="preset on" data-preset="field1" onclick="choosePreset('field1')"><span class="pic">⛳</span><div><b>필드 단판 대회</b><span>하루 라운드로 순위 결정 · 조편성 포함</span></div></div>
-        <div class="preset" data-preset="screen2" onclick="choosePreset('screen2')"><span class="pic">🖥️</span><div><b>스크린 예선 + 결승</b><span>기간 예선(코스 도전) 후 상위 진출자 결승</span></div></div>
-        <div class="preset" data-preset="custom" onclick="choosePreset('custom')"><span class="pic">🛠️</span><div><b>직접 구성</b><span>단계 수·방식을 하나씩 선택 (최대 3단계)</span></div></div>
+        <p class="wsub">단계 구성만 고르세요 — 각 단계의 방식(지정일/기간)은 다음에서 확인해요</p>
+        <div class="preset on" data-preset="solo" onclick="chooseStructure('solo')"><span class="pic">🏁</span><div><b>단판 대회</b><span>한 번의 라운드로 순위 결정 — 클럽 월례회 표준</span></div></div>
+        <div class="preset" data-preset="qualify2" onclick="chooseStructure('qualify2')"><span class="pic">🥇</span><div><b>예선 + 결승</b><span>예선 통과자만 결승 진출 (컷 1회)</span></div></div>
+        <div class="preset" data-preset="qualify3" onclick="chooseStructure('qualify3')"><span class="pic">🏆</span><div><b>예선 + 본선 + 결승</b><span>큰 대회 형식 (컷 2회)</span></div></div>
         <div class="wnav"><span></span><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
@@ -688,154 +705,162 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
           <label class="fl">주최 · 주관</label>
           <input type="text" id="fHost" value="임팩트파크골프 · 다운솔루텍">
         </div>
+        <p class="swaphint" style="text-align:left">💡 "○○공원 ○월 월례오픈"처럼 장소+달이 들어가면 찾기 쉬워요</p>
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
-      <div class="wpane" id="wpType">
-        <h2 class="wq">어떤 유형의 대회인가요?</h2>
-        <p class="wsub">필드는 현장 라운드, 스크린은 기간 중 자유 방문 방식이에요</p>
-        <button class="optbig on" id="obTypeField" onclick="setTourType('field')"><span class="on-dot"></span><div><b>필드</b><span>파크골프장에서 지정일에 라운드 진행</span></div></button>
-        <button class="optbig" id="obTypeScreen" onclick="setTourType('screen')"><span class="on-dot"></span><div><b>스크린</b><span>기간 중 매장을 자유롭게 방문해 기록 제출</span></div></button>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
+      <div class="wpane" id="wpStageConfirm">
+        <h2 class="wq">경기 방식을 확인해주세요</h2>
+        <p class="wsub">표준 설정을 미리 채워뒀어요 — 그대로 진행하면 됩니다</p>
 
-      <div class="wpane" id="wpStageCount">
-        <h2 class="wq">몇 단계 대회인가요?</h2>
-        <p class="wsub">단계마다 기간·코스·진출 인원을 따로 정할 수 있어요</p>
-        <button class="optbig on" id="obStage1" onclick="setStageCount(1)"><span class="on-dot"></span><div><b>1단계 — 단판 대회</b><span>한 번에 순위 결정 · 가장 일반적</span></div></button>
-        <button class="optbig" id="obStage2" onclick="setStageCount(2)"><span class="on-dot"></span><div><b>2단계 — 예선 → 결승</b><span>예선 후 상위 진출자가 결승 진행</span></div></button>
-        <button class="optbig" id="obStage3" onclick="setStageCount(3)"><span class="on-dot"></span><div><b>3단계 — 예선 → 본선 → 결승</b><span>대규모 대회 · 협회전</span></div></button>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
-
-      <div class="wpane" id="wpStage1">
-        <h2 class="wq" id="stage1QTitle">코스와 기간을 정해주세요</h2>
-        <p class="wsub">선택한 유형에 맞는 코스 정보를 입력하세요</p>
-        <div class="card">
-          <div id="fieldFields">
-            <label class="fl">경기 규모</label>
-            <select id="fHoles" onchange="renderVenues()">
-              <option value="18">18홀 (1개 코스)</option>
-              <option value="36" selected>36홀 (2개 코스)</option>
-              <option value="54">54홀 (3개 코스)</option>
-              <option value="72">72홀 (4개 코스)</option>
-            </select>
-            <label class="fl">골프장 (코스별 · 최대 4개) </label>
-            <div id="venueBox"></div>
-            <label class="fl">기록 방식</label>
-            <div class="optrow" id="recordModeRow1">
-              <div class="opt on" onclick="setRecordMode(1,'hole')">홀별 기록</div>
-              <div class="opt" onclick="setRecordMode(1,'total')">총점만</div>
+        <div class="stagecard ok" id="stageCard1">
+          <div class="stagecard-head"><b id="stageCardTitle1">본선</b> <span class="kbadge" id="stageCardBadge1">지정일 라운드</span></div>
+          <div class="specgrid" id="stageCardSpec1"></div>
+          <span class="expand" id="stageCardExpand1" onclick="toggleStageCard(1)">상세 바꾸기 ∨</span>
+          <div class="stagecard-detail" id="stageCardDetail1" style="display:none">
+            <p class="sub" style="margin-bottom:6px;font-weight:700">경기 방식 — 단계마다 다르게 선택 가능</p>
+            <div class="segk" id="kindSeg1">
+              <div onclick="setStageKind(1,'round')">지정일 라운드</div>
+              <div onclick="setStageKind(1,'period')">대회기간 라운드</div>
             </div>
-            <p class="sub" id="recordModeNote1" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
-          </div>
-          <div id="screenFields" style="display:none">
-            <label class="fl">진행 코스 수 · 최대 6개</label>
-            <select id="fScreenCourses" onchange="renderScreenVenues()">
-              <option value="1">1개 코스</option>
-              <option value="2" selected>2개 코스</option>
-              <option value="3">3개 코스</option>
-              <option value="4">4개 코스</option>
-              <option value="5">5개 코스</option>
-              <option value="6">6개 코스</option>
-            </select>
-            <label class="fl">코스명 · 총파</label>
-            <div id="screenVenueBox"></div>
-            <p class="sub" style="margin-top:8px">참가자가 기간 중 자유롭게 방문해 기록을 제출하는 방식입니다 — 조편성 없이 진행돼요.</p>
-          </div>
-        </div>
-        <div class="card" id="stage1CutBox" style="display:none">
-          <label class="fl" style="margin-top:0" id="cut1Label">예선 → 결승 진출 방식</label>
-          <select id="fCutMode" onchange="toggleCutMode(1)">
-            <option value="total">전체 인원</option>
-            <option value="gender">남녀 구분</option>
-          </select>
-          <div id="cutTotalBox"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal" value="24"></div>
-          <div id="cutGenderBox" class="frow" style="display:none">
-            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM" value="12"></div>
-            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF" value="12"></div>
-          </div>
-        </div>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
-
-      <div class="wpane" id="wpStage2">
-        <h2 class="wq" id="stage2QTitle">2단계(결승) 코스와 기간을 정해주세요</h2>
-        <div class="card">
-          <div id="fieldFields2">
-            <label class="fl">경기 규모</label>
-            <select id="fHoles2" onchange="renderVenues2()">
-              <option value="18" selected>18홀 (1개 코스)</option>
-              <option value="36">36홀 (2개 코스)</option>
-              <option value="54">54홀 (3개 코스)</option>
-              <option value="72">72홀 (4개 코스)</option>
-            </select>
-            <label class="fl">골프장 (코스별)</label>
-            <div id="venueBox2"></div>
-            <label class="fl">기록 방식</label>
-            <div class="optrow" id="recordModeRow2">
-              <div class="opt on" onclick="setRecordMode(2,'hole')">홀별 기록</div>
-              <div class="opt" onclick="setRecordMode(2,'total')">총점만</div>
+            <div id="fieldFields" style="margin-top:14px">
+              <label class="fl" style="margin-top:0">경기 규모</label>
+              <select id="fHoles" onchange="renderVenues();renderStageCard(1)">
+                <option value="18">18홀 (1개 코스)</option>
+                <option value="36" selected>36홀 (2개 코스)</option>
+                <option value="54">54홀 (3개 코스)</option>
+                <option value="72">72홀 (4개 코스)</option>
+              </select>
+              <label class="fl">골프장 (코스별 · 최대 4개) </label>
+              <div id="venueBox"></div>
+              <label class="fl">기록 방식</label>
+              <div class="optrow" id="recordModeRow1">
+                <div class="opt on" onclick="setRecordMode(1,'hole');renderStageCard(1)">홀별 기록</div>
+                <div class="opt" onclick="setRecordMode(1,'total');renderStageCard(1)">총점만</div>
+              </div>
+              <p class="sub" id="recordModeNote1" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
             </div>
-            <p class="sub" id="recordModeNote2" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
-          </div>
-          <div id="screenFields2" style="display:none">
-            <label class="fl">진행 코스 수</label>
-            <select id="fScreenCourses2" onchange="renderScreenVenues2()">
-              <option value="1" selected>1개 코스</option>
-              <option value="2">2개 코스</option>
-              <option value="3">3개 코스</option>
-            </select>
-            <label class="fl">코스명 · 총파</label>
-            <div id="screenVenueBox2"></div>
-          </div>
-        </div>
-        <div class="card" id="stage2CutBox" style="display:none">
-          <label class="fl" style="margin-top:0">본선 → 결승 진출 방식</label>
-          <select id="fCutMode2" onchange="toggleCutMode(2)">
-            <option value="total">전체 인원</option>
-            <option value="gender">남녀 구분</option>
-          </select>
-          <div id="cutTotalBox2"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal2" value="12"></div>
-          <div id="cutGenderBox2" class="frow" style="display:none">
-            <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM2" value="6"></div>
-            <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF2" value="6"></div>
-          </div>
-        </div>
-        <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
-      </div>
-
-      <div class="wpane" id="wpStage3">
-        <h2 class="wq">3단계(결승) 코스와 기간을 정해주세요</h2>
-        <div class="card">
-          <div id="fieldFields3">
-            <label class="fl">경기 규모</label>
-            <select id="fHoles3" onchange="renderVenues3()">
-              <option value="18" selected>18홀 (1개 코스)</option>
-              <option value="36">36홀 (2개 코스)</option>
-              <option value="54">54홀 (3개 코스)</option>
-              <option value="72">72홀 (4개 코스)</option>
-            </select>
-            <label class="fl">골프장 (코스별)</label>
-            <div id="venueBox3"></div>
-            <label class="fl">기록 방식</label>
-            <div class="optrow" id="recordModeRow3">
-              <div class="opt on" onclick="setRecordMode(3,'hole')">홀별 기록</div>
-              <div class="opt" onclick="setRecordMode(3,'total')">총점만</div>
+            <div id="screenFields" style="display:none;margin-top:14px">
+              <label class="fl" style="margin-top:0">진행 코스 수 · 최대 6개</label>
+              <select id="fScreenCourses" onchange="renderScreenVenues();renderStageCard(1)">
+                <option value="1">1개 코스</option>
+                <option value="2" selected>2개 코스</option>
+                <option value="3">3개 코스</option>
+                <option value="4">4개 코스</option>
+                <option value="5">5개 코스</option>
+                <option value="6">6개 코스</option>
+              </select>
+              <label class="fl">코스명 · 총파</label>
+              <div id="screenVenueBox"></div>
+              <p class="sub" style="margin-top:8px">참가자가 기간 중 자유롭게 방문해 기록을 제출하는 방식입니다 — 조편성 없이 진행돼요.</p>
             </div>
-            <p class="sub" id="recordModeNote3" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
-          </div>
-          <div id="screenFields3" style="display:none">
-            <label class="fl">진행 코스 수</label>
-            <select id="fScreenCourses3" onchange="renderScreenVenues3()">
-              <option value="1" selected>1개 코스</option>
-              <option value="2">2개 코스</option>
-              <option value="3">3개 코스</option>
-            </select>
-            <label class="fl">코스명 · 총파</label>
-            <div id="screenVenueBox3"></div>
+            <div class="card" id="stage1CutBox" style="display:none;margin-top:14px">
+              <label class="fl" style="margin-top:0" id="cut1Label">예선 → 결승 진출 방식</label>
+              <select id="fCutMode" onchange="toggleCutMode(1)">
+                <option value="total">전체 인원</option>
+                <option value="gender">남녀 구분</option>
+              </select>
+              <div id="cutTotalBox"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal" value="24"></div>
+              <div id="cutGenderBox" class="frow" style="display:none">
+                <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM" value="12"></div>
+                <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF" value="12"></div>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div class="stagecard ok" id="stageCard2" style="display:none">
+          <div class="stagecard-head"><b id="stageCardTitle2">결승</b> <span class="kbadge" id="stageCardBadge2">지정일 라운드</span></div>
+          <div class="specgrid" id="stageCardSpec2"></div>
+          <span class="expand" id="stageCardExpand2" onclick="toggleStageCard(2)">상세 바꾸기 ∨</span>
+          <div class="stagecard-detail" id="stageCardDetail2" style="display:none">
+            <p class="sub" style="margin-bottom:6px;font-weight:700">경기 방식 — 단계마다 다르게 선택 가능</p>
+            <div class="segk" id="kindSeg2">
+              <div onclick="setStageKind(2,'round')">지정일 라운드</div>
+              <div onclick="setStageKind(2,'period')">대회기간 라운드</div>
+            </div>
+            <div id="fieldFields2" style="margin-top:14px">
+              <label class="fl" style="margin-top:0">경기 규모</label>
+              <select id="fHoles2" onchange="renderVenues2();renderStageCard(2)">
+                <option value="18" selected>18홀 (1개 코스)</option>
+                <option value="36">36홀 (2개 코스)</option>
+                <option value="54">54홀 (3개 코스)</option>
+                <option value="72">72홀 (4개 코스)</option>
+              </select>
+              <label class="fl">골프장 (코스별)</label>
+              <div id="venueBox2"></div>
+              <label class="fl">기록 방식</label>
+              <div class="optrow" id="recordModeRow2">
+                <div class="opt on" onclick="setRecordMode(2,'hole');renderStageCard(2)">홀별 기록</div>
+                <div class="opt" onclick="setRecordMode(2,'total');renderStageCard(2)">총점만</div>
+              </div>
+              <p class="sub" id="recordModeNote2" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
+            </div>
+            <div id="screenFields2" style="display:none;margin-top:14px">
+              <label class="fl" style="margin-top:0">진행 코스 수</label>
+              <select id="fScreenCourses2" onchange="renderScreenVenues2();renderStageCard(2)">
+                <option value="1" selected>1개 코스</option>
+                <option value="2">2개 코스</option>
+                <option value="3">3개 코스</option>
+              </select>
+              <label class="fl">코스명 · 총파</label>
+              <div id="screenVenueBox2"></div>
+            </div>
+            <div class="card" id="stage2CutBox" style="display:none;margin-top:14px">
+              <label class="fl" style="margin-top:0">본선 → 결승 진출 방식</label>
+              <select id="fCutMode2" onchange="toggleCutMode(2)">
+                <option value="total">전체 인원</option>
+                <option value="gender">남녀 구분</option>
+              </select>
+              <div id="cutTotalBox2"><label class="fl">진출 인원</label><input type="tel" id="fCutTotal2" value="12"></div>
+              <div id="cutGenderBox2" class="frow" style="display:none">
+                <div><label class="fl">남자 진출 인원</label><input type="tel" id="fCutM2" value="6"></div>
+                <div><label class="fl">여자 진출 인원</label><input type="tel" id="fCutF2" value="6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stagecard ok" id="stageCard3" style="display:none">
+          <div class="stagecard-head"><b>결승</b> <span class="kbadge" id="stageCardBadge3">지정일 라운드</span></div>
+          <div class="specgrid" id="stageCardSpec3"></div>
+          <span class="expand" id="stageCardExpand3" onclick="toggleStageCard(3)">상세 바꾸기 ∨</span>
+          <div class="stagecard-detail" id="stageCardDetail3" style="display:none">
+            <p class="sub" style="margin-bottom:6px;font-weight:700">경기 방식 — 단계마다 다르게 선택 가능</p>
+            <div class="segk" id="kindSeg3">
+              <div onclick="setStageKind(3,'round')">지정일 라운드</div>
+              <div onclick="setStageKind(3,'period')">대회기간 라운드</div>
+            </div>
+            <div id="fieldFields3" style="margin-top:14px">
+              <label class="fl" style="margin-top:0">경기 규모</label>
+              <select id="fHoles3" onchange="renderVenues3();renderStageCard(3)">
+                <option value="18" selected>18홀 (1개 코스)</option>
+                <option value="36">36홀 (2개 코스)</option>
+                <option value="54">54홀 (3개 코스)</option>
+                <option value="72">72홀 (4개 코스)</option>
+              </select>
+              <label class="fl">골프장 (코스별)</label>
+              <div id="venueBox3"></div>
+              <label class="fl">기록 방식</label>
+              <div class="optrow" id="recordModeRow3">
+                <div class="opt on" onclick="setRecordMode(3,'hole');renderStageCard(3)">홀별 기록</div>
+                <div class="opt" onclick="setRecordMode(3,'total');renderStageCard(3)">총점만</div>
+              </div>
+              <p class="sub" id="recordModeNote3" style="display:none;margin-top:6px">홀 단위 기록이 없어 동점 처리에서 코스 카운트백을 선택할 수 없어요.</p>
+            </div>
+            <div id="screenFields3" style="display:none;margin-top:14px">
+              <label class="fl" style="margin-top:0">진행 코스 수</label>
+              <select id="fScreenCourses3" onchange="renderScreenVenues3();renderStageCard(3)">
+                <option value="1" selected>1개 코스</option>
+                <option value="2">2개 코스</option>
+                <option value="3">3개 코스</option>
+              </select>
+              <label class="fl">코스명 · 총파</label>
+              <div id="screenVenueBox3"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="wnav"><button class="btn ghost" onclick="wizPrev()">← 이전</button><button class="btn" onclick="wizNext()">다음 →</button></div>
       </div>
 
@@ -995,7 +1020,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="psegpane" id="pGroups">
         <p class="sub">이름을 누르고 바꿀 상대를 누르면 조가 맞바뀝니다.</p>
         <div id="groupsDisabledNote" class="card" style="display:none;text-align:center;padding:30px 20px">
-          <p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
+          <p class="sub" style="margin:0">이 단계는 <b>대회기간 라운드(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
         </div>
         <div id="groupsEmpty" class="card" style="display:none;text-align:center;padding:44px 26px">
           <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#B9CCE0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg>
@@ -1599,11 +1624,15 @@ const courseParTotal=c=>Array.isArray(c)?c.reduce((a,b)=>a+b,0):(+c||0);
 const isOut=p=>p.st==='wd'||p.st==='dq';
 let jRound=0,waitlist=[],swapSel=null,corrPend=null,editIdx=-1,parEditIdx=0;
 let creatingTournament=false;
-const config={created:false,id:null,pendingId:null,type:'field',stageCount:1,presetMode:'field1',name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:80,capUnlimited:false,
+const config={created:false,id:null,pendingId:null,type:'field',stageCount:1,presetMode:'solo',name:'',hostOrg:'',dateS:'',dateE:'',place:'',tie:'',rounds:2,venues:[],cap:80,capUnlimited:false,
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
-  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:'',apply_deadline:''},recordModes:{1:'hole',2:'hole',3:'hole'},regClosed:false};
+  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:'',apply_deadline:''},
+  // CH30-A: 단계별 경기 방식(kind) — 위저드가 예선=대회기간, 결승·단판=지정일로 기본값을 채운다.
+  // config.type(field/screen)은 stagesToType()로 내부 파생만 하고 더는 사용자에게 직접 묻지 않는다(하위호환 유지).
+  stageKinds:{1:'round',2:'round',3:'round'},
+  recordModes:{1:'hole',2:'hole',3:'hole'},regClosed:false};
 const user={loggedIn:false,name:'',phone:'',id:null,secret:null};
 // 차수28-B2: 대회 개설 시 데모 심판 자동 삽입 폐지(실사용 대회에 가짜 심판이
 // 섞이는 문제) — 신규 대회는 항상 심판 0명으로 시작, 운영진 탭에서 직접 등록.
@@ -1833,7 +1862,7 @@ function renderGroupsSeg(){
   const disabled=judgeStageKind==='period'||stageRecordMode==='total';
   $('#groupsDisabledNote').style.display=disabled?'block':'none';
   if(disabled)$('#groupsDisabledNote').innerHTML=judgeStageKind==='period'
-    ?'<p class="sub" style="margin:0">이 단계는 <b>기간형(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>'
+    ?'<p class="sub" style="margin:0">이 단계는 <b>대회기간 라운드(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>'
     :'<p class="sub" style="margin:0">이 단계는 <b>총점만(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>';
   if(playersActiveStage&&playersActiveStage.seq>1&&!playersActiveStage.roster_confirmed){
     $('#groupsDisabledNote').style.display='block';
@@ -1880,7 +1909,7 @@ async function renderScoreTab(){
   if(judgeStageKind==='period'||stageRecordMode==='total'){
     $('#scoreModeSeg').style.display='none';
     box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
-      <p class="sub" style="margin-bottom:16px">${judgeStageKind==='period'?'기간형':'총점만'} 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
+      <p class="sub" style="margin-bottom:16px">${judgeStageKind==='period'?'대회기간 라운드':'총점만'} 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
       <button class="btn full big" onclick="openJudge(0)">기록 입력 화면 열기</button>
     </div>`;
     return}
@@ -2025,7 +2054,7 @@ function renderMgmtHeader(){
     :`${(config.dateS||'').replaceAll('-','.')} ~ ${(config.dateE||'').slice(5).replace('-','.')}`;
   $('#mgmtName').textContent=config.name||'—';
   $('#mgSub').textContent=config.type==='screen'
-    ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(기간형)`
+    ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(대회기간 라운드)`
     :`${period} · ${config.place||''} · ${HOLES}홀(${ROUNDS}개 코스)`}
 document.querySelectorAll('.bnav button').forEach(b=>b.onclick=()=>goTab(b.dataset.page));
 
@@ -2117,7 +2146,7 @@ async function renderStageSub(){
     const period=config.dateS===config.dateE?(config.dateS||'').replaceAll('-','.')
       :`${(config.dateS||'').replaceAll('-','.')} ~ ${(config.dateE||'').slice(5).replace('-','.')}`;
     $('#mgSub').textContent=config.type==='screen'
-      ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(기간형)`
+      ?`${period} · ${config.place||''} · ${ROUNDS}개 코스(대회기간 라운드)`
       :`${period} · ${config.place||''} · ${HOLES}홀(${ROUNDS}개 코스)`;
     return}
   $('#mgSub').innerHTML=`<span class="stagesub">${stages.map(s=>{
@@ -3452,34 +3481,21 @@ async function startSignIn(){
    config/players/staff 등 잔여 상태가 새 대회로 새어드는 것(BUG-8) 방지 */
 function resetWizardState(){
   config.created=false;config.id=null;config.pendingId=null;
-  config.type='field';config.stageCount=1;config.presetMode='field1';
+  config.type='field';config.stageCount=1;config.presetMode='solo';
   config.name='';config.hostOrg='';config.dateS='';config.dateE='';config.place='';config.tie='';
   config.rounds=2;config.venues=[];config.cap=80;config.capUnlimited=false;
   config.awards={gender:true,age:false,club:false};
   config.fields={name:true,nick:false,sex:true,age:true,club:true,region:false};
   config.eligibility={type:'open',text:''};config.visibility='public';config.accessCode='';
   config.prizeTotal='';config.prizes=[];config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:''};
+  config.stageKinds={1:'round',2:'round',3:'round'};
   config.recordModes={1:'hole',2:'hole',3:'hole'};config.regClosed=false;
   players=[];groups=[];waitlist=[];pending=[];logEntries=[];
   staff=[];
-  curGroup=0;curStaff=0;curHole=0;curFilter='all';padTarget=null;
+  curGroup=0;curStaff=0;curHole=0;curFilter='all';padTarget=null;expandedStage=null;
   ROUNDS=2;HOLES=36;PAR_TOT=132;coursePars=[];coursePars2=[];coursePars3=[];
   wizCapUnlimited=false;wStepIdx=0;todoLinkShared=false}
 /* ================= wizard ================= */
-function setStageFieldsFor(n,t){
-  if(config.stageCount<n)return;
-  $('#fieldFields'+n).style.display=t==='field'?'block':'none';
-  $('#screenFields'+n).style.display=t==='screen'?'block':'none';
-  if(t==='screen'&&!document.querySelectorAll('.screenVenueIn'+n).length)window['renderScreenVenues'+n]();
-  if(t==='field'&&!document.querySelectorAll('.venueIn'+n).length)window['renderVenues'+n]()}
-function setTourType(t){
-  config.type=t;
-  $('#obTypeField').classList.toggle('on',t==='field');
-  $('#obTypeScreen').classList.toggle('on',t==='screen');
-  $('#fieldFields').style.display=t==='field'?'block':'none';
-  $('#screenFields').style.display=t==='screen'?'block':'none';
-  if(t==='screen'&&!document.querySelectorAll('.screenVenueIn').length)renderScreenVenues();
-  setStageFieldsFor(2,t);setStageFieldsFor(3,t)}
 function renderPrizeRows(){
   const box=$('#prizeRows');if(!box)return;
   box.innerHTML=config.prizes.map((p,i)=>`
@@ -3494,18 +3510,18 @@ function removePrizeRow(i){config.prizes.splice(i,1);renderPrizeRows()}
 function fillDefaultPrizes(){
   config.prizes=[{label:'우승',item:''},{label:'준우승',item:''},{label:'3위',item:''}];
   renderPrizeRows()}
-function setStageCount(n){
+// CH30-A: 구조 프리셋이 정한 단계 수에 맞춰 카드 표시·컷 라벨만 갱신한다
+// (예전 setStageCount는 wpStageCount 화면 전용이었으나, 그 화면이 폐지되고
+// chooseStructure()에서만 호출되는 내부 헬퍼로 축소됐다).
+function applyStageCount(n){
   config.stageCount=n;
-  $('#obStage1').classList.toggle('on',n===1);
-  $('#obStage2').classList.toggle('on',n===2);
-  $('#obStage3').classList.toggle('on',n===3);
+  $('#stageCard2').style.display=n>=2?'block':'none';
+  $('#stageCard3').style.display=n===3?'block':'none';
   $('#stage1CutBox').style.display=n>=2?'block':'none';
   $('#stage2CutBox').style.display=n===3?'block':'none';
-  $('#stage1QTitle').textContent=n===1?'코스와 기간을 정해주세요':'예선 코스와 기간을 정해주세요';
-  $('#stage2QTitle').textContent=n===3?'본선 코스와 기간을 정해주세요':'2단계(결승) 코스와 기간을 정해주세요';
+  $('#stageCardTitle1').textContent=n===1?'본선':'예선';
+  $('#stageCardTitle2').textContent=n===3?'본선':'결승';
   $('#cut1Label').textContent=n===3?'예선 → 본선 진출 방식':'예선 → 결승 진출 방식';
-  if(n>=2)setStageFieldsFor(2,config.type);
-  if(n===3)setStageFieldsFor(3,config.type);
   renderWizProgress()}
 function toggleCutMode(which){
   const suf=which===2?'2':'';
@@ -3610,21 +3626,79 @@ function drawParGrid(){
 function cyclePar(h){const c=coursePars[parEditIdx];c[h]=c[h]>=5?3:c[h]+1;drawParGrid()}
 function closeParEdit(){$('#parOv').classList.remove('on');renderVenues()}
 let wStepIdx=0;
-function choosePreset(mode){
+// CH30-A①: 구조 프리셋 3종(단판/예선+결승/예선+본선+결승) — 필드/스크린 질문과
+// "직접 구성"을 폐지한다. 직접 구성이 하던 일(단계별 방식 커스터마이즈)은 화면3의
+// 단계 카드 [상세 바꾸기]가 그대로 흡수한다.
+function chooseStructure(mode){
   config.presetMode=mode;
-  document.querySelectorAll('#wpPreset .preset').forEach(p=>p.classList.toggle('on',p.dataset.preset===mode));
-  if(mode==='field1'){
-    setTourType('field');setStageCount(1);setRecordMode(1,'hole')
-  }else if(mode==='screen2'){
-    setTourType('screen');setStageCount(2);setRecordMode(1,'total');setRecordMode(2,'total')}}
+  document.querySelectorAll('#wpStructure .preset').forEach(p=>p.classList.toggle('on',p.dataset.preset===mode));
+  const n=mode==='solo'?1:mode==='qualify2'?2:3;
+  applyStageCount(n);
+  // 예선 기본값=대회기간 라운드, 결승·본선·단판 기본값=지정일 라운드(🔴① 요구사항)
+  setStageKind(1,n>=2?'period':'round');
+  setStageKind(2,'round');
+  if(n===3)setStageKind(3,'round');
+  expandedStage=null;
+  renderStageCards()}
+// CH30-A③: 단계별 경기 방식(kind) 전환 — fieldFields{n}/screenFields{n}은 예전 필드/스크린
+// 화면의 것을 그대로 재사용한다(이제 대회 전체가 아니라 단계 하나에 스코프됨).
+function setStageKind(n,kind){
+  config.stageKinds[n]=kind;
+  const suf=n===1?'':String(n);
+  const seg=$('#kindSeg'+n);
+  if(seg)[...seg.children].forEach((d,i)=>d.classList.toggle('on',i===(kind==='period'?1:0)));
+  const ff=$('#fieldFields'+suf),sf=$('#screenFields'+suf);
+  if(ff)ff.style.display=kind==='round'?'block':'none';
+  if(sf)sf.style.display=kind==='period'?'block':'none';
+  if(kind==='period'){
+    config.recordModes[n]='total';
+    if(!document.querySelectorAll('.screenVenueIn'+suf).length)window['renderScreenVenues'+suf]();
+  }else{
+    setRecordMode(n,'hole');
+    if(!document.querySelectorAll('.venueIn'+suf).length)window['renderVenues'+suf]();
+  }
+  updateTieOptions();
+  renderStageCard(n)}
+// CH30-A③: 단계 카드 — 접힌 상태는 아이콘 스펙 타일(2×2), 펼치면 경기방식·코스·조편성·
+// 기록방식·동점처리 옵션. 손대지 않아도 되도록 프리셋 기본값을 미리 채워 보여준다.
+function renderStageCard(n){
+  const suf=n===1?'':String(n);
+  const kind=config.stageKinds[n];
+  const badge=$('#stageCardBadge'+n);
+  if(!badge)return;
+  badge.textContent=kind==='period'?'대회기간 라운드':'지정일 라운드';
+  badge.className='kbadge'+(kind==='period'?' period':'');
+  const spec=$('#stageCardSpec'+n);
+  const tieSel=$('#fTie');
+  const tieLabel=tieSel?(tieSel.value.includes('카운트백')?'카운트백':tieSel.value.includes('총점 비교')?'총점 비교':tieSel.value):'카운트백';
+  if(kind==='period'){
+    const courseCount=+($('#fScreenCourses'+suf)?.value||1);
+    spec.innerHTML=`
+      <div class="spec"><i>🖥️</i><div><b>코스 ${courseCount}개</b><small>기간 중 무제한 도전</small></div></div>
+      <div class="spec"><i>⭐</i><div><b>베스트 인정</b><small>총점만 기록</small></div></div>
+      <div class="spec"><i>👥</i><div><b>조 없이 제출</b><small>조편성</small></div></div>
+      <div class="spec"><i>📅</i><div><b>대회기간 라운드</b><small>경기 방식</small></div></div>`
+  }else{
+    const holes=+($('#fHoles'+suf)?.value||18);
+    const rm=config.recordModes[n];
+    spec.innerHTML=`
+      <div class="spec"><i>⛳</i><div><b>${holes}홀 · ${holes/18}코스</b><small>코스</small></div></div>
+      <div class="spec"><i>👥</i><div><b>${rm==='total'?'조 없이 제출':'4인 1조'}</b><small>조편성</small></div></div>
+      <div class="spec"><i>✏️</i><div><b>${rm==='total'?'총점만':'홀별 기록'}</b><small>기록 방식</small></div></div>
+      <div class="spec"><i>⚖️</i><div><b>${tieLabel}</b><small>동점 처리</small></div></div>`}}
+function renderStageCards(){for(let i=1;i<=config.stageCount;i++)renderStageCard(i)}
+// 접힌 카드는 요약만, 펼치면 상세 — 한 번에 한 카드만 펼쳐진다(사용자 지정).
+let expandedStage=null;
+function toggleStageCard(n){
+  expandedStage=expandedStage===n?null:n;
+  for(let i=1;i<=3;i++){
+    const detail=$('#stageCardDetail'+i),btn=$('#stageCardExpand'+i);
+    if(!detail)continue;
+    const open=expandedStage===i;
+    detail.style.display=open?'block':'none';
+    btn.textContent=open?'접기 ∧':'상세 바꾸기 ∨'}}
 function wizardSteps(){
-  const steps=['wpPreset','wpBasic'];
-  if(config.presetMode==='custom')steps.push('wpType','wpStageCount');
-  steps.push('wpStage1');
-  if(config.stageCount>=2)steps.push('wpStage2');
-  if(config.stageCount===3)steps.push('wpStage3');
-  steps.push('wpScheduleCap','wpDone');
-  return steps}
+  return['wpStructure','wpBasic','wpStageConfirm','wpScheduleCap','wpDone']}
 function renderWizProgress(){
   const box=$('#wizProg');if(!box)return;
   const steps=wizardSteps();
@@ -3636,9 +3710,18 @@ function wizShow(idx){
   $('#'+steps[wStepIdx]).classList.add('on');
   renderWizProgress();
   if(steps[wStepIdx]==='wpScheduleCap')renderScheduleBlocks();
+  if(steps[wStepIdx]==='wpStageConfirm')renderStageCards();
   window.scrollTo(0,0)}
 function wizNext(){wizShow(wStepIdx+1)}
 function wizPrev(){wizShow(wStepIdx-1)}
+// CH30-A④: 일정 화면을 "대회 전체 type"이 아니라 단계별 kind로 동적 구성한다 —
+// 지정일 라운드 단계=날짜 하나, 대회기간 라운드 단계=시작~종료. 혼합 구성(T2·T7 등)이면
+// 단계마다 알맞은 입력이 섞여서 나온다.
+function stageDisplayName(n){
+  const total=config.stageCount;
+  if(total===1)return'';
+  if(total===2)return n===1?'예선':'결승';
+  return n===1?'예선':n===2?'본선':'결승'}
 function renderScheduleBlocks(){
   const box=$('#scheduleBlocks');if(!box)return;
   const n=config.stageCount;
@@ -3647,10 +3730,10 @@ function renderScheduleBlocks(){
   let html='';
   for(let i=1;i<=n;i++){
     const s=suf(i);
-    const isLast=i===n;
-    const single=config.type==='field'||(config.type==='screen'&&isLast&&n>1);
-    const title=n===1?(config.type==='screen'?'접수 기간':'대회일'):
-      (single?(isLast?'결승일':`${i}단계 대회일`):(i===1?'예선 기간':i===2?'본선 기간':'기간'));
+    const kind=config.stageKinds[i];
+    const single=kind==='round';
+    const name=stageDisplayName(i);
+    const title=n===1?(kind==='period'?'접수 기간':'대회일'):(single?`${name}일`:`${name} 기간`);
     const[dS,dE]=defaultDates[i-1];
     html+=`<div class="scheduleblock"><p class="stitle">${title}</p>`;
     if(single){
@@ -3659,7 +3742,7 @@ function renderScheduleBlocks(){
     }else{
       html+=`<div class="dfrow"><div><label class="fl" style="margin-top:0">시작일</label><input type="date" id="fDateS${s}" value="${dS}"></div>
         <div><label class="fl" style="margin-top:0">종료일</label><input type="date" id="fDateE${s}" value="${dE}"></div></div>`}
-    if(i===1&&config.type==='field'){
+    if(i===1&&kind==='round'){
       html+=`<label class="fl">접수 마감(선택 — 안내용, 실제 마감은 접수 마감 버튼으로 처리)</label><input type="date" id="fApplyDeadline">`}
     html+='</div>'}
   box.innerHTML=html;
@@ -3806,7 +3889,7 @@ async function openApply(id){
     :t.date.replaceAll('-','.');
   $('#apDate').textContent=period;
   $('#apName').textContent=t.name;
-  const scale=t.type==='screen'?`${t.rounds}개 코스(기간형)`:`${t.rounds*18}홀 스트로크 · ${t.rounds}개 코스`;
+  const scale=t.type==='screen'?`${t.rounds}개 코스(대회기간 라운드)`:`${t.rounds*18}홀 스트로크 · ${t.rounds}개 코스`;
   const ne=t.noticeExtra||{};
   $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 20,000원 · 중식 포함 · 현장 납부'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
   renderCap();
@@ -3957,6 +4040,25 @@ async function createTournament(){
   } finally {
     creatingTournament=false
   }}
+// CH30-A: 단계별 kind(config.stageKinds[seq])로 코스 필드를 읽는다 — 예전엔
+// config.type(대회 전체) 하나가 모든 단계의 kind를 강제해 T2·T7류(예선 대회기간
+// 라운드→결승 지정일 라운드) 구성을 위저드로 만들 수 없었다(🔴①, CH29 전수검증에서 확인).
+function readStageFields(seq){
+  const suf=seq===1?'':String(seq);
+  const kind=config.stageKinds[seq];
+  if(kind==='period'){
+    const venues=[...document.querySelectorAll('.screenVenueIn'+suf)].map((v,i)=>v.value.trim()||`${i+1}코스`);
+    const pars=[...document.querySelectorAll('.screenParIn'+suf)].map(v=>+v.value||66);
+    return{kind,venues,coursePars:pars,useGroups:false}}
+  const holes=+$('#fHoles'+suf).value,rounds=holes/18;
+  const cur=seq===1?coursePars:seq===2?coursePars2:coursePars3;
+  const trimmed=cur.slice(0,rounds);
+  while(trimmed.length<rounds)trimmed.push([...PRESET66]);
+  if(seq===1)coursePars=trimmed;else if(seq===2)coursePars2=trimmed;else coursePars3=trimmed;
+  const venues=[...document.querySelectorAll('.venueIn'+suf)].map((v,i)=>v.value.trim()||`${i+1}코스`);
+  // 조편성 여부는 별도 컬럼이 아니라 기록 방식에서 파생(총점만=제출형·조 없음) —
+  // T4("필드 단판·총점만·조편성X")가 이미 이 전제로 동작하고 있어 그대로 따른다.
+  return{kind,venues,coursePars:trimmed,useGroups:config.recordModes[seq]==='hole'}}
 async function createTournamentInner(){
   todoLinkShared=false;
   config.name=$('#fName').value;config.hostOrg=$('#fHost').value;
@@ -3970,24 +4072,17 @@ async function createTournamentInner(){
   config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:deadlineEl?deadlineEl.value:''};
   jRound=0;
 
-  let stageVenues,stageCoursePars,stageKind,stageUseGroups;
-  if(config.type==='screen'){
-    stageVenues=[...document.querySelectorAll('.screenVenueIn')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-    stageCoursePars=[...document.querySelectorAll('.screenParIn')].map(v=>+v.value||66);
-    stageKind='period';stageUseGroups=false;
-    ROUNDS=stageVenues.length;HOLES=0;coursePars=stageCoursePars;
-    PAR_TOT=stageCoursePars.reduce((a,b)=>a+b,0)}
-  else{
-    HOLES=+$('#fHoles').value;ROUNDS=HOLES/18;
-    coursePars=coursePars.slice(0,ROUNDS);
-    while(coursePars.length<ROUNDS)coursePars.push([...PRESET66]);
-    PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
-    stageVenues=[...document.querySelectorAll('.venueIn')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-    stageCoursePars=coursePars;stageKind='round';stageUseGroups=true}
-  judgeStageKind=stageKind;stageRecordMode=config.recordModes[1];
-  config.rounds=ROUNDS;config.venues=stageVenues;
-  const uv=[...new Set(stageVenues)];
+  const stage1=readStageFields(1);
+  judgeStageKind=stage1.kind;stageRecordMode=config.recordModes[1];
+  if(stage1.kind==='period'){ROUNDS=stage1.venues.length;HOLES=0;coursePars=stage1.coursePars;PAR_TOT=stage1.coursePars.reduce((a,b)=>a+b,0)}
+  else{ROUNDS=stage1.coursePars.length;HOLES=ROUNDS*18;coursePars=stage1.coursePars;PAR_TOT=stage1.coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
+  config.rounds=ROUNDS;config.venues=stage1.venues;
+  const uv=[...new Set(stage1.venues)];
   config.place=uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:'');
+
+  // type 컬럼(하위호환)은 더 이상 사용자에게 직접 묻지 않고 내부 파생만 한다 —
+  // 혼합 구성(어느 단계든 대회기간 라운드 포함)이면 기존 관례대로 'screen'.
+  config.type=Object.values(config.stageKinds).slice(0,config.stageCount).some(k=>k==='period')?'screen':'field';
 
   // 세션 UUID 고정(CH28-A ①): 네트워크 실패 후 재시도해도 같은 id를 재사용 —
   // 새 UUID를 매번 만들면 재시도가 독립된 중복 대회를 만든다.
@@ -3995,8 +4090,8 @@ async function createTournamentInner(){
   const tournamentId=config.pendingId;
   const{error:tErr}=await sb.from('tournaments').insert({
     id:tournamentId,owner_id:user.id,name:config.name,host_org:config.hostOrg,type:config.type,
-    date_start:config.dateS,date_end:config.dateE,rounds:ROUNDS,venues:stageVenues,
-    course_pars:stageCoursePars,tie_rule:config.tie,cap:config.cap,cap_unlimited:config.capUnlimited,fields:config.fields,
+    date_start:config.dateS,date_end:config.dateE,rounds:ROUNDS,venues:stage1.venues,
+    course_pars:stage1.coursePars,tie_rule:config.tie,cap:config.cap,cap_unlimited:config.capUnlimited,fields:config.fields,
     awards:config.awards,status:'ready',
     visibility:config.visibility,access_code:config.visibility==='private'?config.accessCode:null,
     notice_extra:{eligibility:config.eligibility,prize_total:config.prizeTotal,
@@ -4013,38 +4108,26 @@ async function createTournamentInner(){
       :{total:Math.max(2,+$('#fCutTotal'+suf).value||24)}}
 
   const stage1Cut=config.stageCount>=2?readCut(''):null;
-  const stagesPayload=[{seq:1,name:config.stageCount>=2?'예선':'본선',kind:stageKind,
-    date_start:config.dateS,date_end:config.dateE,venues:stageVenues,
-    course_pars:stageCoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
+  const stagesPayload=[{seq:1,name:config.stageCount>=2?'예선':'본선',kind:stage1.kind,
+    date_start:config.dateS,date_end:config.dateE,venues:stage1.venues,
+    course_pars:stage1.coursePars,use_groups:stage1.useGroups,tie_rule:config.tie,
     advance_cut:stage1Cut,status:'open',record_mode:config.recordModes[1]}];
 
   if(config.stageCount>=2){
-    let stage2Venues,stage2CoursePars;
-    if(config.type==='screen'){
-      stage2Venues=[...document.querySelectorAll('.screenVenueIn2')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-      stage2CoursePars=[...document.querySelectorAll('.screenParIn2')].map(v=>+v.value||66)}
-    else{
-      stage2Venues=[...document.querySelectorAll('.venueIn2')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-      stage2CoursePars=coursePars2}
+    const stage2=readStageFields(2);
     const dateS2=$('#fDateS2').value||config.dateS,dateE2=$('#fDateE2').value||config.dateE;
     const stage2Cut=config.stageCount===3?readCut('2'):null;
-    stagesPayload.push({seq:2,name:config.stageCount===3?'본선':'결승',kind:stageKind,
-      date_start:dateS2,date_end:dateE2,venues:stage2Venues,
-      course_pars:stage2CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
+    stagesPayload.push({seq:2,name:config.stageCount===3?'본선':'결승',kind:stage2.kind,
+      date_start:dateS2,date_end:dateE2,venues:stage2.venues,
+      course_pars:stage2.coursePars,use_groups:stage2.useGroups,tie_rule:config.tie,
       advance_cut:stage2Cut,status:'waiting',record_mode:config.recordModes[2]})}
 
   if(config.stageCount===3){
-    let stage3Venues,stage3CoursePars;
-    if(config.type==='screen'){
-      stage3Venues=[...document.querySelectorAll('.screenVenueIn3')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-      stage3CoursePars=[...document.querySelectorAll('.screenParIn3')].map(v=>+v.value||66)}
-    else{
-      stage3Venues=[...document.querySelectorAll('.venueIn3')].map((v,i)=>v.value.trim()||`${i+1}코스`);
-      stage3CoursePars=coursePars3}
+    const stage3=readStageFields(3);
     const dateS3=$('#fDateS3').value||config.dateS,dateE3=$('#fDateE3').value||config.dateE;
-    stagesPayload.push({seq:3,name:'결승',kind:stageKind,
-      date_start:dateS3,date_end:dateE3,venues:stage3Venues,
-      course_pars:stage3CoursePars,use_groups:stageUseGroups,tie_rule:config.tie,
+    stagesPayload.push({seq:3,name:'결승',kind:stage3.kind,
+      date_start:dateS3,date_end:dateE3,venues:stage3.venues,
+      course_pars:stage3.coursePars,use_groups:stage3.useGroups,tie_rule:config.tie,
       advance_cut:null,status:'waiting',record_mode:config.recordModes[3]})}
 
   const{error:stErr}=await sb.rpc('create_stages',{t_id:tournamentId,p_owner_secret:user.secret,p_stages:stagesPayload});
@@ -4060,8 +4143,8 @@ async function createTournamentInner(){
     status:'ready',players:0,cap:config.cap,capUnlimited:config.capUnlimited,host:config.hostOrg||user.name,mine:true});
   $('#boardTitle').textContent=config.name;
   const bhn0=$('#boardHeadName');if(bhn0)bhn0.textContent=config.name;
-  $('#boardSub').textContent=config.type==='screen'
-    ?`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${config.hostOrg}`
+  $('#boardSub').textContent=stage1.kind==='period'
+    ?`대회기간 라운드 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${config.hostOrg}`
     :`${HOLES}홀 스트로크 · ${ROUNDS}개 코스 · PAR ${PAR_TOT} · ${config.hostOrg}`;
   renderMgmtHeader();
   $('#pasteBox').value=SAMPLE;
@@ -4908,7 +4991,7 @@ async function loadBoardData(tournamentId,trusted){
     ROUNDS=stageCoursePars.length||1;HOLES=0;coursePars=stageCoursePars;
     PAR_TOT=stageCoursePars.reduce((a,b)=>a+courseParTotal(b),0);
     $('#boardSub').textContent=boardStageKind==='period'
-      ?`기간형 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`
+      ?`대회기간 라운드 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`
       :`총점만 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`;
     const plAll=await fetchPlays(tournamentId);
     const plRows=boardStageKind==='round'?plAll.filter(r=>r.stage_id===stage.id):plAll;
@@ -5156,7 +5239,7 @@ function fullBoard(){const el=$('#boardShell');
 function renderResult(){
   if(boardStageKind==='period'||boardStageRecordMode==='total'){
     $('#resultSub').textContent=boardStageKind==='period'
-      ?'기간형 대회의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.'
+      ?'대회기간 라운드의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.'
       :'총점만 단계의 시상 화면은 준비 중입니다 — 전광판에서 순위를 확인하세요.';
     $('#podium').innerHTML='';
     return}
