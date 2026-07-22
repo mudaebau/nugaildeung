@@ -398,6 +398,21 @@ tr:last-child td{border-bottom:none}
 .colchip span.on{border-color:var(--main);background:#F4F9FE;color:var(--main-deep)}
 .exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
 .exline b{font-weight:700}
+/* CH32-A②: 여정 체크리스트 — 줄마다 자기 버튼(대칭), 3색 상태 언어 */
+.jlist{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.jstep{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.jstep:last-child{border-bottom:none}
+.jstep .jn{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700}
+.jstep.done .jn{background:#E7F5EE;color:#2E8B63}
+.jstep.cur .jn{background:var(--main-deep);color:#fff}
+.jstep.todo .jn{background:#EDF1F6;color:#9AAAB9}
+.jstep b{font-size:15px;font-weight:700;display:block}
+.jstep small{font-size:12px;color:var(--muted)}
+.jstep.todo b{color:#9AAAB9;font-weight:500}
+.jstep .jact{margin-left:auto;background:var(--main);color:#fff;font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
+.jstep.cur{background:#F4F9FE}
+.jact.sec{background:var(--main-soft);color:var(--main-deep)}
+.jact.dis{background:#EDF1F6;color:#9AAAB9}
 /* CH30-B④: 점수 목록 조별 스티키 헤더 */
 .pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
 .stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
@@ -932,34 +947,28 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="mgmtname" id="mgmtName">—</div>
       <p class="sub" id="mgSub">—</p>
     </div>
+    <!-- CH32-A①: 7탭→4탭(대회홈·참가자·스코어·리더보드). 요강·심판진·결과 탭 버튼은 없앴지만
+         패널(mgNotice/mgStaff/mgResult)과 기능은 그대로 두고 진입 경로만 대회홈 여정·하단 행·
+         리더보드로 옮긴다(mgShow()는 탭 버튼 없이도 정상 동작). -->
     <div class="tabA">
-      <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>관리홈</span></button>
-      <button class="ti" data-mg="mgNotice" onclick="mgShow('mgNotice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg><span>요강</span></button>
+      <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>대회홈</span></button>
       <button class="ti" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></button>
-      <button class="ti" data-mg="mgStaff" onclick="mgShow('mgStaff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg><span>심판진</span></button>
       <button class="ti" data-mg="mgScore" onclick="mgShow('mgScore')"><span class="bdg" id="scoreBadge" style="display:none"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z" fill="currentColor" stroke="none"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg><span>스코어</span></button>
       <button class="ti" data-mg="mgBoard" onclick="mgShow('mgBoard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></button>
-      <button class="ti" data-mg="mgResult" onclick="mgShow('mgResult')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg><span>결과</span></button>
     </div>
 
     <!-- 관리홈 -->
     <div class="mgpane on" id="mgHome">
       <div id="scoreTodo" class="todo" style="display:none" onclick="enterMgmt('mgScore')">📋 <span><b id="scoreTodoText">검수 대기 0건</b> — 스코어 탭에서 처리</span><span class="chev">›</span></div>
-      <div id="journeyBar"></div>
-      <div id="nextTodoCard"></div>
-      <div id="regCard"></div>
-      <div id="stageInfoCard"></div>
+      <!-- CH32-A②: 여정 체크리스트 — 개설/모집/각 단계/종료를 줄마다 자기 버튼으로(대칭 구조) -->
+      <div id="journeyChecklist"></div>
       <div class="stats" id="opStats"></div>
       <div id="advanceResultBox"></div>
+      <!-- CH32-A④: 홈 하단 4행(부제 포함) — 정보 수정은 여정 첫 줄로 이동했으므로 여기서 제외 -->
       <div class="tools">
-        <div class="trow" onclick="openEditInfo()">
-          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-          <span class="tt"><b>대회 정보 수정</b><span>대회명·일정·정원 등 항목별 수정</span></span>
-          <span class="chev">›</span>
-        </div>
         <div class="trow" id="trowBoard" onclick="toggleTool('Board')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
-          <span class="tt"><b>전광판</b><span id="boardUrlSummary">nuga1.kr/t/1024/board</span></span>
+          <span class="tt"><b>전광판</b><span id="boardUrlSummary">순위를 큰 화면(TV)에 띄워요</span></span>
           <span class="chev">›</span>
         </div>
         <div class="tooldetail" id="toolDetailBoard">
@@ -977,7 +986,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         </div>
         <div class="trow" id="trowApply" onclick="toggleTool('Apply')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg></span>
-          <span class="tt"><b>참가 신청 링크</b><span>클럽 카톡방에 공유하면 실시간 반영됩니다</span></span>
+          <span class="tt"><b>참가 신청 링크</b><span>단톡방에 붙여넣어 신청을 받아요</span></span>
           <span class="st2 gray" id="applyStat">접수 0명</span><span class="chev">›</span>
         </div>
         <div class="tooldetail" id="toolDetailApply">
@@ -987,8 +996,17 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
             <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
           </div>
         </div>
+        <div class="trow" onclick="mgShow('mgStaff')">
+          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg></span>
+          <span class="tt"><b>심판진</b><span id="staffRowSummary">점수 입력할 분 추가·문자 링크 발송</span></span>
+          <span class="chev">›</span>
+        </div>
+        <div class="trow" onclick="openExportSheet()">
+          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+          <span class="tt"><b>파일로 저장</b><span>명단·조편성·순위를 엑셀용 파일로</span></span>
+          <span class="chev">›</span>
+        </div>
       </div>
-      <button class="btn full big" id="stageAdvanceBtn" style="margin-top:4px" onclick="openStageSheet()">결과 · 시상 확정하기</button>
     </div>
 
     <!-- 요강 -->
@@ -1105,6 +1123,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="card" style="text-align:center;padding:40px 20px">
         <p class="sub" style="margin-bottom:16px">참가자·관중이 보는 실시간 순위표입니다.<br>대회장 TV·노트북에서는 전체화면으로 여세요.</p>
         <button class="btn full big" onclick="openBoard()">리더보드 열기</button>
+      </div>
+      <!-- CH32-A①: 구 "결과" 탭 진입 경로를 여기로 흡수(완전 병합은 C브랜치) -->
+      <div class="trow" style="cursor:pointer" onclick="mgShow('mgResult')">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></span>
+        <span class="tt"><b>결과·시상</b><span>부문 수상·CSV·인쇄 — 종료 후 최종 결과로 전환</span></span>
+        <span class="chev">›</span>
       </div>
       <button class="btn ghost full" id="boardFinalizeBtn" style="margin-top:10px" onclick="openStageSheet()">최종순위 확정</button>
     </div>
@@ -1438,6 +1462,36 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('중복 기록')">중복 기록</button>
       <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('운영자 지시')">운영자 지시</button>
       <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelPlayDelete()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- CH32-A④: 파일로 저장 — 기존 CSV 내보내기 4종을 한 시트에 모음(재구현 없음) -->
+<div class="overlay" id="exportSheetOv" onclick="if(event.target===this)closeExportSheet()">
+  <div class="pad">
+    <h3>파일로 저장</h3>
+    <p class="sub" style="margin-bottom:14px">엑셀에서 바로 열리는 CSV 파일로 내려받습니다.</p>
+    <div class="tools">
+      <div class="trow" onclick="closeExportSheet();exportPlayersCSV()">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+        <span class="tt"><b>참가자 명단</b><span>이름·연락처·소속 등</span></span>
+        <span class="chev">›</span>
+      </div>
+      <div class="trow" onclick="closeExportSheet();exportGroupsCSV()">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+        <span class="tt"><b>조편성표</b><span>조별 참가자 배치</span></span>
+        <span class="chev">›</span>
+      </div>
+      <div class="trow" onclick="closeExportSheet();exportScoresCSV()">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+        <span class="tt"><b>점수 기록</b><span>홀별·코스별 전체 점수</span></span>
+        <span class="chev">›</span>
+      </div>
+      <div class="trow" onclick="closeExportSheet();exportResultCSV()">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+        <span class="tt"><b>최종 순위</b><span>부문별 순위·수상 내역</span></span>
+        <span class="chev">›</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1805,7 +1859,7 @@ function mgShow(id){
   document.querySelectorAll('.mgpane').forEach(p=>p.classList.remove('on'));
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
-  if(id==='mgHome'){renderStageSub();renderStageHome();renderOpsStats();renderScoreBadge();renderNextTodoCard()}
+  if(id==='mgHome'){renderStageSub();renderJourneyChecklist();renderOpsStats();renderScoreBadge()}
   if(id==='mgNotice')renderNoticeCompletion();
   if(id==='mgPlayers'){playersStageId=null;
     const waitTab=document.querySelector('#playersSeg [data-seg="pWait"]');
@@ -2232,82 +2286,109 @@ async function renderStageSub(){
   $('#mgSub').innerHTML=`<span class="stagesub">${stages.map(s=>{
     const label=s.status==='open'?'진행 중':s.status==='done'?'완료':'대기';
     return s.status==='done'?`<b onclick="viewStageResult('${s.id}')">${s.name}(${label})</b>`:`${s.name}(${label})`}).join(' → ')}</span>`}
-async function renderStageHome(){
-  const box=$('#stageInfoCard');if(!box||!config.id)return;
+// CH32-A②: 여정 체크리스트 — 대회홈의 유일한 진행 안내. 줄마다 자기 버튼(대칭 구조),
+// 3색 상태 언어(파랑=지금 할 일 · 회색=비활성(탭 시 이유 토스트) · 옅파랑=상시 가능).
+// 구 여정바(journeyStepHTML/renderJourneyBar)·구 regCard·구 stageInfoCard·구 지속표시 종료
+// 버튼(#stageAdvanceBtn)을 이 한 함수가 대체한다(CH32-A⑤).
+function journeyRowHTML(state,num,title,subtitle,btnLabel,btnClass,onclick){
+  const jn=state==='done'?'✓':num;
+  const btn=btnLabel?`<button class="jact ${btnClass||''}" onclick="${onclick}">${btnLabel}</button>`:'';
+  return`<div class="jstep ${state}"><span class="jn">${jn}</span><div><b>${title}</b><small>${subtitle}</small></div>${btn}</div>`}
+function cutPreviewText(cut){
+  if(!cut)return'';
+  if(cut.total)return`진출 ${cut.total}명`;
+  if(cut.m||cut.f)return`진출 남${cut.m||0}·여${cut.f||0}`;
+  return''}
+function stageActiveProgressText(stage){
+  const dd=dday(stage.date_end||stage.date_start);
+  if(stage.kind==='period'){
+    const total=(stage.course_pars||[]).length||ROUNDS;
+    const done=periodStandings().filter(s=>!s.out&&s.completed>=total).length;
+    return`완주 ${done}/${players.length}${dd?' · '+dd:''}`}
+  const done=standings().filter(s=>!s.out&&s.thru>=HOLES).length;
+  return`완주 ${done}/${players.filter(p=>!isOut(p)).length}${dd?' · '+dd:''}`}
+async function renderJourneyChecklist(){
+  const box=$('#journeyChecklist');if(!box||!config.id)return;
   const stages=await loadAllStages(config.id);
-  const stage=curActiveStage(stages);
-  if(!stage){box.innerHTML='';return}
   const{data:tRow}=await sb.from('tournaments').select('status,reg_closed,cap,cap_unlimited').eq('id',config.id).single();
   config.regClosed=!!(tRow&&tRow.reg_closed);
   const started=!!tRow&&(tRow.status==='live'||tRow.status==='done');
-  const btn=$('#stageAdvanceBtn');
-
-  renderRegCard(tRow);
-
-  if(!started){
-    renderJourneyBar(stages,tRow,started,false);
-    box.innerHTML=`<div class="card" style="text-align:center;padding:22px 20px">
-      <p class="sub">아직 시작 전입니다. 참가자·${stage.kind==='round'?'조편성을':'접수 현황을'} 확인하고 시작하세요.</p>
-    </div>`;
-    if(btn){btn.textContent=`${stage.name} 시작하기`;btn.onclick=()=>openStageStartSheet(stage)}
-    return}
-
-  if(stage.kind==='period'){
-    const total=(stage.course_pars||[]).length||ROUNDS;
-    const plRows=(await fetchPlays(config.id)).filter(r=>r.stage_id===stage.id);
-    const byPlayer={};(plRows||[]).forEach(r=>{(byPlayer[r.player_id]=byPlayer[r.player_id]||new Set()).add(r.course_no)});
-    const finished=Object.values(byPlayer).filter(s=>s.size>=total).length;
-    const periodTxt=stage.date_start===stage.date_end?(stage.date_start||'').replaceAll('-','.')
-      :`${(stage.date_start||'').replaceAll('-','.')} ~ ${(stage.date_end||'').replaceAll('-','.')}`;
-    box.innerHTML=`<div class="card" style="display:flex;align-items:center;gap:14px">
-      <div class="dday"><b class="num">${dday(stage.date_end)||'—'}</b><span>${stage.name} 마감까지</span></div>
-      <div class="sub" style="font-size:13.5px;line-height:1.6;margin:0">${stage.name} 기간 ${periodTxt}<br>코스 ${total}개 · 전 코스 완주 ${finished}명</div>
-    </div>`
-  }else{
-    let doneG=0;
-    groups.forEach((g,i)=>{const p=groupProgress(i);if(p.total&&p.done===p.total)doneG++});
-    box.innerHTML=`<div class="card" style="display:flex;align-items:center;gap:14px">
-      <div class="dday"><b class="num">${doneG}/${groups.length||0}</b><span>조 완료</span></div>
-      <div class="sub" style="font-size:13.5px;line-height:1.6;margin:0">${stage.name} · ${groups.length}개 조 진행 중</div>
-    </div>`}
-  const openIdx=stages.findIndex(s=>s.status==='open');
-  const hasNext=openIdx>=0&&openIdx+1<stages.length;
-  const readyToFinish=stages.length>0&&openIdx<0&&!(tRow&&tRow.status==='done');
-  // CH31⑦: 마지막 확정 버튼 문구를 "대회 종료"로 명확히 하고, 여정 바의 종료 노드도
-  // 같은 확정 화면(openStageSheet)으로 바로 들어갈 수 있게 한다.
-  if(btn){btn.onclick=()=>openStageSheet();btn.textContent=hasNext?`${stage.name} 마감하고 ${stages[openIdx+1].name} 시작`:'대회 종료 — 결과·시상 확정'}
-  renderJourneyBar(stages,tRow,started,readyToFinish)}
-function journeyStepHTML(label,sub,badge,badgeClosed,cur,done,onclick){
-  return`<div class="js ${cur?'cur':done?'done':''}" ${onclick?`style="cursor:pointer" onclick="${onclick}"`:''}><b>${label}</b>${badge?`<span class="bd ${badgeClosed?'closed':''}">${badge}</span>`:`<span>${sub||''}</span>`}</div>`}
-function renderJourneyBar(stages,tRow,started,readyToFinish){
-  const box=$('#journeyBar');if(!box)return;
   const finished=!!tRow&&tRow.status==='done';
-  const parts=[journeyStepHTML('접수',null,config.regClosed?'마감':'접수중',config.regClosed,!started,started)];
-  stages.forEach(s=>{
-    const sub=s.status==='done'?'완료':(s.status==='open'&&started)?'진행 중':'대기';
-    parts.push(journeyStepHTML(s.name,sub,null,false,started&&s.status==='open',s.status==='done'))});
-  parts.push(journeyStepHTML('종료',finished?'완료':(readyToFinish?'확정 대기':'—'),null,false,false,finished,readyToFinish?'openStageSheet()':null));
-  box.innerHTML=`<div class="jbar">${parts.join('<span class="jarr">›</span>')}</div>`}
-function renderRegCard(tRow){
-  const box=$('#regCard');if(!box)return;
-  const unlimited=!!(tRow&&tRow.cap_unlimited);
-  const cap=(tRow&&tRow.cap)||config.cap;
-  const capStat=unlimited
-    ?`<div><b class="num" style="font-size:22px;color:var(--main-deep)">${players.length}</b><span style="font-size:11.5px;color:var(--muted);display:block">명 신청 · 제한 없음</span></div>`
-    :`<div><b class="num" style="font-size:22px;color:var(--main-deep)">${players.length}<small style="font-size:13px;font-weight:600;color:var(--muted)">/${cap}</small></b><span style="font-size:11.5px;color:var(--muted);display:block">신청 / 정원</span></div>
-      <div><b class="num" style="font-size:22px;color:var(--main-deep)">${waitlist.length}</b><span style="font-size:11.5px;color:var(--muted);display:block">대기</span></div>`;
-  box.innerHTML=`<div class="card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><b style="font-size:15.5px">참가 접수</b></div>
-    <div style="display:flex;gap:18px;margin-bottom:14px">${capStat}</div>
-    <button class="btn full" style="background:${config.regClosed?'var(--main-soft)':'#FBE9E4'};color:${config.regClosed?'var(--main-deep)':'#C4523A'}" onclick="${config.regClosed?'reopenRegistration()':'openRegCloseSheet()'}">${config.regClosed?'접수 재개':'접수 마감하기'}</button>
-  </div>`}
+  const rows=[];
+  let n=1;
+
+  // 1. 개설 — 항상 상시 가능(옅파랑)
+  const pct=noticeCompletionPct();
+  rows.push(journeyRowHTML('done',n++,'대회 개설',
+    `요강 완성도 <b style="color:#C9930A">${pct}%</b> · 일정·구조 관리`,
+    '정보 수정','sec','openEditInfo()'));
+
+  // 2. 모집 — 시작 전엔 지금 할 일(파랑), 시작 후엔 완료(재개는 옅파랑으로 상시)
+  const applyTxt=`${players.length+waitlist.length}명 신청${config.regClosed?' · 마감됨':(started?'':'')}`;
+  if(!started){
+    rows.push(journeyRowHTML('cur',n++,'참가자 모집',applyTxt,
+      config.regClosed?'재개':'모집 마감', config.regClosed?'sec':'',
+      config.regClosed?'reopenRegistration()':'openRegCloseSheet()'));
+  }else{
+    rows.push(journeyRowHTML('done',n++,'참가자 모집',applyTxt,'재개','sec','reopenRegistration()'));
+  }
+
+  // 3..N. 각 단계 — 진행 중(파랑 마감) / 완료(옅파랑 결과보기) / 대기(회색, 순서 되면 파랑 시작)
+  let reachedNextStart=!started; // 아직 시작 전이면 stages[0]이 "지금 시작할 차례"
+  stages.forEach((stage,i)=>{
+    const seq=n++;
+    if(stage.status==='done'){
+      rows.push(journeyRowHTML('done',seq,stage.name,'완료','결과 보기','sec',`viewStageResult('${stage.id}')`));
+      reachedNextStart=true; // 방금 단계가 끝났으니 다음 단계가 이제 시작 대상
+    }else if(stage.status==='open'){
+      rows.push(journeyRowHTML('cur',seq,stage.name,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
+      reachedNextStart=false;
+    }else{ // waiting
+      const preview=[cutPreviewText(stage.advance_cut),(stage.date_start||'').replaceAll('-','.')].filter(Boolean).join(' · ');
+      if(reachedNextStart){
+        rows.push(journeyRowHTML('cur',seq,stage.name,preview,`${stage.name} 시작`,'',`checkStageStart('${stage.id}')`));
+        reachedNextStart=false;
+      }else{
+        rows.push(journeyRowHTML('todo',seq,stage.name,preview,`${stage.name} 시작`,'dis',
+          `toast('이전 단계를 먼저 마쳐야 시작할 수 있어요')`));
+      }
+    }});
+
+  // N+1. 종료
+  const openIdx=stages.findIndex(s=>s.status==='open');
+  const readyToFinish=stages.length>0&&openIdx<0&&stages.every(s=>s.status==='done')&&!finished;
+  if(finished){
+    rows.push(journeyRowHTML('done',n++,'대회 종료','완료','결과 보기','sec',"mgShow('mgResult')"));
+  }else if(readyToFinish){
+    rows.push(journeyRowHTML('cur',n++,'대회 종료','결과·시상 확정 준비됨','종료 확정','','openStageSheet()'));
+  }else{
+    rows.push(journeyRowHTML('todo',n++,'대회 종료','결과·시상 확정','종료 확정','dis',
+      `toast('모든 단계를 마쳐야 종료를 확정할 수 있어요')`));
+  }
+
+  box.innerHTML=`<div class="jlist">${rows.join('')}</div>`;
+  // CH32-A④: 심판진 행 부제 — 나(운영자) 포함 인원수를 매번 갱신
+  const staffRow=$('#staffRowSummary');
+  if(staffRow)staffRow.textContent=`점수 입력할 분 추가·문자 링크 발송 — 나(운영자) 포함 ${scorerOptions().length}명`}
+// 대기 중인 단계의 [시작] 버튼 — 사전 점검 시트를 먼저 연다(CH32-A③)
+async function checkStageStart(stageId){
+  const stages=await loadAllStages(config.id);
+  const stage=stages.find(s=>s.id===stageId);
+  if(stage)openStageStartSheet(stage)}
 function openStageStartSheet(stage){
   let html=`<p class="sheetli"><b>✓</b><span>참가자 ${players.length}명 등록됨</span></p>`;
+  // CH32-A③: 명단 확정 여부(2단계 이상만 해당 — 1단계는 접수 명단이 곧 명단)
+  if(stage.seq>1){
+    html+=stage.roster_confirmed
+      ?`<p class="sheetli"><b>✓</b><span>'${stage.name}' 명단 확정됨</span></p>`
+      :`<p class="sheetli warn"><b>!</b><span>'${stage.name}' 명단이 아직 확정되지 않았어요 — 참가자 탭에서 먼저 확정하세요</span></p>`}
   if(stage.kind==='round'){
     const doneG=groups.length&&groups.every(g=>g.length>0);
     html+=doneG
       ?`<p class="sheetli"><b>✓</b><span>조편성 완료(${groups.length}개 조)</span></p>`
       :`<p class="sheetli warn"><b>!</b><span>조편성이 아직 안 됐어요 — 참가자 탭에서 먼저 조편성하는 것을 권장합니다</span></p>`}
+  // CH32-A③: 심판 수(개설자는 등록 없이 항상 포함 — CH31⑩)
+  html+=`<p class="sheetli"><b>✓</b><span>점수 입력 가능 ${scorerOptions().length}명(나(운영자) 포함)</span></p>`;
   html+=`<p class="sheetli"><b>✓</b><span>시작 후 스코어 탭에서 점수를 입력하면 대회가 진행 상태로 전환됩니다</span></p>`;
   $('#stageStartTitle').textContent=`${stage.name}을 시작할까요?`;
   $('#stageStartList').innerHTML=html;
@@ -2328,7 +2409,7 @@ async function confirmRegClose(){
   const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=true;
   closeRegCloseSheet();
   await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:'접수 마감'});
-  renderStageHome();
+  renderJourneyChecklist();
   toast('접수를 마감했습니다')}
 async function reopenRegistration(){
   const{error}=await sb.rpc('set_registration_closed',{t_id:config.id,p_closed:false,p_owner_secret:user.secret});
@@ -2336,7 +2417,7 @@ async function reopenRegistration(){
   config.regClosed=false;
   const cached=tournaments.find(x=>x.id===config.id);if(cached)cached.regClosed=false;
   await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:'접수 재개'});
-  renderStageHome();
+  renderJourneyChecklist();
   toast('접수를 재개했습니다')}
 function cutCompetitors(doneArr,cut,margin){
   if(!cut||!doneArr.length)return null;
@@ -2548,7 +2629,7 @@ async function doAdvanceStage(curStage,nextStage,advanced){
     <button class="btn ghost full" style="margin-top:10px" onclick="copyAdvanceResult()">진출 안내 문구 복사 (카톡·문자 발송용)</button></div>`;
   toast(`${nextStage.name} 진출자 ${advanced.length}명이 선발되었습니다`);
   await syncActiveStageState(config.id);
-  renderStageSub();renderStageHome();renderOpsStats()}
+  renderStageSub();renderJourneyChecklist();renderOpsStats()}
 let lastAdvanceResult='';
 let pastStageSnap=null;
 async function viewStageResult(stageId){
@@ -2763,7 +2844,6 @@ async function loadMyTournament(tournamentId){
   await syncActiveStageState(tournamentId);
   if(!config.id)return false;
   config.created=true;
-  todoLinkShared=false;
   const stages=await loadAllStages(tournamentId);
   config.stageCount=stages.length||1;
   const{data:tRow}=await sb.from('tournaments').select('tie_rule,fields,awards,type,date_start,date_end,visibility,reg_closed,status,cap,cap_unlimited,notice_extra').eq('id',tournamentId).single();
@@ -3015,24 +3095,7 @@ function copyApplyShareLink(){
 
 /* ================= 대회 정보 수정 (3등급) ================= */
 let editInfoSection=null,editStage=null,editStageLocked=false,editCoursePars=[],editWarnCtx=null;
-let todoLinkShared=false;
-/* 차수27①: 관리홈 개설 직후 "다음 할 일" 카드 — 첫 단계 시작 전 + 신청 소수(3명 미만)일 때만,
-   신청이 쌓이거나 단계가 시작되면 카드 자체가 사라진다(닫기 버튼 없음). */
-async function renderNextTodoCard(){
-  const box=$('#nextTodoCard');if(!box||!config.id)return;
-  const{data:tRow}=await sb.from('tournaments').select('status').eq('id',config.id).single();
-  const started=!!tRow&&(tRow.status==='live'||tRow.status==='done');
-  if(started||players.length>=3){box.innerHTML='';return}
-  const pct=noticeCompletionPct();
-  const step2Done=pct>=100;
-  box.innerHTML=`
-    <div class="todo3">
-      <h6>🎉 대회가 열렸어요 — 다음 할 일</h6>
-      <div class="tstep"><span class="no done">✓</span><div><b>대회 열기</b><span>완료</span></div></div>
-      <div class="tstep"><span class="no ${step2Done?'done':''}">${step2Done?'✓':'2'}</span><div><b>요강 완성하기</b><span>${step2Done?'완료':`시상·참가비 미입력 (완성도 ${pct}%)`}</span></div>${step2Done?'':`<span class="go" onclick="openEditInfo().then(()=>showEditSection('awards'))">채우기 ›</span>`}</div>
-      <div class="tstep"><span class="no ${todoLinkShared?'done':'wait'}">${todoLinkShared?'✓':'3'}</span><div><b>단톡방에 링크 공유</b><span>${todoLinkShared?'완료':'신청을 받기 시작하세요'}</span></div>${todoLinkShared?'':`<span class="go" onclick="shareTodoLink()">복사 ›</span>`}</div>
-    </div>`}
-function shareTodoLink(){copyApplyShareLink();todoLinkShared=true;renderNextTodoCard()}
+// CH32-A⑤: 구 "다음 할 일" 카드(차수27①) 폐지 — 여정 체크리스트가 그 역할을 흡수했다.
 function noticeCompletionItems(){
   return[
     {label:'🏆 시상 내역',filled:!!(config.prizeTotal||config.prizes.some(p=>p.label)),key:'awards'},
@@ -3579,7 +3642,7 @@ function resetWizardState(){
   staff=[];
   curGroup=0;curStaff=0;curHole=0;curFilter='all';padTarget=null;expandedStage=null;
   ROUNDS=2;HOLES=36;PAR_TOT=132;coursePars=[];coursePars2=[];coursePars3=[];
-  wizCapUnlimited=false;wStepIdx=0;todoLinkShared=false}
+  wizCapUnlimited=false;wStepIdx=0}
 /* ================= wizard ================= */
 function renderPrizeRows(){
   const box=$('#prizeRows');if(!box)return;
@@ -4155,7 +4218,6 @@ function readStageFields(seq){
   // T4("필드 단판·총점만·조편성X")가 이미 이 전제로 동작하고 있어 그대로 따른다.
   return{kind,venues,coursePars:trimmed,useGroups:config.recordModes[seq]==='hole'}}
 async function createTournamentInner(){
-  todoLinkShared=false;
   config.name=$('#fName').value;config.hostOrg=$('#fHost').value;
   config.dateS=$('#fDateS').value;config.dateE=$('#fDateE').value;
   if(config.dateE<config.dateS)config.dateE=config.dateS;
@@ -5699,6 +5761,9 @@ function downloadCSV(filename,rows){
   const a=document.createElement('a');
   a.href=url;a.download=filename;document.body.appendChild(a);a.click();
   document.body.removeChild(a);URL.revokeObjectURL(url)}
+// CH32-A④: 파일로 저장 시트 — 기존 CSV 내보내기 4종을 한 곳에 모으는 진입점(재구현 없음)
+function openExportSheet(){$('#exportSheetOv').classList.add('on')}
+function closeExportSheet(){$('#exportSheetOv').classList.remove('on')}
 function exportPlayersCSV(){
   if(!players.length){toast('참가자가 없습니다');return}
   const rows=[['이름','전화번호','성별','나이','소속','지역','조','상태','체크인','입금']];
