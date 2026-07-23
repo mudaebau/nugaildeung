@@ -451,8 +451,6 @@ tr:last-child td{border-bottom:none}
 .toolrow .info{flex:1;min-width:110px}
 .toolrow .info b{display:block;font-size:18px}
 .toolrow .info span{color:var(--muted);font-size:14px}
-.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;cursor:pointer}
-.ckc.on{background:var(--mint);border-color:var(--mint)}
 .pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px;flex:0 0 auto;cursor:pointer}
 .pill2.pay{background:#E3F6F0;color:#2E8B63}
 .pill2.nopay{background:#FBE9E4;color:var(--coral)}
@@ -954,7 +952,9 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>대회홈</span></button>
       <button class="ti" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></button>
       <button class="ti" data-mg="mgScore" onclick="mgShow('mgScore')"><span class="bdg" id="scoreBadge" style="display:none"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z" fill="currentColor" stroke="none"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg><span>스코어</span></button>
-      <button class="ti" data-mg="mgBoard" onclick="mgShow('mgBoard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></button>
+      <!-- CH32-A⑥: 리더보드 탭은 "열기" 중간 문 없이 바로 순위(구 mgResult)를 보여준다.
+           TV 전체화면(구 mgBoard 런처)은 결과 화면 안의 별도 행으로 이동. -->
+      <button class="ti" data-mg="mgResult" onclick="mgShow('mgResult')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></button>
     </div>
 
     <!-- 관리홈 -->
@@ -1098,7 +1098,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       </div>
       <button class="btn ghost full" id="sendAllBtn" style="margin-top:4px" onclick="sendLinks()">📨 전체 발송 문구 복사</button>
       <p class="swaphint">심판은 문자 링크로 접속해요 — 가입 필요 없음</p>
-      <button class="btn ghost full" onclick="openJudge(0)">내가 직접 입력하기</button>
+      <!-- CH32-A⑦: "내가 직접 입력하기" 버튼 제거 — 개설자는 위 목록에 "나 (운영자)"로 상시 표시되고
+           스코어 탭에서 등록 없이 바로 입력 가능해 별도 버튼이 불필요해졌다(CH31⑩). -->
     </div>
 
     <!-- 스코어입력 -->
@@ -1118,23 +1119,23 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     </div>
 
     <!-- 리더보드 -->
+    <!-- CH32-A⑥: 리더보드 탭 대상이 아닌 보조 화면 — TV 전체화면 전용(결과 화면 상단 행에서 진입) -->
     <div class="mgpane" id="mgBoard">
       <div class="stagechips" id="boardStageChips"></div>
       <div class="card" style="text-align:center;padding:40px 20px">
         <p class="sub" style="margin-bottom:16px">참가자·관중이 보는 실시간 순위표입니다.<br>대회장 TV·노트북에서는 전체화면으로 여세요.</p>
-        <button class="btn full big" onclick="openBoard()">리더보드 열기</button>
-      </div>
-      <!-- CH32-A①: 구 "결과" 탭 진입 경로를 여기로 흡수(완전 병합은 C브랜치) -->
-      <div class="trow" style="cursor:pointer" onclick="mgShow('mgResult')">
-        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></span>
-        <span class="tt"><b>결과·시상</b><span>부문 수상·CSV·인쇄 — 종료 후 최종 결과로 전환</span></span>
-        <span class="chev">›</span>
+        <button class="btn full big" onclick="openBoard()">전체화면으로 열기</button>
       </div>
       <button class="btn ghost full" id="boardFinalizeBtn" style="margin-top:10px" onclick="openStageSheet()">최종순위 확정</button>
     </div>
 
-    <!-- 결과 -->
+    <!-- 리더보드(구 결과) — CH32-A⑥: 탭 진입 시 바로 순위/결과를 보여준다(중간 문 없음) -->
     <div class="mgpane" id="mgResult">
+      <div class="trow" style="cursor:pointer" onclick="mgShow('mgBoard')">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+        <span class="tt"><b>TV 전체화면으로 보기</b><span>대회장 TV·노트북에 연결해 크게 띄워요</span></span>
+        <span class="chev">›</span>
+      </div>
       <p class="sub" id="resultSub">경기 진행 전입니다.</p>
       <div id="roundResultBox">
         <div class="podium" id="podium"></div>
@@ -1513,8 +1514,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <input type="tel" id="pevGroup" placeholder="예: 3">
     <div class="frow" style="margin-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:12px">
-        <span style="font-weight:600">체크인</span>
-        <button class="pill2 nopay" id="pevCiBtn" onclick="togglePevCheckin()">미체크인</button>
+        <span style="font-weight:600">출석</span>
+        <button class="pill2 nopay" id="pevCiBtn" onclick="togglePevCheckin()">미출석</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:12px">
         <span style="font-weight:600">입금</span>
@@ -1747,7 +1748,7 @@ const config={created:false,id:null,pendingId:null,type:'field',stageCount:1,pre
   awards:{gender:true,age:false,club:false},
   fields:{name:true,nick:false,sex:true,age:true,club:true,region:false},
   eligibility:{type:'open',text:''},visibility:'public',accessCode:'',
-  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:'',apply_deadline:''},
+  prizeTotal:'',prizes:[],noticeExtra:{contact:'',fee:'',rules:'',apply_deadline:'',venue_place:''},
   // CH30-A: 단계별 경기 방식(kind) — 위저드가 예선=대회기간, 결승·단판=지정일로 기본값을 채운다.
   // config.type(field/screen)은 stagesToType()로 내부 파생만 하고 더는 사용자에게 직접 묻지 않는다(하위호환 유지).
   stageKinds:{1:'round',2:'round',3:'round'},
@@ -2001,7 +2002,7 @@ function renderGroupsSeg(){
   $('#groupsFormed').style.display=(!disabled&&groups.length>0)?'block':'none';
   if(disabled)return;
   if(!groups.length){
-    $('#groupsEmptyDesc').innerHTML=`확정 참가자 <b class="num">${players.length}명</b>을<br>4인 1조로 자동 편성합니다.<br>같은 클럽은 서로 다른 조로 분산돼요.`;
+    $('#groupsEmptyDesc').innerHTML=`확정 참가자 <b class="num">${players.length}명</b>을<br>4인 1조 기준으로 자동 편성합니다(최소 2인).<br>같은 클럽은 서로 다른 조로 분산돼요.`;
     return}
   // CH31⑫(c): 직접 지정된 조라는 것을 화면에서 바로 알 수 있게 표시
   const srcNote=$('#groupsSourceNote');
@@ -2037,12 +2038,11 @@ async function renderScoreTab(){
     return}
 
   const box=$('#mgScoreBody');if(!box)return;
+  // CH32-A⑤(중간 문 제거): "기록 입력 화면 열기" 버튼 없이 스코어 탭 진입과 동시에 바로 입력
+  // 화면으로 들어간다 — CSV 내보내기는 대회홈의 [파일로 저장] 시트에서 항상 가능하므로
+  // 이 화면을 거치지 않아도 접근성이 줄지 않는다.
   if(judgeStageKind==='period'||stageRecordMode==='total'){
-    $('#scoreModeSeg').style.display='none';
-    box.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
-      <p class="sub" style="margin-bottom:16px">${judgeStageKind==='period'?'대회기간 라운드':'총점만'} 단계는 선수 검색 → 코스 → 총타수로 기록합니다.</p>
-      <button class="btn full big" onclick="openJudge(0)">기록 입력 화면 열기</button>
-    </div>`;
+    openJudge(0);
     return}
   if(!groups.length){
     $('#scoreModeSeg').style.display='none';
@@ -2255,7 +2255,10 @@ function openT(id){
 
 function dbToTournament(row,playerCount){
   const venues=row.venues||[];
-  return{id:row.id,name:row.name,place:venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'',
+  const ne0=row.notice_extra||{};
+  // CH32-A⑧: 대회장소(요강·신청 표시용)를 입력해뒀으면 그걸 우선 쓰고, 없으면 기존처럼 코스명에서 유추
+  const place=ne0.venue_place||(venues[0]?venues[0]+(venues.length>1?` 외 ${venues.length-1}곳`:''):'');
+  return{id:row.id,name:row.name,place,
     date:row.date_start,dateE:row.date_end,status:row.status,players:playerCount,cap:row.cap,capUnlimited:!!row.cap_unlimited,
     host:row.host_org,mine:!!(user.id&&row.owner_id===user.id),regClosed:!!row.reg_closed,
     visibility:row.visibility||'public',noticeExtra:row.notice_extra||{},awards:row.awards||{},
@@ -2324,7 +2327,13 @@ async function renderJourneyChecklist(){
     '정보 수정','sec','openEditInfo()'));
 
   // 2. 모집 — 시작 전엔 지금 할 일(파랑), 시작 후엔 완료(재개는 옅파랑으로 상시)
-  const applyTxt=`${players.length+waitlist.length}명 신청${config.regClosed?' · 마감됨':(started?'':'')}`;
+  // CH32-A④: 목업처럼 접수 마감일(설정돼 있으면)을 부제에 같이 보여준다("41명 신청 · 8.20 마감됨")
+  const dl=config.noticeExtra&&config.noticeExtra.apply_deadline;
+  const dlStr=dl?(()=>{const p=dl.split('-');return p.length===3?`${+p[1]}.${+p[2]}`:''})():'';
+  const applyParts=[`${players.length+waitlist.length}명 신청`];
+  if(dlStr)applyParts.push(dlStr);
+  if(config.regClosed)applyParts.push('마감됨');
+  const applyTxt=applyParts.join(' · ');
   if(!started){
     rows.push(journeyRowHTML('cur',n++,'참가자 모집',applyTxt,
       config.regClosed?'재개':'모집 마감', config.regClosed?'sec':'',
@@ -2337,19 +2346,22 @@ async function renderJourneyChecklist(){
   let reachedNextStart=!started; // 아직 시작 전이면 stages[0]이 "지금 시작할 차례"
   stages.forEach((stage,i)=>{
     const seq=n++;
+    // CH32-A④(목업 대조): 진행 중·대기 중인 단계는 줄 제목에 "진행"을 붙인다("예선 진행"/"결승 진행")
+    // — 버튼 라벨은 그대로 단계 이름만 쓴다("예선 마감"/"결승 시작"). 완료된 단계는 붙이지 않는다.
+    const titleInProgress=`${stage.name} 진행`;
     if(stage.status==='done'){
       rows.push(journeyRowHTML('done',seq,stage.name,'완료','결과 보기','sec',`viewStageResult('${stage.id}')`));
       reachedNextStart=true; // 방금 단계가 끝났으니 다음 단계가 이제 시작 대상
     }else if(stage.status==='open'){
-      rows.push(journeyRowHTML('cur',seq,stage.name,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
+      rows.push(journeyRowHTML('cur',seq,titleInProgress,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
       reachedNextStart=false;
     }else{ // waiting
       const preview=[cutPreviewText(stage.advance_cut),(stage.date_start||'').replaceAll('-','.')].filter(Boolean).join(' · ');
       if(reachedNextStart){
-        rows.push(journeyRowHTML('cur',seq,stage.name,preview,`${stage.name} 시작`,'',`checkStageStart('${stage.id}')`));
+        rows.push(journeyRowHTML('cur',seq,titleInProgress,preview,`${stage.name} 시작`,'',`checkStageStart('${stage.id}')`));
         reachedNextStart=false;
       }else{
-        rows.push(journeyRowHTML('todo',seq,stage.name,preview,`${stage.name} 시작`,'dis',
+        rows.push(journeyRowHTML('todo',seq,titleInProgress,preview,`${stage.name} 시작`,'dis',
           `toast('이전 단계를 먼저 마쳐야 시작할 수 있어요')`));
       }
     }});
@@ -2855,7 +2867,7 @@ async function loadMyTournament(tournamentId){
     config.cap=tRow.cap||config.cap;config.capUnlimited=!!tRow.cap_unlimited;
     const ne=tRow.notice_extra||{};config.eligibility=ne.eligibility||config.eligibility;
     config.prizeTotal=ne.prize_total||'';config.prizes=ne.prizes||[];
-    config.noticeExtra={contact:ne.contact||'',fee:ne.fee||'',rules:ne.rules||'',apply_deadline:ne.apply_deadline||''}}
+    config.noticeExtra={contact:ne.contact||'',fee:ne.fee||'',rules:ne.rules||'',apply_deadline:ne.apply_deadline||'',venue_place:ne.venue_place||''}}
   const wRows=(await fetchPlayers(tournamentId)).filter(p=>p.status==='wait');
   waitlist=wRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
     club:r.club||'',region:r.region||'',nick:r.nick||''}));
@@ -2863,7 +2875,8 @@ async function loadMyTournament(tournamentId){
   staff=(sRows||[]).map(r=>({id:r.id,name:r.name,phone:r.phone,duty:r.duty,canScore:r.can_score,token:r.token,link_opened_at:r.link_opened_at}));
   judgeTokenMode=false;
   const uv=[...new Set(config.venues)];
-  config.place=uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:'');
+  // CH32-A⑧: 대회장소를 직접 지정했으면 그걸 쓰고, 아니면 코스명에서 자동 유추(기존 동작)
+  config.place=config.noticeExtra.venue_place||(uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:''));
   renderMgmtHeader();renderPlayers();await renderTools();drawQR();
   return true}
 async function enterMyTournament(id){
@@ -2952,10 +2965,12 @@ function renderNotice(t,stages,playerCount){
   const oneLine=stages.length>1?`${period}${last!==first?` 예선 · ${(last.date_start||'').replaceAll('-','.')} 결승`:''}`:period;
 
   // 핵심카드①: 일정
+  // CH32-A⑧: 대회장소(요강 표시용)를 지정해뒀으면 코스명 대신 그걸 보여준다
+  const venuePlace=ne.venue_place||'';
   const isPeriod=first.kind==='period';
   const kSchedule=isPeriod
     ?{label:stages.length>1?'📅 예선 기간':'📅 접수 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
-    :{label:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuesArr[0]||''};
+    :{label:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuePlace||venuesArr[0]||''};
 
   // 핵심카드②: 결승 or 장소
   let kSecond;
@@ -2964,6 +2979,8 @@ function renderNotice(t,stages,playerCount){
     const cut=cutStage&&cutStage.advance_cut;
     const cutText=cut?(cut.total?`상위 ${cut.total}명 진출`:cut.m||cut.f?`남 ${cut.m||0}·여 ${cut.f||0}명 진출`:''):'';
     kSecond={label:'🏁 결승',val:(last.date_start||'').replaceAll('-','.'),sub:cutText}
+  }else if(venuePlace){
+    kSecond={label:'📍 장소',val:venuePlace,sub:''}
   }else{
     kSecond={label:'📍 장소',val:venuesArr[0]||'—',sub:venuesArr.length>1?`외 ${venuesArr.length-1}곳`:''}}
 
@@ -3132,8 +3149,12 @@ async function renderEditInfo(){
     visibility:renderEditVisibility,course:renderEditCourse,fields:renderEditFields};
   const fn=fns[editInfoSection];if(fn)await fn()}
 function editSectionRow(key,icon,title,desc,tier){
+  // CH32-A P1③: tier===3(잠금)은 실제로 editStageLocked(해당 단계 기록 존재)일 때만
+  // "잠금" 배지를 붙인다 — 이전엔 tier 값만 보고 개설 직후부터 항상 잠금 배지를 붙여
+  // 신규 대회에서도 잠긴 것처럼 보였다(실제 클릭은 열렸음 — 배지만 거짓 표시).
+  const locked=tier===3&&editStageLocked;
   const badge=tier===2?'<span class="pill" style="background:#FDF3DC;color:#8A6A1E;margin-left:8px">경고</span>'
-    :tier===3?'<span class="pill" style="background:#F3E4E0;color:#9A4A34;margin-left:8px">잠금</span>':'';
+    :locked?'<span class="pill" style="background:#F3E4E0;color:#9A4A34;margin-left:8px">잠금</span>':'';
   return`<div class="trow" style="cursor:pointer" onclick="showEditSection('${key}')">
     <span class="tic">${icon}</span>
     <span class="tt"><b>${title}${badge}</b><span>${desc}</span></span>
@@ -3156,7 +3177,7 @@ async function renderEditInfoList(){
     <p class="sub" style="margin-bottom:6px;font-weight:700">경고 후 수정 — 참가자 공지 필요</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
       ${editSectionRow('schedule','📅','일정','대회 시작일·종료일',2)}
-      ${editSectionRow('venue','📍','장소','코스명 (개수는 변경 불가)',2)}
+      ${editSectionRow('venue','⛳','코스명','코스별 이름 (개수는 변경 불가, 대회장소는 [일정]에서)',2)}
       ${editSectionRow('cap','👥','정원','모집 정원 · 초과분은 자동 대기 전환',2)}
       ${editSectionRow('fields','📝','참가자 정보 항목','접수 시 받을 정보(성별·나이·소속 등)',2)}
       ${editSectionRow('eligibility','✅','참여 대상','참가 자격 제한 여부',2)}
@@ -3269,10 +3290,17 @@ function renderEditSchedule(){
         <div><label class="fl" style="margin-top:0">종료일</label><input type="date" id="eiDateE"></div>
       </div>
     </div>
+    <div class="card">
+      <label class="fl" style="margin-top:0">대회장소</label>
+      <input type="text" id="eiVenuePlace" placeholder="예: 양평파크골프장">
+      <p class="sub" style="margin-top:6px">요강·신청 화면에 표시되는 이름이에요. 코스별 정확한 코스명은 [장소] 메뉴에서 따로 관리해요.</p>
+    </div>
     <button class="btn full" style="margin-top:14px" onclick="saveEditSchedule()">저장</button>`;
-  $('#eiDateS').value=config.dateS;$('#eiDateE').value=config.dateE}
+  $('#eiDateS').value=config.dateS;$('#eiDateE').value=config.dateE;
+  $('#eiVenuePlace').value=config.noticeExtra.venue_place||''}
 function saveEditSchedule(){
   const dateS=$('#eiDateS').value;let dateE=$('#eiDateE').value;
+  const venuePlace=$('#eiVenuePlace').value.trim();
   if(!dateS){toast('시작일을 입력하세요');return}
   if(dateE<dateS)dateE=dateS;
   const oldS=config.dateS,oldE=config.dateE;
@@ -3283,12 +3311,14 @@ function saveEditSchedule(){
       p_access_code:config.visibility==='private'?config.accessCode:null,
       p_owner_secret:user.secret,
       p_who:user.name,p_what:`일정 수정: ${oldS}~${oldE} → ${dateS}~${dateE}`,
-      p_cap_unlimited:config.capUnlimited});
+      p_cap_unlimited:config.capUnlimited,p_venue_place:venuePlace});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     config.dateS=dateS;config.dateE=dateE;
+    config.noticeExtra={...config.noticeExtra,venue_place:venuePlace};
+    config.place=venuePlace||config.place;
     renderMgmtHeader();editInfoBack();toast('일정을 저장했습니다')})}
 
-/* --- ②경고: 장소(코스명) --- */
+/* --- ②경고: 코스명 (대회장소 표시 텍스트는 renderEditSchedule에서 별도 관리) --- */
 function renderEditVenue(){
   const box=$('#editInfoBody');
   const names=(editStage.venues&&editStage.venues.length?editStage.venues:config.venues)||[];
@@ -3635,7 +3665,7 @@ function resetWizardState(){
   config.awards={gender:true,age:false,club:false};
   config.fields={name:true,nick:false,sex:true,age:true,club:true,region:false};
   config.eligibility={type:'open',text:''};config.visibility='public';config.accessCode='';
-  config.prizeTotal='';config.prizes=[];config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:''};
+  config.prizeTotal='';config.prizes=[];config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:'',venue_place:''};
   config.stageKinds={1:'round',2:'round',3:'round'};
   config.recordModes={1:'hole',2:'hole',3:'hole'};config.regClosed=false;
   players=[];groups=[];waitlist=[];pending=[];logEntries=[];
@@ -4437,20 +4467,27 @@ async function loadDemo(){
 function syncMine(){const t=tournaments.find(x=>x.mine);if(t){t.players=players.length;renderHome();updateApplyStat()}}
 function renderPlayers(){
   const cols=activeCols().filter(c=>c.k!=='name'&&c.k!=='phone');
+  // CH32-A⑩: 출석은 지정일 라운드 단계에서만 의미가 있다(대회기간 라운드는 방문 시점이 제각각이라
+  // "출석"이라는 개념 자체가 성립하지 않음) — 명단 행 뱃지·상단 집계 모두에서 그때만 노출한다.
+  const showAttendance=!(playersActiveStage&&playersActiveStage.kind==='period');
   $('#ptable').innerHTML=players.length?players.map((p,i)=>
     `<div class="toolrow" style="${isOut(p)?'opacity:.5':''}">
-      <span class="ckc ${p.ci?'on':''}" onclick="toggleCheckin(${i})">${p.ci?'✓':''}</span>
       <div class="info" style="cursor:pointer" onclick="openPEdit(${i})"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
       <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}${p.group>=0?' · '+(p.group+1)+'조':''}</span></div>
       <span title="전화 걸기" style="font-size:17px;padding:8px 10px;margin-right:6px;cursor:pointer" onclick="event.stopPropagation();callPlayer(${i})">📞</span>
-      <span class="pill2 ${p.paid?'pay':'nopay'}" style="margin-left:auto" onclick="event.stopPropagation();togglePaidRow(${i})">${p.paid?'입금':'미입금'}</span>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        ${showAttendance?`<span class="pill2 ${p.ci?'pay':'nopay'}" onclick="event.stopPropagation();toggleCheckin(${i})">${p.ci?'출석':'미출석'}</span>`:''}
+        <span class="pill2 ${p.paid?'pay':'nopay'}" onclick="event.stopPropagation();togglePaidRow(${i})">${p.paid?'입금':'미입금'}</span>
+      </div>
     </div>`).join('')
     :'<p class="sub" style="text-align:center;padding:26px 0">등록된 참가자가 없습니다</p>';
   renderPlayersSub();renderWait()}
 function renderPlayersSub(){
   if(curMgTab!=='mgPlayers')return;
-  const ci=players.filter(p=>p.ci).length,paid=players.filter(p=>p.paid).length;
-  $('#mgSub').textContent=`참가자 ${players.length}명 · 출석 ${ci} · 입금 ${paid}`}
+  const paid=players.filter(p=>p.paid).length;
+  const showAttendance=!(playersActiveStage&&playersActiveStage.kind==='period');
+  const ciPart=showAttendance?`출석 ${players.filter(p=>p.ci).length} · `:'';
+  $('#mgSub').textContent=`참가자 ${players.length}명 · ${ciPart}입금 ${paid}`}
 async function toggleCheckin(i){
   const p=players[i];if(!p.id)return;const next=!p.ci;
   const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_checked_in:next});
@@ -4482,7 +4519,7 @@ async function togglePevCheckin(){
   const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_checked_in:next});
   if(error){toast('출석 처리 중 오류가 발생했습니다');console.error(error);return}
   p.ci=next;
-  const btn=$('#pevCiBtn');btn.textContent=next?'체크인':'미체크인';btn.className='pill2 '+(next?'pay':'nopay');
+  const btn=$('#pevCiBtn');btn.textContent=next?'출석':'미출석';btn.className='pill2 '+(next?'pay':'nopay');
   renderPlayers()}
 
 /* ===== 참가자 수정 · 기권/실격 · 삭제 ===== */
@@ -4493,7 +4530,7 @@ function openPEdit(i){editIdx=i;const p=players[i];
   $('#pevAge').value=p.age||'';$('#pevClub').value=p.club||'';
   $('#pevGroup').value=p.group>=0?p.group+1:'';
   $('#pevWd').textContent=isOut(p)?'복귀 처리':'기권 처리';
-  const ciBtn=$('#pevCiBtn');ciBtn.textContent=p.ci?'체크인':'미체크인';ciBtn.className='pill2 '+(p.ci?'pay':'nopay');
+  const ciBtn=$('#pevCiBtn');ciBtn.textContent=p.ci?'출석':'미출석';ciBtn.className='pill2 '+(p.ci?'pay':'nopay');
   const paidBtn=$('#pevPaidBtn');paidBtn.textContent=p.paid?'입금':'미입금';paidBtn.className='pill2 '+(p.paid?'pay':'nopay');
   $('#pev').classList.add('on')}
 function closePEdit(){$('#pev').classList.remove('on');editIdx=-1}
@@ -4670,17 +4707,20 @@ function computeGroupPlan(count,allow3){
     return{n,sizes:Array.from({length:n},(_,i)=>i<extra?base+1:base)}}
   const full=Math.floor(count/4),rem=count%4;
   const sizes=Array.from({length:full},()=>4);
-  if(rem>0)sizes.push(rem);
+  // CH32-A⑨: 나머지가 정확히 1명이면 그대로 붙이면 "1인 조"가 생겨 최소 2인 원칙이 깨진다 —
+  // 마지막 4인 조에서 1명을 덜어 3인+2인으로 재배분한다.
+  if(rem===1&&full>=1){sizes[sizes.length-1]=3;sizes.push(2)}
+  else if(rem>0)sizes.push(rem);
   return{n:sizes.length,sizes}}
 function renderGroupConfirmBody(){
   const active=players.filter(p=>!isOut(p));
   const plan=computeGroupPlan(active.length,groupAllow3);
   const threeCount=plan.sizes.filter(s=>s===3).length;
-  const fourCount=plan.sizes.filter(s=>s===4).length;
   const oddSizes=plan.sizes.filter(s=>s!==3&&s!==4);
+  // CH32-A⑨: 3인 조·잔여 조 발생 안내를 모드와 무관하게 실제 계산 결과 기준으로 표시
   let leftoverLine='';
-  if(!groupAllow3&&oddSizes.length)leftoverLine=`<li><i>✓</i>마지막 조는 ${oddSizes[0]}인으로 남습니다</li>`;
-  else if(groupAllow3&&threeCount)leftoverLine=`<li><i>✓</i>인원을 고르게 나눠 ${threeCount}개 조는 3인으로 구성됩니다</li>`;
+  if(threeCount)leftoverLine+=`<li><i>✓</i>${threeCount}개 조는 3인으로 구성됩니다</li>`;
+  if(oddSizes.length)leftoverLine+=`<li><i>✓</i>마지막 조는 ${oddSizes[0]}인으로 남습니다</li>`;
   // CH31⑫(c): 직접 지정된 조가 있으면 자동 편성이 그걸 덮어쓴다는 것을 더 구체적으로 경고
   const reeditWarn=groups.length
     ?(groupsSource==='manual'
@@ -4688,7 +4728,7 @@ function renderGroupConfirmBody(){
       :`<li class="warn"><i>!</i>다시 편성하면 기존 조 배치는 사라집니다</li>`)
     :'';
   $('#groupConfirmBody').innerHTML=`<ul>
-    <li><i>✓</i><b>4인 1조 · 총 ${plan.n}개 조</b> (참가 ${active.length}명)</li>
+    <li><i>✓</i><b>4인 1조 기준 · 총 ${plan.n}개 조</b> (참가 ${active.length}명)</li>
     <li><i>✓</i>같은 클럽은 다른 조로 분산</li>
     ${leftoverLine}
     ${reeditWarn}
@@ -5234,8 +5274,9 @@ async function flushQueue(){
   let sent=0,newlyFailed=0;
   for(let i=0;i<q.length;i++){
     try{
-      // CH31⑩: 오프라인 큐에 담긴 게 소유자 모드(*_owner RPC 파라미터 모양)면 그에 맞춰 재전송한다.
-      const rpcName=q[i].type==='play'?(q[i].params.p_owner_secret?'submit_play_owner':'submit_play'):'submit_score';
+      // CH31⑩/CH32-A P1①: 오프라인 큐에 담긴 게 소유자 모드(*_owner RPC 파라미터 모양)면 그에 맞춰 재전송한다.
+      const isOwnerQueued=!!q[i].params.p_owner_secret;
+      const rpcName=q[i].type==='play'?(isOwnerQueued?'submit_play_owner':'submit_play'):(isOwnerQueued?'submit_score_owner':'submit_score');
       const{error}=await sb.rpc(rpcName,q[i].params);
       if(error){
         console.error(error);
@@ -5256,11 +5297,17 @@ window.addEventListener('online',flushQueue);
 setInterval(flushQueue,15000);
 updateQueueBadge();
 async function submitScoreToServer(pi,gi,v,reason){
-  const token=currentJudgeToken(),playerId=players[pi].id;
-  if(!token||!playerId)return;
-  const params={p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null};
+  const playerId=players[pi].id;if(!playerId)return;
+  // CH32-A P1①②: 개설자는 토큰이 없다(scorerOptions 설계상 정상) — 이전엔 이 사실을 확인하지
+  // 않고 !token만 보고 조용히 return해서, 개설자가 홀별 입력을 저장해도 아무 반응이 없었다.
+  const isOwner=judgeIsOwner();
+  const token=currentJudgeToken();
+  if(!isOwner&&!token)return;
+  const params=isOwner
+    ?{t_id:config.id,p_owner_secret:user.secret,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null}
+    :{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null};
   try{
-    const{error}=await sb.rpc('submit_score',params);
+    const{error}=await sb.rpc(isOwner?'submit_score_owner':'submit_score',params);
     if(error){toast('서버 저장 실패: '+error.message);console.error(error);return}
     await refreshMyTournamentStatus()
   }catch(e){
