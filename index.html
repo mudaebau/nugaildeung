@@ -1882,8 +1882,17 @@ function mgShow(id){
   if(id==='mgStaff')renderTools();
   if(id==='mgScore'){scoreStageId=null;renderScoreTab(true);$('#scoreBadge').style.display='none'}
   if(id==='mgBoard'){boardStageSel=null;renderBoardTab()}
-  if(id==='mgResult')renderResult();
+  if(id==='mgResult')renderResultFresh();
   window.scrollTo(0,0)}
+// CH32-A 보완3 ②(S81): 리더보드 진입은 반드시 단계 상태 일원화 경로(syncActiveStageState)를
+// 지난다. 위저드→[대회 관리로 가기] 직행 세션은 boardStageKind가 기본값('round')에 머물러,
+// 기간형 대회의 리더보드가 라운드 분기로 렌더되다 sums()에서 예외(또는 빈 순위)로 끝나
+// "무표시"가 됐다. 지난 단계 스냅숏(pastStageSnap) 열람 중엔 스냅숏을 보존한다.
+async function renderResultFresh(){
+  if(config.id&&!pastStageSnap&&!judgeTokenMode){
+    try{await syncActiveStageState(config.id)}
+    catch(e){console.error(e);toast('순위를 불러오는 중 오류가 발생했습니다')}}
+  renderResult()}
 async function pendingReviewCount(){
   if(!config.id||judgeStageKind!=='round'||!groups.length)return 0;
   const{data:photos}=await sb.from('scorecard_photos').select('group_no,course_no').eq('tournament_id',config.id);
@@ -5740,11 +5749,16 @@ function renderPeriodResult(){
   const cols=`34px minmax(0,1fr) repeat(${ROUNDS},52px) 60px`;
   const headHTML=`<div class="presrow head" style="grid-template-columns:${cols}">
     <span></span><span>선수</span>${Array.from({length:ROUNDS},(_,r)=>`<span class="v">${vShort(r)}</span>`).join('')}<span class="v">합계</span></div>`;
+  // CH32-A 보완3 ②(S81/P72): 순위 번호는 전 코스 완주자에게만 부여 — 미완주자는 '·'와
+  // "N/M코스 입력" 라벨로 표시하되 목록에서 빠뜨리지 않는다(무표시 금지).
+  let rankN=0;
   const rowHTML=(s,i)=>{
-    const rk=i===0?'rank1':i<=2?'rank23':'';
-    const totCell=s.tot!=null?s.tot:`${s.sumSoFar||'·'}<small style="display:block;font-weight:400;color:var(--muted)">${s.completed}/${ROUNDS}코스 입력</small>`;
+    const ranked=s.tot!=null;
+    const rk=ranked&&rankN===0?'rank1':ranked&&rankN<=2?'rank23':'';
+    const rankCell=ranked?++rankN:'·';
+    const totCell=ranked?s.tot:`${s.sumSoFar||'·'}<small style="display:block;font-weight:400;color:var(--muted)">${s.completed}/${ROUNDS}코스 입력</small>`;
     return`<div class="presrow ${rk}" style="grid-template-columns:${cols}">
-      <span class="r">${i+1}</span>
+      <span class="r">${rankCell}</span>
       <span class="nm"><b>${s.p.name}</b><small>${s.p.club||''}${config.fields.sex?' · '+s.p.sex:''}${config.fields.age?' '+s.p.age+'세':''}</small></span>
       ${s.bestArr.map(v=>`<span class="v">${v!=null?v:'·'}</span>`).join('')}
       <span class="v tot">${totCell}</span></div>`};
