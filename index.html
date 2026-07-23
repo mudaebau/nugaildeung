@@ -45,13 +45,14 @@ button{font-family:inherit;cursor:pointer}
 .mobile.wide{max-width:none;box-shadow:none;padding-bottom:24px;background:var(--board-bg)}
 
 /* ===== 앱바 ===== */
-/* CH32-C⑮: A안 — 앱바·뼈대는 네이비 유지(액션만 그린) */
-.appbar{background:var(--navy);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
-.abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
+/* CH32-C(최상단 라이트닝): 앱바 = 흰 배경 + 하단 얇은 구분선 + 짙은 글자·아이콘.
+   로고는 컬러 배지(logo-main, 네이비×골드) 유지. LIVE 카드만 네이비(대비 요소). */
+.appbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;min-height:70px}
+.abk{width:46px;height:46px;border-radius:14px;border:none;background:var(--bg);color:var(--ink);font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
 .logo .flag{width:20px;height:20px;background:url('brand/app-icon.svg') center/contain no-repeat}
 .appbar-logo{height:52px;display:block}
-.appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
+.appbar .who{margin-left:auto;font-size:15px;color:#5B6C7C;text-align:right;line-height:1.35;font-weight:500}
 .livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
 .queueBadge{background:#F2E3B4;color:#6f5a13;font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px;display:none;align-items:center;gap:6px}
@@ -199,11 +200,12 @@ tr:last-child td{border-bottom:none}
 .secttl::after{content:'';flex:1;height:1px;background:var(--line)}
 
 /* ===== 홈 히어로 (v2.3 차수 1) ===== */
-.hero{background:linear-gradient(150deg,#5A9ADA,var(--main-deep));border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:16px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+/* CH32-C(최상단 라이트닝): 홈 히어로 = 연한 라임 그라디언트 + 얇은 테두리 + 짙은 글자, CTA 라임 */
+.hero{background:linear-gradient(150deg,#F6FDEC,#E9FAD6);border:1px solid #DDF3C4;border-radius:22px;padding:22px 20px 20px;color:#1C3A08;margin-bottom:16px;box-shadow:0 4px 14px rgba(29,61,92,.08)}
 .hero .herotop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
-.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;letter-spacing:.02em;flex:0 0 auto}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.6);color:#3E5E1E;font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;letter-spacing:.02em;flex:0 0 auto}
 .hero h2{font-size:22px;font-weight:700;line-height:1.4;margin-bottom:16px}
-.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:#fff;color:var(--main-deep);font-weight:700;font-size:18px;min-height:54px;border-radius:15px;border:none}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--main);color:var(--main-ink);font-weight:700;font-size:18px;min-height:54px;border-radius:15px;border:none}
 
 /* ===== 홈 피드 카드 (v2.1 Phase E) ===== */
 .hello{font-size:15px;color:var(--muted);margin:2px 0 16px}
@@ -342,9 +344,10 @@ tr:last-child td{border-bottom:none}
 .stagesub b{cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
 
 /* ===== 상단 안내 바 ===== */
-.backbar{background:var(--main-deep);color:#D8E7F6;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
-.backbar button{border:none;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px;padding:10px 16px;border-radius:99px}
-.backbar span{opacity:.85;font-weight:400}
+/* CH32-C(최상단 라이트닝): 서브 화면·전광판 진입부 백바도 흰 배경 + 구분선 + 짙은 글자 */
+.backbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
+.backbar button{border:none;background:var(--bg);color:var(--ink);font-weight:600;font-size:16px;padding:10px 16px;border-radius:99px}
+.backbar span{color:var(--muted);font-weight:400}
 
 /* ===== 운영 허브 도구 리스트 ===== */
 .tools{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
@@ -680,7 +683,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 <div class="mobile" id="viewOwner">
   <header class="appbar">
     <button class="abk" id="abkBtn" onclick="navBack()">←</button>
-    <div class="logo"><img src="brand/logo-light.svg" alt="누가일등" class="appbar-logo"></div>
+    <div class="logo"><img src="brand/logo-main.svg" alt="누가일등" class="appbar-logo"></div>
     <div class="who" id="whoBox">둘러보는 중 · 로그인 안 함</div>
   </header>
 
