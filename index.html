@@ -10,12 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* CH32-C⑮ 컬러 A안 — 파크골프 그린 액션 (구조=네이비 유지, 골드·상태색 유지).
-     대비 4.5:1 검증 통과값: 액션 그린 #0D8547(흰 글자 4.71:1), 딥그린 #116B3C(6.58:1). */
-  --main:#0D8547;          /* 액션 그린 (버튼·현재 단계·그린 텍스트) */
-  --main-deep:#116B3C;     /* 딥그린 (활성 칩·탭 밑줄·보조 버튼 텍스트) */
-  --main-soft:#E7F3EC;     /* 옅은 그린 (선택 배경·보조 버튼 배경) */
-  --stage-cur:#EEF9F2;     /* 현재 단계 행 배경 */
+  /* CH32-C⑮(최종) 컬러 G1 + 라이트닝 — 밝은 라임 액션 + "밝은 배경·짙은 글자"(대비 전 조합 7:1+).
+     밝은 그린 위 흰 글자 금지: 라임 배경엔 짙은 글자(--main-ink), 흰 바탕 텍스트는 딥그린(--main-deep). */
+  --main:#7BE438;          /* 액션 라임 (버튼·현재 단계 배경) — 위 글자는 --main-ink */
+  --main-ink:#173A05;      /* 라임 위 글자(짙은 그린) */
+  --main-deep:#067A3A;     /* 흰 바탕 그린 텍스트·숫자·활성 표시 (라임은 흰 바탕 글자 불가) */
+  --main-soft:#E5FAD2;     /* 옅은 라임 (선택 배경·보조 버튼 배경) — 위 글자는 --main-deep */
+  --stage-cur:#F4FDEB;     /* 현재 단계 행 배경 (연한 라임) */
   --bg:#F2F5F9;            /* 연한 블루그레이 배경 */
   --paper:#FFFFFF;
   --ink:#2B3A4A;           /* 본문 잉크 */
@@ -81,7 +82,7 @@ p.sub{color:var(--muted);font-size:16px;font-weight:400;margin-bottom:18px;line-
 .kv span{color:var(--muted);flex:0 0 auto}
 
 /* ===== 버튼 ===== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:700;font-size:20px;min-height:56px;padding:14px 22px;border-radius:16px;background:var(--main);color:#fff;transition:transform .06s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:700;font-size:20px;min-height:56px;padding:14px 22px;border-radius:16px;background:var(--main);color:var(--main-ink);transition:transform .06s}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--main-soft);color:var(--main-deep)}
 .btn.warn{background:var(--coral)}
@@ -112,7 +113,7 @@ textarea{resize:vertical;line-height:1.65;font-size:17px}
 /* 선택 토글 */
 .optrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .opt{border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:13px 20px;font-weight:600;font-size:17px;display:flex;gap:6px;align-items:center;color:var(--muted)}
-.opt.on{background:var(--main);border-color:var(--main);color:#fff}
+.opt.on{background:var(--main);border-color:var(--main);color:var(--main-ink)}
 .opt.fixed{background:var(--main-deep);border-color:var(--main-deep);color:#fff}
 .opt .tick{font-size:14px}
 
@@ -261,7 +262,7 @@ tr:last-child td{border-bottom:none}
 .mystats div b{font-family:'Oswald',sans-serif;font-size:21px;font-weight:700;display:block;line-height:1.15}
 .mystats div span{font-size:11.5px;color:var(--muted)}
 .mygo{display:flex;align-items:center;justify-content:center;background:var(--main-soft);color:var(--main-deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
-.mygo.primary{background:var(--main);color:#fff}
+.mygo.primary{background:var(--main);color:var(--main-ink)}
 .mycenter{text-align:center;padding:60px 20px}
 
 .stepper{display:flex;align-items:center;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
@@ -296,7 +297,7 @@ tr:last-child td{border-bottom:none}
 .chiprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;touch-action:pan-x}
 .chiprow::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:600;font-size:18px}
-.chip.on{background:var(--main);color:#fff;border-color:var(--main)}
+.chip.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
 .holecard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
 .holetop{background:var(--main-deep);color:#fff;padding:18px;display:flex;align-items:center;justify-content:space-between}
 .holetop .arrow{width:60px;height:60px;border-radius:16px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:30px;font-weight:600}
@@ -375,9 +376,10 @@ tr:last-child td{border-bottom:none}
 .tooldetail.on{display:block}
 
 /* ===== 대회 관리공간 ===== */
-.mgmthead{background:var(--main-deep);color:#fff;margin:-20px -16px 0;padding:18px 20px 16px}
-.mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3;color:#fff}
-.mgmthead .sub{color:rgba(255,255,255,.75)}
+/* CH32-C⑮(최종) 라이트닝: 대회 헤더 밴드 = 연한 라임 그라디언트 + 짙은 글자(짙은 단색 밴드 폐지) */
+.mgmthead{background:linear-gradient(120deg,#F4FDEB,#E5FAD2);border-bottom:1px solid #DDF3C4;color:#1C3A08;margin:-20px -16px 0;padding:18px 20px 16px}
+.mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3;color:#1C3A08}
+.mgmthead .sub{color:#5B7A45}
 .tabA{display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 2px;margin:0 -16px 14px}
 /* CH32-A 보완5: .ti는 <button>인데 외형 리셋이 없어 기기 브라우저(UA 기본 버튼 크롬)에서
    회색 박스로 렌더됐다 — 전역 button 리셋 대신 영향 범위가 좁은 개별 리셋을 명시. */
@@ -398,14 +400,14 @@ tr:last-child td{border-bottom:none}
 .seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
 /* CH32-B⑪: 단계 세그먼트(.seg) 하위의 [명단|조편성] 탭 — 목업 장면3의 .mtab(개별 라운드 칩) */
 .mtab{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
-.mtab.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
+.mtab.on{background:var(--main);border-color:var(--main);color:var(--main-ink);font-weight:700}
 .psegpane{display:none}
 .psegpane.on{display:block}
 /* CH30-B②: 일괄 입력 — 컬럼 선언 칩 + 예시 줄 */
 .colchip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .colchip span{font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
 .colchip span.req{border-color:var(--ink);background:var(--ink);color:#fff}
-.colchip span.on{border-color:var(--main);background:#EEF9F2;color:var(--main-deep)}
+.colchip span.on{border-color:var(--main);background:var(--stage-cur);color:var(--main-deep)}
 .exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
 .exline b{font-weight:700}
 /* CH32-A②: 여정 체크리스트 — 줄마다 자기 버튼(대칭), 3색 상태 언어 */
@@ -414,13 +416,13 @@ tr:last-child td{border-bottom:none}
 .jstep:last-child{border-bottom:none}
 .jstep .jn{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700}
 .jstep.done .jn{background:#E7F5EE;color:#2E8B63}
-.jstep.cur .jn{background:var(--main-deep);color:#fff}
+.jstep.cur .jn{background:var(--main);color:var(--main-ink)}
 .jstep.todo .jn{background:#EDF1F6;color:#9AAAB9}
 .jstep b{font-size:15px;font-weight:700;display:block}
 .jstep small{font-size:12px;color:var(--muted)}
 .jstep.todo b{color:#9AAAB9;font-weight:500}
-.jstep .jact{margin-left:auto;background:var(--main);color:#fff;font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
-.jstep.cur{background:#EEF9F2}
+.jstep .jact{margin-left:auto;background:var(--main);color:var(--main-ink);font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
+.jstep.cur{background:var(--stage-cur)}
 .jact.sec{background:var(--main-soft);color:var(--main-deep)}
 .jact.dis{background:#EDF1F6;color:#9AAAB9}
 /* CH32-B 보완: 마감 완료 단계 버튼 — 민트(완료 상태), 탭 시 안내 토스트(무반응 아님) */
@@ -447,7 +449,7 @@ tr:last-child td{border-bottom:none}
 .hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
 .hc b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
 .hc.empty b{color:#B9C6D4}
-.hc.cur{border-color:var(--main);border-width:2.5px;background:#EEF9F2}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:var(--stage-cur)}
 .hc.birdie b{color:var(--red)}
 .sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
 .sumrow b{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--main-deep)}
@@ -473,8 +475,9 @@ tr:last-child td{border-bottom:none}
 .urlchip{background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:12px 14px;font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:.03em;word-break:break-all}
 
 /* ===== 참가 신청 ===== */
-.poster{background:linear-gradient(160deg,var(--main) 0%,var(--main-deep) 100%);color:#fff;border-radius:var(--radius);padding:24px 22px;margin-bottom:16px;box-shadow:0 6px 18px rgba(47,107,170,.28)}
-.poster .pdate{color:rgba(255,255,255,.92);font-weight:600;font-size:16px;letter-spacing:.06em;margin-bottom:8px}
+/* CH32-C⑮(최종) 라이트닝: 요강 포스터도 연한 라임 그라디언트 + 짙은 글자 */
+.poster{background:linear-gradient(150deg,#F4FDEB,#E5FAD2);color:#1C3A08;border:1px solid #DDF3C4;border-radius:var(--radius);padding:24px 22px;margin-bottom:16px;box-shadow:0 6px 18px rgba(29,61,92,.10)}
+.poster .pdate{color:#3E5E1E;font-weight:600;font-size:16px;letter-spacing:.06em;margin-bottom:8px}
 .poster h3{font-weight:700;font-size:25px;line-height:1.4;margin-bottom:10px}
 .poster .pmeta{font-size:16px;opacity:.95;line-height:1.75}
 .capbar-hero{background:rgba(255,255,255,.22);border-radius:99px;height:14px;margin-top:16px;overflow:hidden}
@@ -516,7 +519,7 @@ tr:last-child td{border-bottom:none}
 .ynqrow span:last-child{font-weight:700;text-align:right}
 .ynctabar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:9px;margin:16px -16px -20px}
 .ynctabar .share{width:52px;height:52px;border-radius:14px;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;border:none}
-.ynctabar .go{flex:1;background:var(--main);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:700;border:none}
+.ynctabar .go{flex:1;background:var(--main);color:var(--main-ink);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:700;border:none}
 .ynctabar .go.disabled{background:var(--line);color:var(--muted)}
 
 /* 차수27: 다음 할 일 카드 */
@@ -524,7 +527,7 @@ tr:last-child td{border-bottom:none}
 .todo3 h6{font-size:14.5px;font-weight:700;margin-bottom:12px}
 .tstep{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .tstep:last-child{border-bottom:none}
-.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:var(--main-ink);font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .tstep .no.done{background:#E7F5EE;color:#2E8B63}
 .tstep .no.wait{background:#EDF1F6;color:#9AAAB9}
 .tstep b{font-size:14.5px;font-weight:700;display:block}
@@ -541,9 +544,9 @@ tr:last-child td{border-bottom:none}
 .modew{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .modew3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
 .modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:15px}
-.modew3 button.on{background:var(--main);color:#fff;border-color:var(--main)}
+.modew3 button.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
 .modew button{min-height:64px;padding:12px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:19px}
-.modew button.on{background:var(--main);color:#fff;border-color:var(--main)}
+.modew button.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
 .receipt{text-align:center;padding:28px 16px}
 .receipt .big{font-size:52px}
 .receipt h3{font-weight:700;font-size:25px;margin:12px 0 4px}
@@ -640,7 +643,7 @@ tr:last-child td{border-bottom:none}
 
 /* ===== 조편성 카드 ===== */
 .gcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-.gcard .ghead{background:var(--main);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline}
+.gcard .ghead{background:var(--main);color:var(--main-ink);padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline}
 .gcard .ghead b{font-weight:700;font-size:20px}
 .gcard .ghead .tee{font-size:14px;opacity:.95}
 .gcard ul{list-style:none;padding:8px 18px}
@@ -658,7 +661,7 @@ tr:last-child td{border-bottom:none}
 .inrow .who span{font-size:11.5px;color:var(--muted)}
 input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:var(--ink);flex:0 0 auto}
 .numbox.filled{border-color:var(--main)}
-.okbtn{height:44px;padding:0 14px;border-radius:12px;background:var(--main);color:#fff;font-weight:700;font-size:14px;border:none;flex:0 0 auto}
+.okbtn{height:44px;padding:0 14px;border-radius:12px;background:var(--main);color:var(--main-ink);font-weight:700;font-size:14px;border:none;flex:0 0 auto}
 .okbtn.done{background:#E7F5EE;color:#2E8B63}
 .bestrow{background:#F4FBF8}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
