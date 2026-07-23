@@ -418,6 +418,8 @@ tr:last-child td{border-bottom:none}
 .jstep.cur{background:#F4F9FE}
 .jact.sec{background:var(--main-soft);color:var(--main-deep)}
 .jact.dis{background:#EDF1F6;color:#9AAAB9}
+/* CH32-B 보완: 마감 완료 단계 버튼 — 민트(완료 상태), 탭 시 안내 토스트(무반응 아님) */
+.jact.done{background:#E7F5EE;color:#2E8B63}
 /* CH30-B④: 점수 목록 조별 스티키 헤더 */
 .pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
 .stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
@@ -2241,11 +2243,9 @@ async function renderBoardTab(){
   if(!boardStageSel||!stages.find(s=>s.id===boardStageSel))boardStageSel=(curActiveStage(stages)||stages[0]).id;
   $('#boardStageChips').innerHTML=stageChipsHTML(stages,boardStageSel,'selectBoardStage');
   const sel=stages.find(s=>s.id===boardStageSel);
-  $('#boardFinalizeBtn').style.display=sel.status==='open'?'block':'none';
-  if(sel.status==='open'){
-    const openIdx=stages.findIndex(s=>s.status==='open');
-    const hasNext=openIdx>=0&&openIdx+1<stages.length;
-    $('#boardFinalizeBtn').textContent=hasNext?`${sel.name} 최종순위 확정`:'결과 · 시상 확정하기'}}
+  // CH32-B 보완③(P28): 단계 마감·종료 확정은 여정(대회홈)이 단일 소유 — 리더보드/전광판 쪽
+  // 확정 버튼은 숨긴다(과거 openStageSheet 직결 버튼은 마감/확정 분리 후 의미가 어긋남).
+  $('#boardFinalizeBtn').style.display='none'}
 function selectBoardStage(id){
   boardStageSel=id;
   loadAllStages(config.id).then(stages=>{
@@ -2423,7 +2423,10 @@ async function renderJourneyChecklist(){
     // — 버튼 라벨은 그대로 단계 이름만 쓴다("예선 마감"/"결승 시작"). 완료된 단계는 붙이지 않는다.
     const titleInProgress=`${stage.name} 진행`;
     if(stage.status==='done'){
-      rows.push(journeyRowHTML('done',seq,stage.name,'완료','결과 보기','sec',`viewStageResult('${stage.id}')`));
+      // CH32-B 보완①: 마감 완료 단계 — ✓민트 번호 + "✓ 마감됨" 민트 버튼(탭=안내 토스트, 무반응 아님).
+      // 부제에 마감 시점(단계 종료일)을 유지. 결과 열람은 리더보드 탭 단계 칩으로.
+      const closedSub=stage.date_end||stage.date_start?`${mdShort(stage.date_end||stage.date_start)} 마감`:'마감 완료';
+      rows.push(journeyRowHTML('done',seq,stage.name,closedSub,'✓ 마감됨','done',`toast('이미 마감된 단계예요 — 결과는 리더보드 탭에서 볼 수 있어요')`));
       reachedNextStart=true; // 방금 단계가 끝났으니 다음 단계가 이제 시작 대상
     }else if(stage.status==='open'){
       rows.push(journeyRowHTML('cur',seq,titleInProgress,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
@@ -2448,7 +2451,8 @@ async function renderJourneyChecklist(){
   if(finished){
     rows.push(journeyRowHTML('done',n++,'대회 종료','완료','결과 보기','sec',"mgShow('mgResult')"));
   }else if(readyToFinish){
-    rows.push(journeyRowHTML('cur',n++,'대회 종료','결과·시상 확정 준비됨','종료 확정','','openStageSheet()'));
+    // CH32-B 보완②: 모든 단계 마감됨 + 아직 미확정 → [종료 확정]이 유일한 파랑(마감과 확정 분리).
+    rows.push(journeyRowHTML('cur',n++,'대회 종료','결과·시상 확정 준비됨','종료 확정','','openFinalizeSheet()'));
   }else{
     rows.push(journeyRowHTML('todo',n++,'대회 종료','결과·시상 확정','종료 확정','dis',
       `toast('모든 단계를 마쳐야 종료를 확정할 수 있어요')`));
@@ -2463,7 +2467,9 @@ async function checkStageStart(stageId){
   const stages=await loadAllStages(config.id);
   const stage=stages.find(s=>s.id===stageId);
   if(stage)openStageStartSheet(stage)}
+let startStageCtx=null;
 function openStageStartSheet(stage){
+  startStageCtx=stage; // CH32-B 보완: [시작] 확정 시 이 단계를 open_stage로 실제로 연다
   let html=`<p class="sheetli"><b>✓</b><span>참가자 ${players.length}명 등록됨</span></p>`;
   // CH32-A③: 명단 확정 여부(2단계 이상만 해당 — 1단계는 접수 명단이 곧 명단)
   if(stage.seq>1){
@@ -2482,10 +2488,17 @@ function openStageStartSheet(stage){
   $('#stageStartList').innerHTML=html;
   $('#stageStartOv').classList.add('on')}
 function closeStageStart(){$('#stageStartOv').classList.remove('on')}
-function confirmStageStart(){
+async function confirmStageStart(){
+  const stage=startStageCtx;startStageCtx=null;
   closeStageStart();
+  // CH32-B 보완②: 단계를 실제로 연다(waiting→open). seq 1은 개설 시 이미 open이라 호출해도 무해(멱등).
+  if(stage&&config.id){
+    const{error}=await sb.rpc('open_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
+    if(error){toast('단계 시작 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+    await syncActiveStageState(config.id)}
   enterMgmt('mgScore');
-  toast('스코어 탭에서 점수를 입력하면 대회가 시작됩니다')}
+  renderJourneyChecklist();
+  toast('단계를 시작했습니다 — 스코어 탭에서 점수를 입력하세요')}
 function openRegCloseSheet(){
   $('#regCloseCountLine').textContent=`현재 신청 ${players.length}명 · 대기 ${waitlist.length}명이 확정 명단이 됩니다`;
   $('#regCloseOv').classList.add('on')}
@@ -2592,12 +2605,15 @@ async function openStageSheet(){
   $('#stageAdvConfirmBtn').style.display='block';
 
   if(!hasNext){
-    $('#stageAdvTitle').textContent='결과를 확정할까요?';
+    // CH32-B 보완②: 마지막 단계 [마감]은 단계만 마감(close_stage) — 대회 확정(finalize)은 분리된
+    // [종료 확정] 단계에서. 마감 직후 여정의 [종료 확정]이 유일한 파랑이 된다.
+    $('#stageAdvTitle').textContent=`${curStage.name}을 마감할까요?`;
     $('#stageAdvList').innerHTML=`
-      <p class="sheetli"><b>✓</b><span>최종 순위가 확정되고 요강·참가자 화면에 반영됩니다</span></p>
-      <p class="sheetli warn"><b>!</b><span>확정 후에는 기록을 수정할 수 없습니다</span></p>`;
-    $('#stageAdvConfirmBtn').textContent='확정하기';
-    stageSheetCtx={type:'finalize'};
+      <p class="sheetli"><b>✓</b><span>${curStage.name} 순위가 마감됩니다</span></p>
+      <p class="sheetli warn"><b>!</b><span>마감 후에는 ${curStage.name} 기록을 입력·수정할 수 없습니다</span></p>
+      <p class="sheetli"><b>✓</b><span>마감하면 여정 [종료 확정]에서 결과·시상을 확정할 수 있어요</span></p>`;
+    $('#stageAdvConfirmBtn').textContent='마감하기';
+    stageSheetCtx={type:'close',curStage};
     $('#stageAdvOv').classList.add('on');
     return}
 
@@ -2701,7 +2717,28 @@ async function confirmStageSheet(){
   const ctx=stageSheetCtx;
   closeStageAdv();
   if(ctx.type==='finalize'){await finalizeTournament();return}
+  if(ctx.type==='close'){await doCloseStage(ctx.curStage);return}
   await doAdvanceStage(ctx.curStage,ctx.nextStage,ctx.advanced)}
+// CH32-B 보완②: 마지막 단계 마감 — 대회는 확정하지 않고 단계만 done으로. 이후 [종료 확정]이 활성화.
+async function doCloseStage(stage){
+  const{error}=await sb.rpc('close_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
+  if(error){toast('마감 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  toast(`${stage.name}을 마감했습니다 — 여정 [종료 확정]으로 결과를 확정하세요`);
+  await syncActiveStageState(config.id);
+  renderStageSub();renderJourneyChecklist();renderOpsStats()}
+// CH32-B 보완②: 종료 확정 — 모든 단계 마감 후 대회를 done으로 확정(단계 마감과 분리된 별도 시트).
+function openFinalizeSheet(){
+  if(!config.id)return;
+  $('#stageAdvTieBox').style.display='none';$('#stageAdvTieBox').innerHTML='';
+  $('#stageAdvConfirmBtn').style.display='block';
+  cutResolution=null;
+  $('#stageAdvTitle').textContent='대회 결과를 확정할까요?';
+  $('#stageAdvList').innerHTML=`
+    <p class="sheetli"><b>✓</b><span>최종 순위·부문 시상이 확정되고 요강·참가자 화면에 반영됩니다</span></p>
+    <p class="sheetli warn"><b>!</b><span>확정 후에는 기록을 수정할 수 없습니다</span></p>`;
+  $('#stageAdvConfirmBtn').textContent='종료 확정하기';
+  stageSheetCtx={type:'finalize'};
+  $('#stageAdvOv').classList.add('on')}
 async function doAdvanceStage(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return}
   const ids=advanced.map(p=>p.id);
