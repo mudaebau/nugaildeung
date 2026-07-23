@@ -10,28 +10,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* 파스텔 블루 시니어 팔레트 */
-  --main:#4E8FD0;          /* 메인 블루 */
-  --main-deep:#2F6BAA;     /* 진한 블루 (헤더) */
-  --main-soft:#E3EEF9;     /* 연한 블루 (선택 배경) */
-  --bg:#F2F5F9;            /* 연한 블루그레이 배경 */
+  /* CH32-C⑮(최종) 컬러 G1 + 라이트닝 — 밝은 라임 액션 + "밝은 배경·짙은 글자"(대비 전 조합 7:1+).
+     밝은 그린 위 흰 글자 금지: 라임 배경엔 짙은 글자(--main-ink), 흰 바탕 텍스트는 딥그린(--main-deep). */
+  --main:#7BE438;          /* 액션 라임 (버튼·현재 단계 배경) — 위 글자는 --main-ink */
+  --main-ink:#173A05;      /* 라임 위 글자(짙은 그린) */
+  --main-deep:#067A3A;     /* 흰 바탕 그린 텍스트·숫자·활성 표시 (라임은 흰 바탕 글자 불가) */
+  --main-soft:#E5FAD2;     /* 옅은 라임 (선택 배경·보조 버튼 배경) — 위 글자는 --main-deep */
+  --stage-cur:#F4FDEB;     /* 현재 단계 행 배경 (연한 라임) */
+  --bg:#F4F7FA;            /* 연한 블루그레이 배경 */
   --paper:#FFFFFF;
   --ink:#2B3A4A;           /* 본문 잉크 */
-  --muted:#68798C;
+  --muted:#5B6C7C;
   --line:#DCE6F0;
-  --mint:#57C2A8;
-  --leaf:#7FBF6A;
+  --mint:#2E8B63;
   --sun:#F7CF5C;           /* 옐로우 */
   --coral:#EF8368;         /* 코랄 */
-  --red:#E2604A;
+  --red:#C4523A;
   --board-bg:#173350;      /* 전광판: 딥 네이비 */
   --board-line:#2C5680;
-  --navy:#1D3D5C;          /* 브랜드 v3: 로고 풍선·LIVE 카드 등 다크 표면 공용 네이비 */
+  --navy:#1D3D5C;          /* 로고 배지 · LIVE/대회 카드 배경 (다크 표면 전용) */
+  --lime-ink:var(--lime-ink);      /* C-2: 라임연톤 표면(히어로·헤더밴드) 위 제목 */
+  --lime-sub:var(--lime-sub);      /* C-2: 라임연톤 표면 위 부제 */
   --radius:20px; --navh:78px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{font-size:20px}
-body{font-family:'Noto Sans KR',sans-serif;background:#E7EDF4;color:var(--ink);min-height:100vh;line-height:1.5}
+html{font-size:18px}
+/* CH32-C⑯(P95): 한글은 어절(단어) 단위로 줄바꿈 — 낱글자 쪼개짐 방지. 안전망으로 긴 토큰
+   (URL·연속 숫자 등)만 넘칠 때 break-word. 안내·부제·토스트의 어색한 말줄임을 없앤다. */
+body{font-family:'Noto Sans KR',sans-serif;background:#F4F7FA;color:var(--ink);min-height:100vh;line-height:1.5;word-break:keep-all;overflow-wrap:break-word}
 .num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 button{font-family:inherit;cursor:pointer}
 
@@ -40,18 +46,21 @@ button{font-family:inherit;cursor:pointer}
 .mobile.wide{max-width:none;box-shadow:none;padding-bottom:24px;background:var(--board-bg)}
 
 /* ===== 앱바 ===== */
-.appbar{background:var(--main-deep);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
-.abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
-.logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+/* CH32-C(최상단 라이트닝): 앱바 = 흰 배경 + 하단 얇은 구분선 + 짙은 글자·아이콘.
+   로고는 컬러 배지(logo-main, 네이비×골드) 유지. LIVE 카드만 네이비(대비 요소). */
+.appbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;min-height:70px}
+.abk{width:46px;height:46px;border-radius:14px;border:none;background:var(--bg);color:var(--ink);font-size:22px;font-weight:700;display:none;align-items:center;justify-content:center;flex:0 0 auto}
+.logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
 .logo .flag{width:20px;height:20px;background:url('brand/app-icon.svg') center/contain no-repeat}
 .appbar-logo{height:52px;display:block}
-.appbar .who{margin-left:auto;font-size:15px;opacity:.95;text-align:right;line-height:1.35;font-weight:500}
-.livepill{background:var(--coral);color:#fff;font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
-.livepill .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
-.queueBadge{background:#F2E3B4;color:#6f5a13;font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px;display:none;align-items:center;gap:6px}
+.appbar .who{margin-left:auto;font-size:15px;color:#5B6C7C;text-align:right;line-height:1.35;font-weight:500}
+/* C-3: LIVE 표시 = 라임(액션색) — 코랄은 위험 전용이므로. 밝은 라임 위 글자·도트는 짙은 그린 */
+.livepill{background:var(--main);color:var(--main-ink);font-weight:700;font-size:14px;padding:6px 12px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
+.livepill .dot{width:8px;height:8px;border-radius:50%;background:var(--main-ink);animation:blink 1.4s infinite}
+.queueBadge{background:#F7CF5C;color:#2B3A4A;font-weight:700;font-size:14px;padding:6px 12px;border-radius:99px;display:none;align-items:center;gap:6px}
 #jQueueBadge{font-size:14px} /* 심판 화면(시니어) 전용 가중 — 운영자 화면의 mgQueueBadge는 기존 13px 유지 */
 .queueBadge.err{background:var(--coral);color:#fff}
-.reconnectBadge{background:rgba(239,131,104,.9);color:#fff;font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;display:none;align-items:center;gap:6px;margin-bottom:10px}
+.reconnectBadge{background:rgba(239,131,104,.9);color:#fff;font-weight:700;font-size:14px;padding:6px 14px;border-radius:99px;display:none;align-items:center;gap:6px;margin-bottom:10px}
 .reconnectBadge .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
 @keyframes blink{50%{opacity:.25}}
 
@@ -65,49 +74,49 @@ button{font-family:inherit;cursor:pointer}
 
 .page{display:none;padding:20px 16px 34px}
 .page.on{display:block}
-h2.sec{font-weight:700;font-size:26px;margin-bottom:6px;letter-spacing:-.02em}
-p.sub{color:var(--muted);font-size:16px;font-weight:400;margin-bottom:18px;line-height:1.6}
+h2.sec{font-weight:700;font-size:22px;margin-bottom:6px;letter-spacing:-.02em}
+p.sub{color:var(--muted);font-size:15px;font-weight:400;margin-bottom:18px;line-height:1.6}
 
 /* ===== 카드 ===== */
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px}
 .kv{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed var(--line);font-size:18px;gap:12px}
 .kv:last-child{border-bottom:none}
-.kv b{font-weight:600;text-align:right}
+.kv b{font-weight:700;text-align:right}
 .kv span{color:var(--muted);flex:0 0 auto}
 
 /* ===== 버튼 ===== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:700;font-size:20px;min-height:56px;padding:14px 22px;border-radius:16px;background:var(--main);color:#fff;transition:transform .06s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:700;font-size:18px;min-height:56px;padding:14px 22px;border-radius:16px;background:var(--main);color:var(--main-ink);transition:transform .06s}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--main-soft);color:var(--main-deep)}
 .btn.warn{background:var(--coral)}
 .btn.full{width:100%}
-.btn.big{font-size:21px;min-height:64px}
-.btn.sm{min-height:46px;padding:8px 16px;font-size:16px;border-radius:12px;box-shadow:none}
+.btn.big{font-size:18px;min-height:64px}
+.btn.sm{min-height:46px;padding:8px 16px;font-size:15px;border-radius:12px;box-shadow:none}
 .btn:disabled{opacity:.45;box-shadow:none}
 .btn:focus-visible{outline:3px solid var(--sun)}
 
 /* ===== 상태 배지 ===== */
-.pill{display:inline-block;background:var(--main-soft);color:var(--main-deep);font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px}
-.pill.amber{background:#FCF1CE;color:#8a6a10}
-.pill.red{background:#FBE2DB;color:#a83c26}
-.pill.gray{background:#E9EEF4;color:var(--muted)}
+.pill{display:inline-block;background:var(--main-soft);color:var(--main-deep);font-weight:700;font-size:14px;padding:6px 12px;border-radius:99px}
+.pill.amber{background:#F7CF5C;color:#2B3A4A}
+.pill.red{background:#FBE9E4;color:#C4523A}
+.pill.gray{background:#F4F7FA;color:var(--muted)}
 
 /* ===== 입력 ===== */
-label.fl{display:block;font-weight:600;font-size:16px;margin:16px 0 8px}
+label.fl{display:block;font-weight:700;font-size:15px;margin:16px 0 8px}
 label.fl:first-child{margin-top:0}
 input[type=text],input[type=tel],input[type=date],input[type=time],select,textarea{
-  width:100%;padding:15px 16px;border:2px solid var(--line);border-radius:14px;font-family:inherit;font-size:19px;background:var(--paper);color:var(--ink)}
+  width:100%;padding:15px 16px;border:2px solid var(--line);border-radius:14px;font-family:inherit;font-size:18px;background:var(--paper);color:var(--ink)}
 input[type=date]{-webkit-appearance:none;appearance:none;min-height:56px;box-sizing:border-box}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--main)}
-textarea{resize:vertical;line-height:1.65;font-size:17px}
+textarea{resize:vertical;line-height:1.65;font-size:15px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dfrow input[type=date]{width:100%}
 
 /* 선택 토글 */
 .optrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.opt{border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:13px 20px;font-weight:600;font-size:17px;display:flex;gap:6px;align-items:center;color:var(--muted)}
-.opt.on{background:var(--main);border-color:var(--main);color:#fff}
+.opt{border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:13px 20px;font-weight:700;font-size:15px;display:flex;gap:6px;align-items:center;color:var(--muted)}
+.opt.on{background:var(--main);border-color:var(--main);color:var(--main-ink)}
 .opt.fixed{background:var(--main-deep);border-color:var(--main-deep);color:#fff}
 .opt .tick{font-size:14px}
 
@@ -115,14 +124,14 @@ textarea{resize:vertical;line-height:1.65;font-size:17px}
 .wprog{display:flex;gap:6px;margin-bottom:26px}
 .wprog i{flex:1;height:5px;border-radius:99px;background:var(--line);font-style:normal}
 .wprog i.d{background:var(--main)}
-.wq{font-size:24px;font-weight:700;line-height:1.45;margin-bottom:6px}
+.wq{font-size:22px;font-weight:700;line-height:1.45;margin-bottom:6px}
 .wsub{font-size:14px;color:var(--muted);margin-bottom:20px}
 .optbig{width:100%;text-align:left;background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:19px 20px;margin-bottom:12px;display:flex;align-items:center;gap:15px}
 .optbig.on{border-color:var(--main);background:var(--main-soft)}
-.optbig .on-dot{width:26px;height:26px;border-radius:50%;border:2px solid #C9D8E7;flex:0 0 auto}
+.optbig .on-dot{width:26px;height:26px;border-radius:50%;border:2px solid #DCE6F0;flex:0 0 auto}
 .optbig.on .on-dot{border:8px solid var(--main)}
-.optbig b{display:block;font-size:17px;font-weight:700}
-.optbig span{font-size:13px;color:var(--muted)}
+.optbig b{display:block;font-size:15px;font-weight:700}
+.optbig span{font-size:14px;color:var(--muted)}
 .wpane{display:none}.wpane.on{display:block}
 .wnav{display:flex;justify-content:space-between;margin-top:18px;gap:10px}
 
@@ -130,51 +139,51 @@ textarea{resize:vertical;line-height:1.65;font-size:17px}
 .preset{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:18px 20px;margin-bottom:12px;display:flex;gap:14px;align-items:center;width:100%;text-align:left}
 .preset.on{border-color:var(--main);background:var(--main-soft)}
 .preset .pic{width:46px;height:46px;border-radius:14px;background:var(--main-soft);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
-.preset b{display:block;font-size:16.5px;font-weight:700}
+.preset b{display:block;font-size:15px;font-weight:700}
 .preset span{font-size:12.5px;color:var(--muted);line-height:1.5}
 
 /* CH30-A: 단계 요약 카드 */
 .stagecard{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:17px 19px;margin-bottom:12px}
 .stagecard.ok{border-color:var(--mint)}
-.stagecard-head{font-size:16px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.kbadge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--main-soft);color:var(--main-deep)}
+.stagecard-head{font-size:15px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kbadge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--main-soft);color:var(--main-deep)}
 .kbadge.period{background:#E7F5EE;color:#2E8B63}
 .specgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .spec{background:var(--bg);border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px}
-.spec i{font-style:normal;font-size:19px;flex:0 0 auto}
+.spec i{font-style:normal;font-size:18px;flex:0 0 auto}
 .spec b{display:block;font-size:14px;font-weight:700;line-height:1.25}
-.spec small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
-.expand{font-size:13px;font-weight:700;color:var(--main-deep);margin-top:9px;display:inline-block;cursor:pointer}
+.spec small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.expand{font-size:14px;font-weight:700;color:var(--main-deep);margin-top:9px;display:inline-block;cursor:pointer}
 .stagecard-detail{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
 .segk{display:flex;background:var(--bg);border-radius:12px;padding:3.5px}
-.segk div{flex:1;text-align:center;font-size:13.5px;font-weight:700;padding:9px 4px;border-radius:9px;color:var(--muted);cursor:pointer}
+.segk div{flex:1;text-align:center;font-size:14px;font-weight:700;padding:9px 4px;border-radius:9px;color:var(--muted);cursor:pointer}
 .segk div.on{background:var(--paper);color:var(--main-deep);box-shadow:0 1px 4px rgba(43,58,74,.12)}
 .scheduleblock{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
-.scheduleblock .stitle{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
-.donehero{background:linear-gradient(170deg,var(--sun),#F3C23B);border-radius:0 0 30px 30px;padding:30px 24px 26px;text-align:center;color:#22303D;margin:-20px -16px 16px}
+.scheduleblock .stitle{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.donehero{background:linear-gradient(170deg,var(--sun),#C9930A);border-radius:0 0 30px 30px;padding:30px 24px 26px;text-align:center;color:#2B3A4A;margin:-20px -16px 16px}
 .donehero h3{font-size:22px;font-weight:700;line-height:1.4}
-.donehero p{font-size:13.5px;margin-top:5px;color:#6b5310}
+.donehero p{font-size:14px;margin-top:5px;color:#C9930A}
 .laterlist{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:0}
-.laterlist .lrow{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);font-size:14.5px}
+.laterlist .lrow{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px}
 .laterlist .lrow:last-child{border-bottom:none}
-.laterlist .lrow .st3{margin-left:auto;font-size:12px;font-weight:700;color:#C9930A}
+.laterlist .lrow .st3{margin-left:auto;font-size:12.5px;font-weight:700;color:#C9930A}
 .laterlist .lrow .st3.ok{color:#2E8B63}
-.pct{height:8px;background:#EDF2F8;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.pct{height:8px;background:#F4F7FA;border-radius:99px;overflow:hidden;margin:8px 0 4px}
 .pct i{display:block;height:100%;background:var(--main);border-radius:99px}
 
 /* 스탭 행 */
 .staffrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}
 .staffrow:last-child{border-bottom:none}
 .avatar{width:46px;height:46px;border-radius:50%;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:0 0 auto}
-.avatar.lead{background:var(--sun);color:#6b4e07}
+.avatar.lead{background:var(--sun);color:#2B3A4A}
 .staffrow .info{flex:1;min-width:130px}
 .staffrow .info b{display:block;font-size:18px}
 .staffrow .info span{color:var(--muted);font-size:14px}
-.perm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--muted)}
+.perm{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--muted)}
 .perm input{width:24px;height:24px;accent-color:var(--main)}
 
 /* 표 */
-table{width:100%;border-collapse:collapse;font-size:17px}
+table{width:100%;border-collapse:collapse;font-size:15px}
 th{color:var(--muted);font-weight:500;text-align:left;padding:10px 8px;border-bottom:2px solid var(--line);font-size:14px;white-space:nowrap}
 td{padding:12px 8px;border-bottom:1px solid var(--line)}
 tr:last-child td{border-bottom:none}
@@ -183,21 +192,22 @@ tr:last-child td{border-bottom:none}
 /* ===== 대회 리스트 ===== */
 .filterrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scrollbar-width:none}
 .filterrow::-webkit-scrollbar{display:none}
-.fchip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:600;font-size:17px;color:var(--muted)}
+.fchip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:700;font-size:15px;color:var(--muted)}
 .fchip.on{background:var(--main-deep);color:#fff;border-color:var(--main-deep)}
-.tstat.live{background:var(--coral);color:#fff}
+.tstat.live{background:var(--main);color:var(--main-ink)}
 .tstat.open{background:var(--mint);color:#fff}
-.tstat.done{background:#E9EEF4;color:var(--muted)}
+.tstat.done{background:#F4F7FA;color:var(--muted)}
 .tstat.ready{background:var(--main-soft);color:var(--main-deep)}
 .secttl{font-size:15px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:20px 0 12px;display:flex;align-items:center;gap:10px}
 .secttl::after{content:'';flex:1;height:1px;background:var(--line)}
 
 /* ===== 홈 히어로 (v2.3 차수 1) ===== */
-.hero{background:linear-gradient(150deg,#5A9ADA,var(--main-deep));border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:16px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+/* CH32-C(최상단 라이트닝): 홈 히어로 = 연한 라임 그라디언트 + 얇은 테두리 + 짙은 글자, CTA 라임 */
+.hero{background:linear-gradient(150deg,#F6FDEC,#E9FAD6);border:1px solid #DDF3C4;border-radius:22px;padding:22px 20px 20px;color:var(--lime-ink);margin-bottom:16px;box-shadow:0 4px 14px rgba(29,61,92,.08)}
 .hero .herotop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
-.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;letter-spacing:.02em;flex:0 0 auto}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.6);color:var(--lime-sub);font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:99px;letter-spacing:.02em;flex:0 0 auto}
 .hero h2{font-size:22px;font-weight:700;line-height:1.4;margin-bottom:16px}
-.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:#fff;color:var(--main-deep);font-weight:700;font-size:18px;min-height:54px;border-radius:15px;border:none}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--main);color:var(--main-ink);font-weight:700;font-size:18px;min-height:54px;border-radius:15px;border:none}
 
 /* ===== 홈 피드 카드 (v2.1 Phase E) ===== */
 .hello{font-size:15px;color:var(--muted);margin:2px 0 16px}
@@ -205,25 +215,25 @@ tr:last-child td{border-bottom:none}
 .livecard{display:block;width:100%;text-align:left;border:none;background:linear-gradient(165deg,var(--navy),var(--board-bg));border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
 .livecard:active{transform:scale(.99)}
 .livecard .lrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.livecard .lpill{background:var(--coral);font-size:13px;font-weight:700;padding:5px 12px;border-radius:99px;display:flex;align-items:center;gap:6px}
-.livecard .lpill i{width:7px;height:7px;border-radius:50%;background:#fff;font-style:normal}
-.livecard .lsub{font-size:13px;color:#9FBEDC;margin-left:auto}
-.livecard h3{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.livecard .lpill{background:var(--main);color:var(--main-ink);font-size:14px;font-weight:700;padding:5px 12px;border-radius:99px;display:flex;align-items:center;gap:6px}
+.livecard .lpill i{width:7px;height:7px;border-radius:50%;background:var(--main-ink);font-style:normal}
+.livecard .lsub{font-size:14px;color:#9FBEDC;margin-left:auto}
+.livecard h3{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:8px}
 .livecard .lmeta{font-size:14px;color:#C7DBEF}
-.livecard .lmore{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:14.5px;color:#9FBEDC}
-.livecard .lmore b{color:#fff;font-weight:700;font-size:16px}
+.livecard .lmore{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:14px;color:#9FBEDC}
+.livecard .lmore b{color:#fff;font-weight:700;font-size:15px}
 .livecard .ltop3{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)}
 .livecard .lp{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:14px}
 .livecard .lp .lrank{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto}
 .livecard .lp.top1 .lrank{background:var(--sun);color:#6b4e07}
-.livecard .lp .lname{flex:1;color:#fff;font-weight:600}
+.livecard .lp .lname{flex:1;color:#fff;font-weight:700}
 .livecard .lp .lsc{color:#C7DBEF}
 .opencard{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:14px}
 .opencard:active{transform:scale(.99)}
 .oc-top{display:flex;align-items:flex-start;gap:14px}
 .dday{background:var(--main-soft);color:var(--main-deep);border-radius:16px;padding:10px 8px;text-align:center;min-width:74px;flex:0 0 auto}
-.dday b{font-family:'Oswald',sans-serif;font-size:23px;font-weight:700;display:block;line-height:1}
-.dday span{font-size:12px;font-weight:500}
+.dday b{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:12.5px;font-weight:500}
 .oc-info h4{font-size:18px;font-weight:700;line-height:1.45;margin-bottom:3px}
 .oc-info p{font-size:14px;color:var(--muted)}
 .capbar{margin-top:14px;background:var(--main-soft);height:8px;border-radius:99px;overflow:hidden}
@@ -232,8 +242,8 @@ tr:last-child td{border-bottom:none}
 .oc-foot .go{color:var(--main-deep);font-weight:700}
 .minecard{display:flex;width:100%;text-align:left;align-items:center;gap:14px;background:var(--paper);border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px;position:relative}
 .minecard:active{transform:scale(.99)}
-.minecard .mk{position:absolute;top:-13px;left:16px;background:var(--sun);color:#6b4e07;font-size:13px;font-weight:700;padding:4px 12px;border-radius:99px}
-.minecard .mc-body h4{font-size:17px;font-weight:700}
+.minecard .mk{position:absolute;top:-13px;left:16px;background:var(--sun);color:#6b4e07;font-size:14px;font-weight:700;padding:4px 12px;border-radius:99px}
+.minecard .mc-body h4{font-size:15px;font-weight:700}
 .minecard .mc-body p{font-size:14px;color:var(--muted);margin-top:3px}
 .minecard .go{margin-left:auto;color:var(--main-deep);font-weight:700;font-size:22px;flex:0 0 auto}
 .simplecard{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:12px}
@@ -246,74 +256,74 @@ tr:last-child td{border-bottom:none}
 .mycard{background:var(--paper);border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px;cursor:pointer;width:100%;text-align:left;display:block}
 .mycard.plain{border:1px solid var(--line)}
 .myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
-.stt.live{background:var(--coral);color:#fff}
+.stt{font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--main);color:var(--main-ink)}
 .stt.open{background:var(--mint);color:#fff}
-.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.done{background:#F4F7FA;color:var(--muted)}
 .stt.ready{background:var(--main-soft);color:var(--main-deep)}
-.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mycard h4{font-size:15px;font-weight:700;line-height:1.4;margin-bottom:10px}
 .mystats{display:flex;gap:18px;margin-bottom:14px}
-.mystats div b{font-family:'Oswald',sans-serif;font-size:21px;font-weight:700;display:block;line-height:1.15}
-.mystats div span{font-size:11.5px;color:var(--muted)}
-.mygo{display:flex;align-items:center;justify-content:center;background:var(--main-soft);color:var(--main-deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
-.mygo.primary{background:var(--main);color:#fff}
+.mystats div b{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:12.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:var(--main-soft);color:var(--main-deep);font-weight:700;font-size:15px;min-height:48px;border-radius:14px}
+.mygo.primary{background:var(--main);color:var(--main-ink)}
 .mycenter{text-align:center;padding:60px 20px}
 
 .stepper{display:flex;align-items:center;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .stepper .st{flex:1;text-align:center}
 .stepper .st b{display:block;font-size:15px;font-weight:700}
-.stepper .st span{font-size:12px;color:var(--muted)}
+.stepper .st span{font-size:12.5px;color:var(--muted)}
 .stepper .st.cur{opacity:1}
 .stepper .st.cur b{color:var(--main-deep)}
 .stepper .st.cur span{color:var(--mint);font-weight:700}
 .stepper .st.done{opacity:.9}
 .stepper .st.wait{opacity:.45}
-.stepper .starr{color:#C3D2E1;font-size:17px;padding:0 4px}
+.stepper .starr{color:#9AAAB9;font-size:15px;padding:0 4px}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
 .stat{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 8px;text-align:center}
 .stat b{font-family:'Oswald',sans-serif;font-size:27px;font-weight:700;display:block;line-height:1.1;color:var(--ink)}
-.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
-.stat span{font-size:12px;color:var(--muted);font-weight:500}
+.stat b small{font-size:14px;font-weight:700;color:var(--muted)}
+.stat span{font-size:12.5px;color:var(--muted);font-weight:500}
 .stat.hot b{color:var(--main-deep)}
 
 /* ===== 로그인 ===== */
 .authbox{max-width:340px;margin:0 auto;text-align:center;padding-top:14px}
 .authbox .badge-logo{width:180px;height:auto;margin:0 auto 16px;display:block}
-.authbox h2{font-weight:700;font-size:26px;margin-bottom:8px;line-height:1.4}
-.authbox p{color:var(--muted);font-size:17px;margin-bottom:20px;line-height:1.65}
-.codeinput{letter-spacing:.55em;text-align:center;font-family:'Oswald',sans-serif;font-size:30px!important}
+.authbox h2{font-weight:700;font-size:22px;margin-bottom:8px;line-height:1.4}
+.authbox p{color:var(--muted);font-size:15px;margin-bottom:20px;line-height:1.65}
+.codeinput{letter-spacing:.55em;text-align:center;font-family:'Oswald',sans-serif;font-size:27px!important}
 
 /* ===== 심판 화면 ===== */
 .judgehead{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .judgehead .info{flex:1}
-.judgehead .info b{display:block;font-size:19px}
+.judgehead .info b{display:block;font-size:18px}
 .judgehead .info span{font-size:14px;color:var(--muted)}
 .chiprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;touch-action:pan-x}
 .chiprow::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:600;font-size:18px}
-.chip.on{background:var(--main);color:#fff;border-color:var(--main)}
+.chip{flex:0 0 auto;border:2px solid var(--line);background:var(--paper);border-radius:99px;padding:12px 20px;font-weight:700;font-size:18px}
+.chip.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
 .holecard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
 .holetop{background:var(--main-deep);color:#fff;padding:18px;display:flex;align-items:center;justify-content:space-between}
-.holetop .arrow{width:60px;height:60px;border-radius:16px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:30px;font-weight:600}
+.holetop .arrow{width:60px;height:60px;border-radius:16px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:22px;font-weight:700}
 .holetop .arrow:disabled{opacity:.3}
 .holetop .hno{text-align:center}
-.holetop .hno b{font-weight:700;font-size:36px;display:block;line-height:1.15}
-.holetop .hno span{font-size:16px;color:#C9DCF0;font-weight:600;letter-spacing:.06em}
+.holetop .hno b{font-weight:700;font-size:22px;display:block;line-height:1.15}
+.holetop .hno span{font-size:15px;color:#9AAAB9;font-weight:700;letter-spacing:.06em}
 .prow{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--line)}
 .prow:last-child{border-bottom:none}
-.prow .pname{flex:1;font-weight:600;font-size:20px}
+.prow .pname{flex:1;font-weight:700;font-size:18px}
 .prow .pname small{display:block;font-weight:500;color:var(--muted);font-size:14px}
-.scbtn{width:74px;height:64px;border-radius:16px;border:2.5px solid var(--line);background:var(--bg);font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:#AEBBC9}
+.scbtn{width:74px;height:64px;border-radius:16px;border:2.5px solid var(--line);background:var(--bg);font-family:'Oswald',sans-serif;font-size:27px;font-weight:700;color:#9AAAB9}
 .scbtn.filled{color:var(--ink);border-color:var(--main);background:var(--main-soft)}
-.scbtn.birdie{background:#FDEEEA;border-color:#F3B3A2;color:var(--red)}
-.scbtn.over{background:#EAF2FB;border-color:#B8D2EE;color:#2F6BAA}
-.holeprog{padding:14px 18px;font-size:16px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;background:#F7FAFD}
+.scbtn.birdie{background:#FBE9E4;border-color:#FBE9E4;color:var(--red)}
+.scbtn.over{background:#F4F7FA;border-color:#DCE6F0;color:var(--muted)}
+.holeprog{padding:14px 18px;font-size:15px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;background:#F4F7FA}
 .dots{display:flex;gap:5px;flex-wrap:wrap}
 .dots i{width:12px;height:12px;border-radius:4px;background:var(--line)}
 .dots i.d{background:var(--mint)}
 .dots i.c{outline:3px solid var(--main);outline-offset:1px}
 .log{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;max-height:170px;overflow-y:auto}
-.log h4{font-size:14px;color:var(--muted);margin-bottom:8px;font-weight:600}
+.log h4{font-size:14px;color:var(--muted);margin-bottom:8px;font-weight:700}
 .log div{font-size:15px;padding:5px 0;border-bottom:1px dashed var(--line)}
 .log div:last-child{border-bottom:none}
 .log b{color:var(--main-deep)}
@@ -322,23 +332,24 @@ tr:last-child td{border-bottom:none}
 .overlay{position:fixed;inset:0;background:rgba(23,51,80,.5);display:none;align-items:flex-end;justify-content:center;z-index:100}
 .overlay.on{display:flex}
 .pad{background:var(--paper);border-radius:26px 26px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:430px}
-.pad h3{font-size:21px;margin-bottom:2px;font-weight:700}
-.pad p{color:var(--muted);font-size:16px;margin-bottom:16px}
+.pad h3{font-size:18px;margin-bottom:2px;font-weight:700}
+.pad p{color:var(--muted);font-size:15px;margin-bottom:16px}
 .padgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .padbtn{height:76px;border-radius:18px;border:2px solid var(--line);background:var(--bg);font-family:'Oswald',sans-serif;font-size:34px;font-weight:600}
 .padbtn:active{background:var(--main-soft)}
 .padbtn.parhint{border:3px solid var(--main);color:var(--main-deep)}
-.padbtn.clear{font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:600;color:var(--muted)}
-.sheetli{display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14.5px;color:var(--ink);line-height:1.5}
+.padbtn.clear{font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:700;color:var(--muted)}
+.sheetli{display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;color:var(--ink);line-height:1.5}
 .sheetli:last-child{border-bottom:none}
 .sheetli b{font-weight:700;color:var(--main-deep);flex:0 0 auto}
 .sheetli.warn b{color:var(--coral)}
 .stagesub b{cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
 
 /* ===== 상단 안내 바 ===== */
-.backbar{background:var(--main-deep);color:#D8E7F6;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
-.backbar button{border:none;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px;padding:10px 16px;border-radius:99px}
-.backbar span{opacity:.85;font-weight:400}
+/* CH32-C(최상단 라이트닝): 서브 화면·전광판 진입부 백바도 흰 배경 + 구분선 + 짙은 글자 */
+.backbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
+.backbar button{border:none;background:var(--bg);color:var(--ink);font-weight:700;font-size:15px;padding:10px 16px;border-radius:99px}
+.backbar span{color:var(--muted);font-weight:400}
 
 /* ===== 운영 허브 도구 리스트 ===== */
 .tools{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
@@ -347,12 +358,12 @@ tr:last-child td{border-bottom:none}
 .trow .tic{width:42px;height:42px;border-radius:13px;background:var(--main-soft);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .trow .tic svg{width:21px;height:21px;stroke:var(--main-deep)}
 .trow .tt{flex:1;min-width:0}
-.trow .tt b{display:block;font-size:15.5px;font-weight:700}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
 .trow .tt span{font-size:12.5px;color:var(--muted)}
-.trow .st2{font-size:12px;font-weight:700;color:var(--mint);white-space:nowrap}
+.trow .st2{font-size:12.5px;font-weight:700;color:var(--mint);white-space:nowrap}
 .trow .st2.warn{color:#C9930A}
-.trow .st2.gray{color:var(--muted);font-weight:600}
-.trow .chev{color:#B7C6D5;font-size:18px;transition:transform .2s;flex:0 0 auto}
+.trow .st2.gray{color:var(--muted);font-weight:700}
+.trow .chev{color:#9AAAB9;font-size:18px;transition:transform .2s;flex:0 0 auto}
 .trow.open .chev{transform:rotate(90deg)}
 .tooldetail{display:none;padding:0 18px 18px}
 
@@ -361,7 +372,7 @@ tr:last-child td{border-bottom:none}
 .jrow:not(:last-child){border-bottom:1px solid var(--line)}
 .jrow.dis{opacity:.5}
 .jrow .who{flex:1;min-width:0}
-.jrow .who b{display:block;font-size:15.5px;font-weight:700}
+.jrow .who b{display:block;font-size:15px;font-weight:700}
 .jrow .who span{font-size:12.5px;color:var(--muted)}
 .jst{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;flex:0 0 auto}
 .jst.on{background:#E7F5EE;color:#2E8B63}
@@ -370,87 +381,88 @@ tr:last-child td{border-bottom:none}
 .tooldetail.on{display:block}
 
 /* ===== 대회 관리공간 ===== */
-.mgmthead{background:var(--main-deep);color:#fff;margin:-20px -16px 0;padding:18px 20px 16px}
-.mgmthead .mgmtname{font-size:19px;font-weight:700;line-height:1.3;color:#fff}
-.mgmthead .sub{color:rgba(255,255,255,.75)}
+/* CH32-C⑮(최종) 라이트닝: 대회 헤더 밴드 = 연한 라임 그라디언트 + 짙은 글자(짙은 단색 밴드 폐지) */
+.mgmthead{background:linear-gradient(120deg,#F4FDEB,#E5FAD2);border-bottom:1px solid #DDF3C4;color:var(--lime-ink);margin:-20px -16px 0;padding:18px 20px 16px}
+.mgmthead .mgmtname{font-size:18px;font-weight:700;line-height:1.3;color:var(--lime-ink)}
+.mgmthead .sub{color:var(--lime-sub)}
 .tabA{display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 2px;margin:0 -16px 14px}
 /* CH32-A 보완5: .ti는 <button>인데 외형 리셋이 없어 기기 브라우저(UA 기본 버튼 크롬)에서
    회색 박스로 렌더됐다 — 전역 button 리셋 대신 영향 범위가 좁은 개별 리셋을 명시. */
-.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7;border:none;background:none;appearance:none;-webkit-appearance:none}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#9AAAB9;border:none;background:none;appearance:none;-webkit-appearance:none}
 .tabA .ti svg{width:21px;height:21px}
-.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti span{font-size:12.5px;font-weight:500;white-space:nowrap}
 .tabA .ti.on{color:var(--main-deep)}
 .tabA .ti.on span{font-weight:700}
 .tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--main-deep)}
 .tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
-.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo{background:#F7CF5C;border:1.5px solid #F7CF5C;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#2B3A4A;margin-bottom:12px}
 .todo b{font-weight:700}
-.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.todo .chev{margin-left:auto;color:#C9930A;font-weight:700}
 .mgpane{display:none}
 .mgpane.on{display:block}
-.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg{display:flex;background:#F4F7FA;border-radius:14px;padding:4px;margin-bottom:14px}
 .seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer}
 .seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
 /* CH32-B⑪: 단계 세그먼트(.seg) 하위의 [명단|조편성] 탭 — 목업 장면3의 .mtab(개별 라운드 칩) */
 .mtab{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
-.mtab.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
+.mtab.on{background:var(--main);border-color:var(--main);color:var(--main-ink);font-weight:700}
 .psegpane{display:none}
 .psegpane.on{display:block}
 /* CH30-B②: 일괄 입력 — 컬럼 선언 칩 + 예시 줄 */
 .colchip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.colchip span{font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.colchip span{font-size:14px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
 .colchip span.req{border-color:var(--ink);background:var(--ink);color:#fff}
-.colchip span.on{border-color:var(--main);background:#F4F9FE;color:var(--main-deep)}
-.exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
+.colchip span.on{border-color:var(--main);background:var(--stage-cur);color:var(--main-deep)}
+.exline{background:#F7CF5C;border:1px dashed #F7CF5C;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:10px}
 .exline b{font-weight:700}
 /* CH32-A②: 여정 체크리스트 — 줄마다 자기 버튼(대칭), 3색 상태 언어 */
 .jlist{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
 .jstep{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
 .jstep:last-child{border-bottom:none}
-.jstep .jn{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700}
+.jstep .jn{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
 .jstep.done .jn{background:#E7F5EE;color:#2E8B63}
-.jstep.cur .jn{background:var(--main-deep);color:#fff}
-.jstep.todo .jn{background:#EDF1F6;color:#9AAAB9}
+.jstep.cur .jn{background:var(--main);color:var(--main-ink)}
+.jstep.todo .jn{background:#DCE6F0;color:#9AAAB9}
 .jstep b{font-size:15px;font-weight:700;display:block}
-.jstep small{font-size:12px;color:var(--muted)}
+.jstep small{font-size:12.5px;color:var(--muted)}
 .jstep.todo b{color:#9AAAB9;font-weight:500}
-.jstep .jact{margin-left:auto;background:var(--main);color:#fff;font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
-.jstep.cur{background:#F4F9FE}
+.jstep .jact{margin-left:auto;background:var(--main);color:var(--main-ink);font-size:14px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
+.jstep.cur{background:var(--stage-cur)}
 .jact.sec{background:var(--main-soft);color:var(--main-deep)}
-.jact.dis{background:#EDF1F6;color:#9AAAB9}
+.jact.dis{background:#DCE6F0;color:#9AAAB9}
 /* CH32-B 보완: 마감 완료 단계 버튼 — 민트(완료 상태), 탭 시 안내 토스트(무반응 아님) */
 .jact.done{background:#E7F5EE;color:#2E8B63}
 /* CH30-B④: 점수 목록 조별 스티키 헤더 */
-.pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
+.pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:12.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
 .stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
 .stagechips::-webkit-scrollbar{display:none}
-.stagechip{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 15px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.stagechip{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 15px;font-size:14px;font-weight:500;color:var(--muted)}
 .stagechip.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
 .jbar{display:flex;align-items:center;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
 .js{flex:1;text-align:center;position:relative}
-.js b{display:block;font-size:13.5px;font-weight:700;color:#9AAAB9}
-.js span{font-size:10.5px;color:#B4C2D0;font-weight:500}
+.js b{display:block;font-size:14px;font-weight:700;color:#9AAAB9}
+.js span{font-size:11px;color:#9AAAB9;font-weight:500}
 .js.done b{color:var(--muted)}
 .js.done span{color:var(--mint)}
-.js.cur b{color:var(--main-deep);font-size:14.5px}
+.js.cur b{color:var(--main-deep);font-size:14px}
 .js.cur span{color:var(--mint);font-weight:700}
-.js .bd{display:inline-block;font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:#E7F5EE;color:#2E8B63;margin-top:3px}
-.js .bd.closed{background:#EDF1F6;color:#8CA0B4}
-.jarr{color:#D3DEE9;font-size:14px;padding:0 2px;flex:0 0 auto}
+.js .bd{display:inline-block;font-size:11px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:#E7F5EE;color:#2E8B63;margin-top:3px}
+.js .bd.closed{background:#DCE6F0;color:#9AAAB9}
+.jarr{color:#DCE6F0;font-size:14px;padding:0 2px;flex:0 0 auto}
 .holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
 .hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center;cursor:pointer}
-.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
-.hc b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
-.hc.empty b{color:#B9C6D4}
-.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#9AAAB9}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:var(--stage-cur)}
 .hc.birdie b{color:var(--red)}
-.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
-.sumrow b{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--main-deep)}
-.gridsummary{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0;padding:10px 14px;background:var(--main-soft);border-radius:14px;font-size:13px;color:var(--muted)}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F4F7FA;border-radius:14px;font-size:14px}
+.sumrow b{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--main-deep)}
+.gridsummary{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0;padding:10px 14px;background:var(--main-soft);border-radius:14px;font-size:14px;color:var(--muted)}
 .gridsummary span.cur{color:var(--main-deep);font-weight:700}
 .gridsummary b{font-family:'Oswald',sans-serif;font-weight:700;color:var(--ink)}
 .gridsummary .total{margin-left:auto;color:var(--main-deep);font-weight:700}
-.gridsummary .total b{color:var(--main-deep);font-size:17px}
+.gridsummary .total b{color:var(--main-deep);font-size:15px}
 
 /* ===== 대회 도구 ===== */
 .toolrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dashed var(--line)}
@@ -461,87 +473,89 @@ tr:last-child td{border-bottom:none}
 /* CH32-A 보완5: 수정 시트의 출석·입금 토글은 <button class="pill2">라 UA 기본 테두리(outset)가
    노출됐다(.ti와 동일 계열) — span 사용처에는 영향 없는 border:none을 기본에 명시. */
 .pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px;flex:0 0 auto;cursor:pointer;border:none}
-.pill2.pay{background:#E3F6F0;color:#2E8B63}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
 .pill2.nopay{background:#FBE9E4;color:var(--coral)}
 .qrbox{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .qrbox canvas{width:130px;height:130px;image-rendering:pixelated;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px;flex:0 0 auto}
-.urlchip{background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:12px 14px;font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:.03em;word-break:break-all}
+.urlchip{background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:12px 14px;font-family:'Oswald',sans-serif;font-size:20px;letter-spacing:.03em;word-break:break-all}
 
 /* ===== 참가 신청 ===== */
-.poster{background:linear-gradient(160deg,var(--main) 0%,var(--main-deep) 100%);color:#fff;border-radius:var(--radius);padding:24px 22px;margin-bottom:16px;box-shadow:0 6px 18px rgba(47,107,170,.28)}
-.poster .pdate{color:rgba(255,255,255,.92);font-weight:600;font-size:16px;letter-spacing:.06em;margin-bottom:8px}
-.poster h3{font-weight:700;font-size:25px;line-height:1.4;margin-bottom:10px}
-.poster .pmeta{font-size:16px;opacity:.95;line-height:1.75}
+/* CH32-C⑮(최종) 라이트닝: 요강 포스터도 연한 라임 그라디언트 + 짙은 글자 */
+.poster{background:linear-gradient(150deg,#F4FDEB,#E5FAD2);color:var(--lime-ink);border:1px solid #DDF3C4;border-radius:var(--radius);padding:24px 22px;margin-bottom:16px;box-shadow:0 6px 18px rgba(29,61,92,.10)}
+.poster .pdate{color:var(--lime-sub);font-weight:700;font-size:15px;letter-spacing:.06em;margin-bottom:8px}
+.poster h3{font-weight:700;font-size:22px;line-height:1.4;margin-bottom:10px}
+.poster .pmeta{font-size:15px;opacity:.95;line-height:1.75}
 .capbar-hero{background:rgba(255,255,255,.22);border-radius:99px;height:14px;margin-top:16px;overflow:hidden}
 .capbar-hero i{display:block;height:100%;background:rgba(255,255,255,.85);border-radius:99px;transition:width .5s}
 .capnote{display:flex;justify-content:space-between;font-size:15px;margin-top:8px;opacity:.95}
 
 /* 차수26: 요강 페이지 카드뉴스 (신청 페이지 .poster와는 별개 — 공유 금지) */
-.ynhero{background:linear-gradient(160deg,#24476B 0%,#1D3D5C 60%,#16304A 100%);border-radius:0 0 30px 30px;padding:26px 22px 24px;color:#fff;position:relative;margin:-16px -16px 0}
+/* CH32 토큰정리: 공개 요강 배너 = 대회 카드(네이비 예외) — 오프토큰 블루를 네이비 토큰+보드bg로 */
+.ynhero{background:linear-gradient(160deg,#1D3D5C 0%,#173350 100%);border-radius:0 0 30px 30px;padding:26px 22px 24px;color:#fff;position:relative;margin:-16px -16px 0}
 .ynhero img{height:24px;display:block;margin-bottom:14px}
-.ynhero .ynbadge{display:inline-flex;align-items:center;gap:6px;background:var(--sun);color:#22303D;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:99px;margin-bottom:14px}
-.ynhero h2{font-size:25px;font-weight:700;line-height:1.4;margin-bottom:8px}
-.ynhero .ynsub{font-size:13.5px;color:#BCD2E8;margin-bottom:2px}
-.ynhero .ynhost{font-size:11.5px;color:#8FB0CE;margin-top:12px}
+.ynhero .ynbadge{display:inline-flex;align-items:center;gap:6px;background:var(--sun);color:#2B3A4A;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:99px;margin-bottom:14px}
+.ynhero h2{font-size:22px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.ynhero .ynsub{font-size:14px;color:#9AAAB9;margin-bottom:2px}
+.ynhero .ynhost{font-size:12.5px;color:#9AAAB9;margin-top:12px}
 .ynkgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:-18px 0 0;position:relative;z-index:2}
 .ynkcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 14px;box-shadow:0 6px 18px rgba(29,61,92,.08)}
 .ynkcard small{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
-.ynkcard b{font-size:15.5px;font-weight:700;line-height:1.35}
-.ynkcard .num{font-family:'Oswald',sans-serif;font-size:19px}
-.ynkcard .sm{font-weight:500;font-size:12px;color:var(--muted)}
+.ynkcard b{font-size:15px;font-weight:700;line-height:1.35}
+.ynkcard .num{font-family:'Oswald',sans-serif;font-size:20px}
+.ynkcard .sm{font-weight:500;font-size:12.5px;color:var(--muted)}
 .ynkcard .sm.ok{color:#2E8B63}
-.ynprize{margin-top:14px;background:linear-gradient(150deg,#F7CF5C,#F0BE35);border-radius:20px;padding:18px 20px;color:#22303D}
-.ynprize small{font-size:12px;font-weight:700;color:#7a5c0e}
+.ynprize{margin-top:14px;background:linear-gradient(150deg,#F7CF5C,#F7CF5C);border-radius:20px;padding:18px 20px;color:#2B3A4A}
+.ynprize small{font-size:12.5px;font-weight:700;color:#C9930A}
 .ynprize .total{font-size:27px;font-weight:700;font-family:'Oswald',sans-serif;letter-spacing:.01em}
-.ynprize .total em{font-family:'Noto Sans KR';font-style:normal;font-size:17px}
+.ynprize .total em{font-family:'Noto Sans KR';font-style:normal;font-size:15px}
 .ynprize .plist{display:flex;gap:8px;margin-top:12px}
 .ynprize .p1{flex:1;background:rgba(255,255,255,.5);border-radius:12px;padding:8px 10px;text-align:center}
-.ynprize .p1 small{display:block;color:#7a5c0e;font-size:10.5px}
-.ynprize .p1 b{font-size:14.5px}
+.ynprize .p1 small{display:block;color:#C9930A;font-size:11px}
+.ynprize .p1 b{font-size:14px}
 .ynsec{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px 18px}
-.ynsec h5{font-size:13px;font-weight:700;color:var(--deep);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ynsec h5{font-size:14px;font-weight:700;color:var(--deep);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .ynflow{display:flex;align-items:center;gap:6px}
-.ynfstep{flex:1;background:#F0F5FA;border-radius:12px;padding:10px 8px;text-align:center}
-.ynfstep b{display:block;font-size:13px;font-weight:700}
-.ynfstep span{font-size:10.5px;color:var(--muted)}
-.ynfarr{color:#B4C6D8;font-size:13px}
-.ynqrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.ynfstep{flex:1;background:#F4F7FA;border-radius:12px;padding:10px 8px;text-align:center}
+.ynfstep b{display:block;font-size:14px;font-weight:700}
+.ynfstep span{font-size:11px;color:var(--muted)}
+.ynfarr{color:#9AAAB9;font-size:14px}
+.ynqrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:7px 0;border-bottom:1px dashed var(--line)}
 .ynqrow:last-child{border-bottom:none}
 .ynqrow span:first-child{color:var(--muted);flex:0 0 auto}
 .ynqrow span:last-child{font-weight:700;text-align:right}
 .ynctabar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:9px;margin:16px -16px -20px}
-.ynctabar .share{width:52px;height:52px;border-radius:14px;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;border:none}
-.ynctabar .go{flex:1;background:var(--main);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:700;border:none}
+.ynctabar .share{width:52px;height:52px;border-radius:14px;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;border:none}
+.ynctabar .go{flex:1;background:var(--main);color:var(--main-ink);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;border:none}
 .ynctabar .go.disabled{background:var(--line);color:var(--muted)}
 
 /* 차수27: 다음 할 일 카드 */
 .todo3{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px}
-.todo3 h6{font-size:14.5px;font-weight:700;margin-bottom:12px}
+.todo3 h6{font-size:14px;font-weight:700;margin-bottom:12px}
 .tstep{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .tstep:last-child{border-bottom:none}
-.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:var(--main-ink);font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .tstep .no.done{background:#E7F5EE;color:#2E8B63}
-.tstep .no.wait{background:#EDF1F6;color:#9AAAB9}
-.tstep b{font-size:14.5px;font-weight:700;display:block}
-.tstep span{font-size:11.5px;color:var(--muted)}
+.tstep .no.wait{background:#DCE6F0;color:#9AAAB9}
+.tstep b{font-size:14px;font-weight:700;display:block}
+.tstep span{font-size:12.5px;color:var(--muted)}
 .tstep .go{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--deep);flex:0 0 auto;cursor:pointer}
 /* 차수27: 내 대회 할 일 뱃지 */
-.todobadge{display:flex;align-items:center;gap:7px;background:#FFF7E0;border:1px solid #F3DD9A;border-radius:11px;padding:8px 12px;font-size:12.5px;font-weight:700;color:#8a6410;margin-top:8px}
-.todobadge.red{background:#FBE9E4;border-color:#F2C4B8;color:#C4523A}
+.todobadge{display:flex;align-items:center;gap:7px;background:#F7CF5C;border:1px solid #F7CF5C;border-radius:11px;padding:8px 12px;font-size:12.5px;font-weight:700;color:#2B3A4A;margin-top:8px}
+.todobadge.red{background:#FBE9E4;border-color:#FBE9E4;color:#C4523A}
 /* 차수27②: 3인 조 허용 토글 */
-.tglsw{display:inline-block;width:44px;height:26px;border-radius:99px;background:#C9D8E7;position:relative;flex:0 0 auto;cursor:pointer;transition:background .15s}
+.tglsw{display:inline-block;width:44px;height:26px;border-radius:99px;background:#DCE6F0;position:relative;flex:0 0 auto;cursor:pointer;transition:background .15s}
 .tglsw.on{background:var(--main)}
 .tglsw i{position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;font-style:normal}
 .tglsw.on i{left:21px}
 .modew{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .modew3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
-.modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:15px}
-.modew3 button.on{background:var(--main);color:#fff;border-color:var(--main)}
-.modew button{min-height:64px;padding:12px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:600;font-size:19px}
-.modew button.on{background:var(--main);color:#fff;border-color:var(--main)}
+.modew3 button{min-height:64px;padding:8px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:700;font-size:15px}
+.modew3 button.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
+.modew button{min-height:64px;padding:12px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-weight:700;font-size:18px}
+.modew button.on{background:var(--main);color:var(--main-ink);border-color:var(--main)}
 .receipt{text-align:center;padding:28px 16px}
-.receipt .big{font-size:52px}
-.receipt h3{font-weight:700;font-size:25px;margin:12px 0 4px}
+.receipt .big{font-size:22px}
+.receipt h3{font-weight:700;font-size:22px;margin:12px 0 4px}
 .receipt .rn{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:var(--main-deep);letter-spacing:.1em;background:var(--main-soft);display:inline-block;padding:10px 24px;border-radius:14px;margin:12px 0}
 .receipt p{color:var(--muted);font-size:17px;line-height:1.75}
 
@@ -590,21 +604,21 @@ tr:last-child td{border-bottom:none}
 /* ===== 결과 ===== */
 .podium{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px}
 .pod{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px}
-.pod .medal{font-size:34px}
+.pod .medal{font-size:22px}
 .pod .pi{flex:1}
-.pod b{font-weight:700;font-size:21px}
+.pod b{font-weight:700;font-size:18px}
 .pod span{display:block;color:var(--muted);font-size:15px}
-.pod .sc{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:var(--main-deep)}
+.pod .sc{font-family:'Oswald',sans-serif;font-weight:700;font-size:20px;color:var(--main-deep)}
 .pod.first{border:2px solid var(--sun)}
 
 /* ===== 순위 리스트 (결과 화면) ===== */
 .rrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
 .rrow:last-child{border-bottom:none}
-.rrow .rk{width:32px;height:32px;border-radius:50%;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;flex:0 0 auto}
-.rrow.top1 .rk{background:var(--sun);color:#6b4e07}
+.rrow .rk{width:32px;height:32px;border-radius:50%;background:var(--main-soft);color:var(--main-deep);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;flex:0 0 auto}
+.rrow.top1 .rk{background:var(--sun);color:#2B3A4A}
 .rrow .info{flex:1;min-width:0}
-.rrow .info b{display:block;font-size:17px}
-.rrow .info span{color:var(--muted);font-size:13px}
+.rrow .info b{display:block;font-size:15px}
+.rrow .info span{color:var(--muted);font-size:14px}
 .rrow .sc{text-align:right;flex:0 0 auto}
 
 /* CH30-B①: 대회기간·총점만 결과 — 단일 리스트형(포디움 없음) */
@@ -613,44 +627,51 @@ tr:last-child td{border-bottom:none}
 .presrow.head{background:var(--bg);font-size:11px;font-weight:700;color:var(--muted)}
 .presrow .r{font-family:'Oswald',sans-serif;font-weight:600;color:var(--muted);text-align:center}
 .presrow .v{font-family:'Oswald',sans-serif;font-weight:600;text-align:right}
-.presrow.rank1{background:#FEF7E0;border-left:4px solid var(--sun)}
+.presrow.rank1{background:#F7CF5C;border-left:4px solid var(--sun)}
 .presrow.rank1 .r{color:#C9930A;font-weight:700}
 .presrow.rank1 .v.tot{color:#C9930A;font-weight:700}
 .presrow.rank23 .r{color:var(--ink);font-weight:700}
 .presrow.rank23 .v.tot{font-weight:700}
 .presrow .nm b{display:block}
-.presrow .nm small{color:var(--muted);font-size:11.5px}
-.rrow .sc b{display:block;font-size:17px}
-.rrow .sc span{font-size:13px;color:var(--muted)}
+.presrow .nm small{color:var(--muted);font-size:12.5px}
+.rrow .sc b{display:block;font-size:15px}
+.rrow .sc span{font-size:14px;color:var(--muted)}
 .rrow .sc span.minus{color:var(--red)}
 .printonly{display:none}
-@media print{.printonly{display:table}}
+/* CH32-C⑭: 결과지 인쇄 — 화면 크롬을 숨기고 결과표만 상단에 격리해 인쇄/PDF로 저장 */
+@media print{
+  body{visibility:hidden;background:#fff}
+  #rtablePrint{visibility:visible;display:table;position:absolute;top:0;left:0;width:100%;border-collapse:collapse;font-size:12.5px}
+  #rtablePrint *{visibility:visible}
+  #rtablePrint th,#rtablePrint td{border:1px solid #9AAAB9;padding:5px 7px}
+  #rtablePrint .tac{text-align:center}
+}
 
 /* ===== 조편성 카드 ===== */
 .gcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-.gcard .ghead{background:var(--main);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline}
-.gcard .ghead b{font-weight:700;font-size:20px}
+.gcard .ghead{background:var(--main);color:var(--main-ink);padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline}
+.gcard .ghead b{font-weight:700;font-size:18px}
 .gcard .ghead .tee{font-size:14px;opacity:.95}
 .gcard ul{list-style:none;padding:8px 18px}
-.gcard li{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);font-size:19px;font-weight:600}
+.gcard li{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);font-size:18px;font-weight:700}
 .gcard li:last-child{border-bottom:none}
 .gcard li span{color:var(--muted);font-size:14px;font-weight:500}
 
-.toast{position:fixed;bottom:calc(var(--navh) + 16px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:14px 22px;border-radius:99px;font-weight:600;font-size:17px;opacity:0;transition:.35s;z-index:200;pointer-events:none;max-width:92vw;text-align:center}
+.toast{position:fixed;bottom:calc(var(--navh) + 16px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:14px 22px;border-radius:99px;font-weight:700;font-size:15px;opacity:0;transition:.35s;z-index:200;pointer-events:none;max-width:92vw;text-align:center}
 .toastUndoBtn{text-decoration:underline;font-weight:700;margin-left:10px;cursor:pointer;color:var(--sun)}
 /* 차수23②: 총점 인라인 입력 */
 .inrow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--paper)}
 .inrow:last-child{border-bottom:none}
 .inrow .who{flex:1;min-width:0}
-.inrow .who b{display:block;font-size:15.5px;font-weight:700}
-.inrow .who span{font-size:11.5px;color:var(--muted)}
-input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:var(--ink);flex:0 0 auto}
+.inrow .who b{display:block;font-size:15px;font-weight:700}
+.inrow .who span{font-size:12.5px;color:var(--muted)}
+input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:var(--ink);flex:0 0 auto}
 .numbox.filled{border-color:var(--main)}
-.okbtn{height:44px;padding:0 14px;border-radius:12px;background:var(--main);color:#fff;font-weight:700;font-size:14px;border:none;flex:0 0 auto}
+.okbtn{height:44px;padding:0 14px;border-radius:12px;background:var(--main);color:var(--main-ink);font-weight:700;font-size:14px;border:none;flex:0 0 auto}
 .okbtn.done{background:#E7F5EE;color:#2E8B63}
-.bestrow{background:#F4FBF8}
+.bestrow{background:#F4F7FA}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.note{background:#FDF6E1;border:2px solid #F2E3B4;border-radius:14px;padding:14px 16px;font-size:16px;color:#6f5a13;margin-bottom:16px;line-height:1.65}
+.note{background:#F7CF5C;border:2px solid #F7CF5C;border-radius:14px;padding:14px 16px;font-size:15px;color:#2B3A4A;margin-bottom:16px;line-height:1.65}
 
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
@@ -665,7 +686,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 <div class="mobile" id="viewOwner">
   <header class="appbar">
     <button class="abk" id="abkBtn" onclick="navBack()">←</button>
-    <div class="logo"><img src="brand/logo-light.svg" alt="누가일등" class="appbar-logo"></div>
+    <div class="logo"><img src="brand/logo-main.svg" alt="누가일등" class="appbar-logo"></div>
     <div class="who" id="whoBox">둘러보는 중 · 로그인 안 함</div>
   </header>
 
@@ -955,9 +976,9 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="mgmtname" id="mgmtName">—</div>
       <p class="sub" id="mgSub">—</p>
     </div>
-    <!-- CH32-A①: 7탭→4탭(대회홈·참가자·스코어·리더보드). 요강·심판진·결과 탭 버튼은 없앴지만
-         패널(mgNotice/mgStaff/mgResult)과 기능은 그대로 두고 진입 경로만 대회홈 여정·하단 행·
-         리더보드로 옮긴다(mgShow()는 탭 버튼 없이도 정상 동작). -->
+    <!-- CH32-A①: 7탭→4탭(대회홈·참가자·스코어·리더보드). 심판진·결과 탭 버튼은 없앴지만
+         패널(mgStaff/mgResult)과 기능은 그대로 두고 진입 경로만 대회홈 여정·하단 행·리더보드로
+         옮긴다(mgShow()는 탭 버튼 없이도 정상 동작). 구 요강 탭(mgNotice)은 CH32-C⑰에서 제거. -->
     <div class="tabA">
       <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>대회홈</span></button>
       <button class="ti" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></button>
@@ -1010,7 +1031,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
              📋요강 내용 > [요강 미리보기·공유] 행으로 흡수됨 — 여기서는 제거. -->
         <div class="trow" onclick="mgShow('mgStaff')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg></span>
-          <span class="tt"><b>심판진</b><span id="staffRowSummary">점수 입력할 분 추가·문자 링크 발송</span></span>
+          <span class="tt"><b>심판진</b><span id="staffRowSummary">심판 추가·링크 발송</span></span>
           <span class="chev">›</span>
         </div>
         <div class="trow" onclick="openExportSheet()">
@@ -1021,24 +1042,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       </div>
     </div>
 
-    <!-- 요강 -->
-    <div class="mgpane" id="mgNotice">
-      <div class="card" id="noticeCompletionCard" style="display:none">
-        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>요강 완성도</span><span id="noticeCompletionPct" style="color:var(--main-deep)">0%</span></div>
-        <div class="pct"><i id="noticeCompletionBar" style="width:0%"></i></div>
-        <p class="sub" id="noticeCompletionNote">완료됐어요</p>
-      </div>
-      <div class="laterlist" id="noticeCompletionList" style="margin-bottom:14px"></div>
-      <div class="card">
-        <label class="fl" style="margin-top:0">대회 요강</label>
-        <p class="sub" style="margin-bottom:12px">참가자에게 공유할 수 있는 공개 요강 페이지입니다.</p>
-        <div style="display:flex;gap:8px">
-          <button class="btn sm ghost" onclick="openEditInfo()">수정하기</button>
-          <button class="btn sm ghost" onclick="copyNoticeLink(config.id)">링크 복사</button>
-          <button class="btn sm" onclick="openNotice(config.id)">보기</button>
-        </div>
-      </div>
-    </div>
+<!-- CH32-C⑰: 구 mgNotice(요강) 패널 제거 — CH32-B에서 정보 수정 통합 허브가 완성도·미리보기·
+     공유를 모두 흡수했고 진입 경로(홈 [대회 요강] 행)도 이미 제거돼 도달 불가능한 죽은 코드였다. -->
 
     <!-- 참가자 -->
     <div class="mgpane" id="mgPlayers">
@@ -1078,8 +1083,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
           <p class="sub" style="margin:0">이 단계는 <b>대회기간 라운드(조편성 없음)</b> 방식이라 조편성을 사용하지 않습니다.<br>참가자는 심판 화면에서 개별 기록으로 관리됩니다.</p>
         </div>
         <div id="groupsEmpty" class="card" style="display:none;text-align:center;padding:44px 26px">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#B9CCE0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg>
-          <h4 style="font-size:19px;font-weight:700;margin-bottom:8px">아직 조가 없습니다</h4>
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#9AAAB9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M16 4h4v4"/><path d="M4 20 20 4"/><path d="M16 20h4v-4"/><path d="m14 14 6 6"/><path d="M4 4l6 6"/></svg>
+          <h4 style="font-size:18px;font-weight:700;margin-bottom:8px">아직 조가 없습니다</h4>
           <p class="sub" style="margin-bottom:22px" id="groupsEmptyDesc"></p>
           <button class="btn full big" onclick="openGroupConfirm()">조편성하기</button>
         </div>
@@ -1149,6 +1154,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <span class="tt"><b>TV 전체화면으로 보기</b><span>대회장 TV·노트북에 연결해 크게 띄워요</span></span>
         <span class="chev">›</span>
       </div>
+      <!-- CH32-C⑭: 구 리더보드 필터 통합 — 부문(전체·남자부·여자부) × 범위(종합·코스별) -->
+      <div id="resultFilterRow" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px"></div>
       <p class="sub" id="resultSub">경기 진행 전입니다.</p>
       <div id="roundResultBox">
         <div class="podium" id="podium"></div>
@@ -1167,10 +1174,10 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <div class="card" style="padding:0;overflow:hidden">
           <div id="periodResultList"></div>
         </div>
-        <div class="card" id="periodAwardsBox" style="display:none;font-size:13.5px;line-height:2"></div>
+        <div class="card" id="periodAwardsBox" style="display:none;font-size:14px;line-height:2"></div>
       </div>
       <button class="btn ghost full" style="margin-top:12px" onclick="exportResultCSV()">📄 최종 순위 CSV 내보내기</button>
-      <div id="roundResultActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
+      <div id="roundResultActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="window.print()">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
     </div>
   </section>
 
@@ -1192,7 +1199,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <div class="judgehead">
       <div class="avatar" id="jAvatar">—</div>
       <div class="info"><b id="jName">—</b><span id="jDuty">문자 링크 접속 · 가입 불필요</span></div>
-      <select id="jSel" style="width:auto;padding:8px 10px;font-size:.8rem" onchange="curStaff=+this.value;renderJudge()"></select>
+      <select id="jSel" style="width:auto;padding:8px 10px;font-size:15px" onchange="curStaff=+this.value;renderJudge()"></select>
     </div>
     <label class="fl" style="margin-top:0">대회코스</label>
     <div class="chiprow" id="jRoundChips"></div>
@@ -1264,7 +1271,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     </div>
     <div class="boardshell" id="boardGate" style="display:none;text-align:center;padding:60px 24px">
       <h2 style="color:#fff;margin-bottom:8px">🔒 비공개 대회</h2>
-      <p style="color:#9FBEDC;margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
+      <p style="color:#9AAAB9;margin-bottom:18px">운영자에게 받은 입장 비밀번호를 입력하세요</p>
       <input type="tel" id="boardGateCode" maxlength="6" placeholder="비밀번호" style="text-align:center;margin-bottom:12px;max-width:220px">
       <button class="btn full big" style="max-width:220px;margin:0 auto" onclick="submitBoardGate()">입장하기</button>
     </div>
@@ -1303,21 +1310,21 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="card" id="apEligCard" style="display:none;background:var(--main-soft);border:none">
         <label class="fl" style="margin-top:0">참가 조건</label>
         <p class="sub" id="apEligText" style="margin-bottom:10px">—</p>
-        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;min-height:44px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;min-height:44px">
           <input type="checkbox" id="apEligCheck" style="width:22px;height:22px;flex:0 0 auto">참가 조건을 확인했습니다
         </label>
       </div>
       <div class="card" id="apPrivacyCard" style="background:var(--main-soft);border:none">
         <label class="fl" style="margin-top:0">개인정보 수집·이용 동의</label>
         <p class="sub" id="apPrivacyText" style="margin-bottom:10px">—</p>
-        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;min-height:44px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;min-height:44px">
           <input type="checkbox" id="apPrivacyCheck" style="width:22px;height:22px;flex:0 0 auto">개인정보 수집·이용에 동의합니다
         </label>
-        <p class="sub" style="margin-top:8px"><a href="?privacy=1" target="_blank" style="color:var(--main-deep);font-weight:600">처리방침 전문 보기 ›</a></p>
+        <p class="sub" style="margin-top:8px"><a href="?privacy=1" target="_blank" style="color:var(--main-deep);font-weight:700">처리방침 전문 보기 ›</a></p>
       </div>
       <div class="modew">
         <button class="on" id="mSingle" onclick="setApplyMode('single')">개인 신청</button>
-        <button id="mGroup" onclick="setApplyMode('group')">단체 신청<br><small style="font-weight:400;font-size:.72rem">클럽 총무용</small></button>
+        <button id="mGroup" onclick="setApplyMode('group')">단체 신청<br><small style="font-weight:400;font-size:14px">클럽 총무용</small></button>
       </div>
 
       <div class="card" id="singlePane">
@@ -1382,7 +1389,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="backbar"><button onclick="backToOwner()">← 뒤로</button><span>개인정보 처리방침</span></div>
   <section class="page on" style="padding-top:16px">
     <div class="card">
-      <h3 style="font-size:19px;margin-bottom:14px">개인정보 처리방침</h3>
+      <h3 style="font-size:18px;margin-bottom:14px">개인정보 처리방침</h3>
       <label class="fl" style="margin-top:0">1. 수집 항목</label>
       <p class="sub">이름, 전화번호(필수) 및 대회별로 선택된 성별·나이·소속 클럽·닉네임·지역</p>
       <label class="fl">2. 수집 목적</label>
@@ -1416,12 +1423,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="pad">
     <h3>🔁 점수 정정</h3>
     <p id="corrDesc">—</p>
-    <p style="font-weight:600;color:var(--ink);font-size:17px;margin-bottom:12px">정정 사유를 선택하세요 — 정정 이력이 기록됩니다</p>
+    <p style="font-weight:700;color:var(--ink);font-size:15px;margin-bottom:12px">정정 사유를 선택하세요 — 정정 이력이 기록됩니다</p>
     <div class="padgrid" style="grid-template-columns:1fr 1fr">
-      <button class="padbtn clear" style="font-size:17px" onclick="applyCorr('오기입')">오기입 수정</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="applyCorr('스코어 재확인')">스코어 재확인</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="applyCorr('운영자 지시')">운영자 지시</button>
-      <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelCorr()">취소</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyCorr('오기입')">오기입 수정</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyCorr('스코어 재확인')">스코어 재확인</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyCorr('운영자 지시')">운영자 지시</button>
+      <button class="padbtn clear" style="font-size:15px;color:var(--coral)" onclick="cancelCorr()">취소</button>
     </div>
   </div>
 </div>
@@ -1441,12 +1448,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="pad">
     <h3>🔁 기록 정정</h3>
     <p id="playCorrDesc">—</p>
-    <p style="font-weight:600;color:var(--ink);font-size:17px;margin-bottom:12px">정정 사유를 선택하세요 — 정정 이력이 기록됩니다</p>
+    <p style="font-weight:700;color:var(--ink);font-size:15px;margin-bottom:12px">정정 사유를 선택하세요 — 정정 이력이 기록됩니다</p>
     <div class="padgrid" style="grid-template-columns:1fr 1fr">
-      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('오기입')">오기입 수정</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('스코어 재확인')">스코어 재확인</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="applyPlayCorr('운영자 지시')">운영자 지시</button>
-      <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelPlayCorr()">취소</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyPlayCorr('오기입')">오기입 수정</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyPlayCorr('스코어 재확인')">스코어 재확인</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="applyPlayCorr('운영자 지시')">운영자 지시</button>
+      <button class="padbtn clear" style="font-size:15px;color:var(--coral)" onclick="cancelPlayCorr()">취소</button>
     </div>
   </div>
 </div>
@@ -1470,12 +1477,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="pad">
     <h3>🗑 기록 삭제</h3>
     <p id="playDelDesc">—</p>
-    <p style="font-weight:600;color:var(--ink);font-size:17px;margin-bottom:12px">삭제 사유를 선택하세요</p>
+    <p style="font-weight:700;color:var(--ink);font-size:15px;margin-bottom:12px">삭제 사유를 선택하세요</p>
     <div class="padgrid" style="grid-template-columns:1fr 1fr">
-      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('오기입')">오기입</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('중복 기록')">중복 기록</button>
-      <button class="padbtn clear" style="font-size:17px" onclick="doPlayDelete('운영자 지시')">운영자 지시</button>
-      <button class="padbtn clear" style="font-size:17px;color:var(--coral)" onclick="cancelPlayDelete()">취소</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="doPlayDelete('오기입')">오기입</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="doPlayDelete('중복 기록')">중복 기록</button>
+      <button class="padbtn clear" style="font-size:15px" onclick="doPlayDelete('운영자 지시')">운영자 지시</button>
+      <button class="padbtn clear" style="font-size:15px;color:var(--coral)" onclick="cancelPlayDelete()">취소</button>
     </div>
   </div>
 </div>
@@ -1527,11 +1534,11 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <input type="tel" id="pevGroup" placeholder="예: 3">
     <div class="frow" style="margin-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:12px">
-        <span style="font-weight:600">출석</span>
+        <span style="font-weight:700">출석</span>
         <button class="pill2 nopay" id="pevCiBtn" onclick="togglePevCheckin()">미출석</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:12px">
-        <span style="font-weight:600">입금</span>
+        <span style="font-weight:700">입금</span>
         <button class="pill2 nopay" id="pevPaidBtn" onclick="togglePaid()">미입금</button>
       </div>
     </div>
@@ -1560,7 +1567,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <button class="btn full" style="margin-top:16px" onclick="submitAddPlayer()">추가</button>
     </div>
     <div id="apdGroupPane" style="display:none">
-      <label style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-bottom:10px">
         <input type="checkbox" id="apdGroupColToggle" style="width:20px;height:20px" onchange="toggleApdGroupCol()">이 명단에 조 번호가 포함돼 있어요
       </label>
       <p class="sub" style="font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
@@ -1660,7 +1667,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <p>홀을 누르면 파 3 → 4 → 5 순으로 바뀝니다</p>
     <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px" id="parGrid"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
-      <b style="font-size:19px">코스 파 합계: <span class="num" id="parSum" style="color:var(--main-deep)">66</span></b>
+      <b style="font-size:20px">코스 파 합계: <span class="num" id="parSum" style="color:var(--main-deep)">66</span></b>
       <button class="btn sm" onclick="closeParEdit()">완료</button>
     </div>
   </div>
@@ -1726,7 +1733,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
     <h3>이 기준으로 편성할까요?</h3>
     <div id="groupConfirmBody" style="margin:10px 0 18px"></div>
     <!-- CH32-A 보완2 R6: 기본은 4인 조 우선(끄면 6명=4+2) — 켜면 3인 조를 섞어 고르게 나눔(6명=3+3) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:#F0F5FA;border-radius:13px;padding:12px 15px;margin-bottom:12px;font-size:14px;font-weight:700">
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#F4F7FA;border-radius:13px;padding:12px 15px;margin-bottom:12px;font-size:14px;font-weight:700">
       <span>3인 조 섞어 고르게 나누기</span>
       <span class="tglsw" id="groupAllow3Sw" onclick="toggleGroupAllow3()"><i></i></span>
     </div>
@@ -1878,7 +1885,6 @@ function mgShow(id){
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
   if(id==='mgHome'){renderStageSub();renderJourneyChecklist();renderOpsStats();renderScoreBadge()}
-  if(id==='mgNotice')renderNoticeCompletion();
   // CH32-B⑪: 탭 진입 시 단계 선택을 활성 단계로 리셋(빌드가이드 "진입 시 활성 단계 리셋이 기본")
   if(id==='mgPlayers'){playersStageId=null;playerStageSel=null;renderPlayersTab()}
   if(id==='mgStaff')renderTools();
@@ -1891,6 +1897,7 @@ function mgShow(id){
 // 기간형 대회의 리더보드가 라운드 분기로 렌더되다 sums()에서 예외(또는 빈 순위)로 끝나
 // "무표시"가 됐다. 지난 단계 스냅숏(pastStageSnap) 열람 중엔 스냅숏을 보존한다.
 async function renderResultFresh(){
+  resultGender='all';resultScope=-1; // CH32-C⑭: 탭 재진입 시 필터 초기화(종합·전체)
   if(config.id&&!pastStageSnap&&!judgeTokenMode){
     try{await syncActiveStageState(config.id)}
     catch(e){console.error(e);toast('순위를 불러오는 중 오류가 발생했습니다')}}
@@ -2166,7 +2173,7 @@ function renderPlayerListRows(){
       <div class="avatar">${p.name[0]}</div>
       <div class="info"><b>${p.name}</b><span class="num">${gIdx>=0?(gIdx+1)+'조 · ':''}${p.club||''}</span></div>
       <div style="margin-left:auto;text-align:right">
-        <b class="num" style="display:block;font-size:16px">${prog.filled}/${HOLES}</b>
+        <b class="num" style="display:block;font-size:14px">${prog.filled}/${HOLES}</b>
         ${statusHTML}
       </div>
     </div>`}).join('')
@@ -2396,7 +2403,7 @@ async function renderJourneyChecklist(){
   // 1. 개설 — 항상 상시 가능(옅파랑)
   const pct=noticeCompletionPct();
   rows.push(journeyRowHTML('done',n++,'대회 개설',
-    `요강 완성도 <b style="color:#C9930A">${pct}%</b> · 일정·구조 관리`,
+    `요강 완성도 <b style="color:#C9930A">${pct}%</b>`,
     '정보 수정','sec','openEditInfo()'));
 
   // 2. 모집 — 시작 전엔 지금 할 일(파랑), 시작 후엔 완료(재개는 옅파랑으로 상시)
@@ -2461,7 +2468,7 @@ async function renderJourneyChecklist(){
   box.innerHTML=`<div class="jlist">${rows.join('')}</div>`;
   // CH32-A④: 심판진 행 부제 — 나(운영자) 포함 인원수를 매번 갱신
   const staffRow=$('#staffRowSummary');
-  if(staffRow)staffRow.textContent=`점수 입력할 분 추가·문자 링크 발송 — 나(운영자) 포함 ${scorerOptions().length}명`}
+  if(staffRow)staffRow.textContent=`심판 추가·링크 발송 · 나 포함 ${scorerOptions().length}명`}
 // 대기 중인 단계의 [시작] 버튼 — 사전 점검 시트를 먼저 연다(CH32-A③)
 async function checkStageStart(stageId){
   const stages=await loadAllStages(config.id);
@@ -2671,7 +2678,7 @@ function renderTieBox(){
           <span class="tt"><b>${p.name}</b><span>${p.club||''}${p.age?' · '+p.age+'세':''}</span></span>
         </div>`}).join('')}</div>
       <p class="sub" style="margin:8px 0">잔여 진출 ${needed}자리 — 동점자 전원을 진출시키거나 필요한 인원만 골라 선택하세요</p>
-      ${done?`<p class="sub" style="color:var(--main-deep);font-weight:600">✓ 처리 방식 선택 완료 — ${g.finalPicks.length===g.res.tied.length?'전원 진출':g.finalPicks.map(p=>p.name).join(', ')+' 진출'}</p>`
+      ${done?`<p class="sub" style="color:var(--main-deep);font-weight:700">✓ 처리 방식 선택 완료 — ${g.finalPicks.length===g.res.tied.length?'전원 진출':g.finalPicks.map(p=>p.name).join(', ')+' 진출'}</p>`
         :`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn sm ghost" onclick="expandTieGroup('${g.key}')">동점자 전원 진출(컷 확대)</button>
         <button class="btn sm" ${selCount===needed?'':'disabled'} onclick="confirmTieManual('${g.key}')">선택 완료 (${selCount}/${needed})</button>
@@ -3177,7 +3184,7 @@ function renderNotice(t,stages,playerCount){
     ${awardsSecHTML}
     ${flowSecHTML}
     ${eligSecHTML}
-    <p class="swaphint" style="margin-top:12px;padding:0 4px">실시간 순위는 <a href="?board=${t.id}" target="_blank" style="color:var(--main-deep);font-weight:600">대회 전광판</a>에서 · <a href="?privacy=1" target="_blank" style="color:var(--muted)">개인정보 처리방침</a></p>
+    <p class="swaphint" style="margin-top:12px;padding:0 4px">실시간 순위는 <a href="?board=${t.id}" target="_blank" style="color:var(--main-deep);font-weight:700">대회 전광판</a>에서 · <a href="?privacy=1" target="_blank" style="color:var(--muted)">개인정보 처리방침</a></p>
     </div>
     <div class="ynctabar"><button class="share" onclick="openNoticeShare()">↗</button>${ctaHTML}</div>`}
 function openNoticeShare(){$('#noticeShareOv').classList.add('on')}
@@ -3187,7 +3194,7 @@ async function saveNoticeImage(){
   if(!el||typeof html2canvas==='undefined'){toast('이미지 저장 기능을 불러오지 못했습니다');return}
   const btn=$('#noticeSaveImgBtn');btn.textContent='이미지 만드는 중…';
   try{
-    const canvas=await html2canvas(el,{backgroundColor:'#F2F5F9',scale:2});
+    const canvas=await html2canvas(el,{backgroundColor:'#F4F7FA',scale:2});
     const link=document.createElement('a');
     link.download=`${(noticeT&&noticeT.name)||'누가일등_요강'}.png`;
     link.href=canvas.toDataURL('image/png');
@@ -3236,18 +3243,8 @@ function noticeCompletionItems(){
 function noticeCompletionPct(){
   const items=noticeCompletionItems();
   return Math.round(items.filter(i=>i.filled).length/items.length*100)}
-function renderNoticeCompletion(){
-  const box=$('#noticeCompletionList');if(!box)return;
-  const items=noticeCompletionItems();
-  const filledCount=items.filter(i=>i.filled).length;
-  const pct=noticeCompletionPct();
-  box.innerHTML=items.map(i=>`<div class="lrow">${i.label} <span class="st3 ${i.filled?'ok':''}" style="cursor:pointer" onclick="openEditInfo().then(()=>showEditSection('${i.key}'))">${i.filled?'완료':'채우기 ›'}</span></div>`).join('');
-  const card=$('#noticeCompletionCard');
-  if(pct>=100){card.style.display='none';return}
-  card.style.display='block';
-  $('#noticeCompletionPct').textContent=pct+'%';
-  $('#noticeCompletionBar').style.width=pct+'%';
-  $('#noticeCompletionNote').textContent=`${items.length-filledCount}개 항목을 채우면 요강이 완성돼요`}
+// CH32-C⑰: renderNoticeCompletion 제거 — 죽은 mgNotice 패널 전용 렌더러였다. 완성도 계산
+// (noticeCompletionItems/noticeCompletionPct)은 허브·여정 부제에서 계속 쓰므로 남긴다.
 async function openEditInfo(){
   editInfoSection=null;
   navTo('EditInfo');
@@ -3271,7 +3268,7 @@ async function renderEditInfo(){
 function editHubRow(key,icon,title,desc,opts){
   opts=opts||{};
   let right='<span class="chev">›</span>';
-  if(opts.locked)right='<span class="pill" style="background:#F3E4E0;color:#9A4A34">잠김</span>';
+  if(opts.locked)right='<span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span>';
   else if(opts.status==='ok')right='<span style="font-size:12.5px;color:#2E8B63;font-weight:700">✓</span>';
   else if(opts.status==='todo')right='<span style="font-size:12.5px;color:#C9930A;font-weight:700">채우기 ›</span>';
   const onclick=opts.onclick||`showEditSection('${key}')`;
@@ -3306,7 +3303,7 @@ async function renderEditInfoList(){
       ${editHubRow('awards','🏆','시상 내역','종합·부문 시상과 상금',{status:st(awardsFilled)})}
       ${editHubRow('awards','💰','참가비·문의처','참가비·문의 연락처',{status:st(feeFilled)})}
       ${editHubRow('awards','📖','게임룰','경기 방식·규칙 안내',{status:st(rulesFilled)})}
-      ${editHubRow('notice','👁','요강 미리보기·공유','참가자가 보는 화면 확인 · 단톡방용 이미지 저장',{onclick:`openNotice('${config.id}')`})}
+      ${editHubRow('notice','👁','요강 미리보기·공유','참가자 화면 확인 · 이미지 저장',{onclick:`openNotice('${config.id}')`})}
     </div>
     <p class="sub" style="margin-bottom:6px;font-weight:700">🟡 수정 시 참가자 공지 확인</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
@@ -3319,7 +3316,7 @@ async function renderEditInfoList(){
     </div>
     <p class="sub" style="margin-bottom:6px;font-weight:700">🔴 ${editStageLocked?`'${editStage.name}' 단계에 경기 기록이 있어 잠김`:'경기 기록이 생기면 잠김'}</p>
     <div class="card" style="padding:0 18px">
-      ${editHubRow('course','⛳','코스·단계 구조·컷·동점','코스별 파 · 진출 컷 (코스 개수·코스명 제외)',{locked:editStageLocked})}
+      ${editHubRow('course','⛳','코스·단계 구조·컷·동점','코스별 파 · 진출 컷',{locked:editStageLocked})}
     </div>
     <div id="editHistoryCard" class="card" style="margin-top:16px"></div>`;
   renderEditHistory()}
@@ -3708,7 +3705,7 @@ async function renderEditCourse(){
     $('#eiCutGenderBox').style.display=g?'flex':'none'}}
 function drawEditParGrid(i){
   $('#eiParGrid'+i).innerHTML=editCoursePars[i].map((p,h)=>
-    `<button class="padbtn" style="height:50px;font-size:19px" onclick="cycleEditPar(${i},${h})"><small style="font-size:10px;display:block;color:var(--muted);font-family:'Noto Sans KR'">${h+1}홀</small>${p}</button>`).join('');
+    `<button class="padbtn" style="height:50px;font-size:18px" onclick="cycleEditPar(${i},${h})"><small style="font-size:11px;display:block;color:var(--muted);font-family:'Noto Sans KR'">${h+1}홀</small>${p}</button>`).join('');
   $('#eiParSum'+i).textContent=editCoursePars[i].reduce((a,b)=>a+b,0)}
 function cycleEditPar(i,h){
   editCoursePars[i][h]=editCoursePars[i][h]>=5?3:editCoursePars[i][h]+1;drawEditParGrid(i)}
@@ -4101,7 +4098,7 @@ async function renderTools(){
       <div class="who"><b>${s.name}</b><span>${s.duty||'담당 미지정'} · ${maskPhone(s.phone)}</span></div>
       ${st}
       <span class="jmore" onclick="openStaffAction('${s.id}')">⋯</span>
-    </div>`}).join(''):'<p class="sub" style="text-align:center;padding:20px 0">추가 심판이 없어요 — 필요하면 위 [＋ 심판 추가]로 등록하세요.</p>');
+    </div>`}).join(''):'<p class="sub" style="text-align:center;padding:20px 0">아직 추가 심판이 없어요 — 위 버튼으로 추가하세요</p>');
   $('#sendAllBtn').style.display=sent===js.length&&js.length?'none':'block'}
 function sendLinks(){
   const js=judges();
@@ -4231,7 +4228,8 @@ async function openApply(id){
   const f=applyFields(t);
   const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
   const items=['전화번호',...Object.keys(fieldLabels).filter(k=>f[k]).map(k=>fieldLabels[k])];
-  $('#apPrivacyText').textContent=`수집 항목: ${items.join(', ')} · 목적: 대회 운영·참가자 관리·순위 집계 · 보유기간: 대회 종료 후 1년(이후 파기)`;
+  // CH32-C⑯: 법적 고지(내용 유지) — 내부 중점에 공백을 둬 어절 경계에서 깔끔히 줄바꿈
+  $('#apPrivacyText').textContent=`수집 항목: ${items.join(', ')} · 목적: 대회 운영 · 참가자 관리 · 순위 집계 · 보유기간: 대회 종료 후 1년(이후 파기)`;
   $('#apPrivacyCheck').checked=false;
   renderSingleFields();
   if(t.regClosed){
@@ -4350,14 +4348,14 @@ function toggleTool(name){
   row.classList.toggle('open',open);detail.classList.toggle('on',open)}
 function drawQR(){
   const c=$('#qrCanvas');if(!c)return;const x=c.getContext('2d');
-  x.fillStyle='#fff';x.fillRect(0,0,29,29);x.fillStyle='#12241C';
+  x.fillStyle='#fff';x.fillRect(0,0,29,29);x.fillStyle='#2B3A4A';
   let seed=1024;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
   for(let r=0;r<29;r++)for(let col=0;col<29;col++){
     const fin=(r<8&&col<8)||(r<8&&col>20)||(r>20&&col<8);
     if(!fin&&rnd()>.52)x.fillRect(col,r,1,1)}
   [[0,0],[0,22],[22,0]].forEach(([r,c2])=>{
     x.fillRect(c2,r,7,7);x.fillStyle='#fff';x.fillRect(c2+1,r+1,5,5);
-    x.fillStyle='#12241C';x.fillRect(c2+2,r+2,3,3)})}
+    x.fillStyle='#2B3A4A';x.fillRect(c2+2,r+2,3,3)})}
 let wizCapUnlimited=false;
 function toggleCapUnlimited(){
   wizCapUnlimited=!wizCapUnlimited;
@@ -4620,7 +4618,7 @@ function renderPlayers(){
     `<div class="toolrow" style="${isOut(p)?'opacity:.5':''}">
       <div class="info" style="cursor:pointer" onclick="openPEdit(${i})"><b>${p.name}${p.st==='wd'?' <span class="pill red">기권</span>':p.st==='dq'?' <span class="pill red">실격</span>':''}</b>
       <span class="num">${maskPhone(p.phone)}${cols.length?' · '+cols.map(c=>p[c.k]||'—').join(' · '):''}${p.group>=0?' · '+(p.group+1)+'조':''}</span></div>
-      <span title="전화 걸기" style="font-size:17px;padding:8px 10px;margin-right:6px;cursor:pointer" onclick="event.stopPropagation();callPlayer(${i})">📞</span>
+      <span title="전화 걸기" style="font-size:15px;padding:8px 10px;margin-right:6px;cursor:pointer" onclick="event.stopPropagation();callPlayer(${i})">📞</span>
       <div style="margin-left:auto;display:flex;gap:6px">
         ${showAttendance?`<span class="pill2 ${p.ci?'pay':'nopay'}" onclick="event.stopPropagation();toggleCheckin(${i})">${p.ci?'출석':'미출석'}</span>`:''}
         <span class="pill2 ${p.paid?'pay':'nopay'}" onclick="event.stopPropagation();togglePaidRow(${i})">${p.paid?'입금':'미입금'}</span>
@@ -5007,7 +5005,7 @@ function renderJudge(){
     $('#jName').textContent=s.name+' 님';
     $('#jDuty').textContent=(s.duty||'')+' · 점수 입력 권한이 없는 스탭입니다';
     $('#jRoundChips').innerHTML='';$('#jGroupChips').innerHTML='';
-    $('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem">이 링크는 점수 입력 권한이 없습니다. 담당 업무 안내는 운영자에게 문의하세요.</div>';
+    $('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:15px">이 링크는 점수 입력 권한이 없습니다. 담당 업무 안내는 운영자에게 문의하세요.</div>';
     $('#hDots').innerHTML='';$('#hProg').textContent='';$('#holeNextBtn').style.display='none';
     $('#scPhotoCard').style.display='none';
     return}
@@ -5331,7 +5329,7 @@ async function uploadScorecardPhoto(file){
   loadScorecardPhoto()}
 function renderHole(){
   if(curGroup>=groups.length)curGroup=Math.max(0,groups.length-1);
-  if(!groups.length){$('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem">조편성 후 입력할 수 있습니다</div>';$('#hDots').innerHTML='';$('#hProg').textContent='';return}
+  if(!groups.length){$('#jPlayers').innerHTML='<div style="padding:20px;color:var(--muted);font-size:15px">조편성 후 입력할 수 있습니다</div>';$('#hDots').innerHTML='';$('#hProg').textContent='';return}
   const gi=jRound*18+curHole;
   $('#hNo').textContent=(curHole+1)+'홀';
   $('#hPar').textContent=`PAR ${parAt(gi)} · ${(config.venues[jRound]||'').replace(' 파크골프장','')}`;
@@ -5340,7 +5338,7 @@ function renderHole(){
   let filled=0;
   $('#jPlayers').innerHTML=g.map(pi=>{const p=players[pi];const v=p.scores[gi];
     if(isOut(p))return`<div class="prow" style="opacity:.55"><div class="pname">${p.name}<small>${p.club||''}</small></div>
-      <span class="pill red" style="font-size:16px;padding:10px 16px">${p.st==='wd'?'기권':'실격'}</span></div>`;
+      <span class="pill red" style="font-size:15px;padding:10px 16px">${p.st==='wd'?'기권':'실격'}</span></div>`;
     if(v!=null)filled++;
     let cls='scbtn'+(v==null?'':v<parAt(gi)?' filled birdie':v>parAt(gi)?' filled over':' filled');
     return`<div class="prow"><div class="pname">${p.name}<small>${p.club||''}</small></div>
@@ -5821,10 +5819,13 @@ function fullBoard(){const el=$('#boardShell');
 
 /* ================= 결과 ================= */
 function renderPeriodResult(){
-  const st=periodStandings();
+  // CH32-C⑭: 기간형 리더보드에도 부문(전체/남/여) 필터 적용 — 범위는 종합 고정.
+  const pool=resultGender==='all'?players:players.filter(p=>p.sex===resultGender);
+  const st=periodStandings(pool);
   const done=st.filter(s=>s.completed>0&&!s.out);
   const outs=st.filter(s=>s.out);
-  const fullyDone=done.filter(s=>s.completed>=ROUNDS);
+  // 부문 수상은 항상 전체 기준(필터와 무관)
+  const fullyDone=periodStandings().filter(s=>s.completed>0&&!s.out).filter(s=>s.completed>=ROUNDS);
   // CH32-A 보완2 R9: 설계 확인 — 순위 "확정"(컷·수상·확정 CSV)은 전 코스 완주자만, 진행 중에는
   // 현재 페이스순으로 표시한다(CH30-B 설계 그대로). 문제는 이 규칙이 화면에 안내되지 않아
   // 일부 코스만 입력한 선수가 "순위 없음"으로 오해된 것 — 부분입력 선수에 진행 표기를 붙인다.
@@ -5874,32 +5875,60 @@ function renderPeriodResult(){
     const top=[...players].sort((a,b)=>(b.playCount||0)-(a.playCount||0))[0];
     aw+=`<span style="color:var(--muted)">도전왕 (최다 플레이 ${top?.playCount||0}회) ${top&&top.playCount?top.name:'해당자 없음'}</span>`}
   $('#periodAwardsBox').style.display=aw?'block':'none';
-  $('#periodAwardsBox').innerHTML=aw?`<b style="font-size:13px;color:var(--deep)">🏆 부문 수상</b><br>${aw}`:'';
+  $('#periodAwardsBox').innerHTML=aw?`<b style="font-size:14px;color:var(--deep)">🏆 부문 수상</b><br>${aw}`:'';
 }
+// CH32-C⑭: 리더보드 필터 — 부문(전체/남/여) × 범위(종합/코스별). 라운드·기간형 공용.
+let resultGender='all',resultScope=-1;
+function renderResultFilters(isPeriod){
+  const box=$('#resultFilterRow');if(!box){return}
+  if(resultScope>=ROUNDS)resultScope=-1;
+  let h='';
+  if(config.fields.sex){
+    [['all','전체'],['남','남자부'],['여','여자부']].forEach(([g,lb])=>
+      h+=`<span class="mtab ${resultGender===g?'on':''}" onclick="setResultGender('${g}')">${lb}</span>`)}
+  // 범위(종합/코스별)는 라운드형 다코스에서만 — 기간형은 코스별 베스트 합산이 본질이라 종합 고정
+  if(!isPeriod&&ROUNDS>=2){
+    if(h)h+='<span style="flex:1"></span>';
+    h+=`<span class="mtab ${resultScope===-1?'on':''}" onclick="setResultScope(-1)">종합</span>`;
+    for(let r=0;r<ROUNDS;r++)h+=`<span class="mtab ${resultScope===r?'on':''}" onclick="setResultScope(${r})">${r+1}코스</span>`}
+  box.innerHTML=h;box.style.display=h?'flex':'none'}
+function setResultGender(g){resultGender=g;renderResult()}
+function setResultScope(r){resultScope=r;renderResult()}
 function renderResult(){
   const isPeriod=boardStageKind==='period'||boardStageRecordMode==='total';
   $('#roundResultBox').style.display=isPeriod?'none':'block';
   $('#roundResultActions').style.display=isPeriod?'none':'grid';
   $('#periodResultBox').style.display=isPeriod?'block':'none';
+  renderResultFilters(isPeriod);
   if(isPeriod){renderPeriodResult();return}
-  const st=standings();
+  const pool=resultGender==='all'?players:players.filter(p=>p.sex===resultGender);
+  const st=standings(pool,resultScope);
   const done=st.filter(s=>s.thru>0&&!s.out);
   const outs=st.filter(s=>s.out);
+  // 부문 수상은 항상 전체 기준으로 계산(필터와 무관)
+  const doneAll=standings().filter(s=>s.thru>0&&!s.out);
+  const summaryView=resultGender==='all'&&resultScope===-1; // 포디움·부문 수상은 종합+전체에서만
   const finished=players.length>0&&players.filter(p=>!isOut(p)).every(p=>p.scores.every(s=>s!=null));
+  const scopeLabel=resultScope>=0?`${resultScope+1}코스 순위`:'';
+  const genderLabel=resultGender==='남'?'남자부':resultGender==='여'?'여자부':'';
+  const filterNote=[genderLabel,scopeLabel].filter(Boolean).join(' · ');
   $('#resultSub').textContent=!players.length?'참가자 등록 후 이용할 수 있습니다.'
     :done.length===0?'경기 진행 전입니다.'
-    :finished?`전 코스 홀아웃 완료 — 동점은 ${config.tie}(으)로 처리.`:'중간 집계입니다.';
+    :filterNote?filterNote:(finished?`전 코스 홀아웃 완료 — 동점은 ${config.tie}(으)로 처리.`:'중간 집계입니다.');
   const t=tournaments.find(x=>x.mine);
-  if(t&&finished&&done.length){t.winner=`${done[0].p.name} (${done[0].p.sex}·${done[0].p.age})`;renderHome()}
+  if(t&&finished&&doneAll.length){t.winner=`${doneAll[0].p.name} (${doneAll[0].p.sex}·${doneAll[0].p.age})`;renderHome()}
   const medals=['🥇','🥈','🥉'];
   const fmt=s=>`${s.tot}타 (${s.topar===0?'E':(s.topar>0?'+':'')+s.topar})`;
-  $('#podium').innerHTML=done.slice(0,3).map((s,i)=>
+  // 포디움은 종합+전체 요약에서만(필터 적용 시엔 순위 리스트로 대체)
+  $('#podium').style.display=summaryView?'':'none';
+  $('#podium').innerHTML=summaryView?done.slice(0,3).map((s,i)=>
     `<div class="pod ${i===0?'first':''}"><div class="medal">${medals[i]}</div>
      <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''}${config.fields.sex?' · '+s.p.sex:''}${config.fields.age?' '+s.p.age+'세':''}</span></div>
-     <div class="sc num">${fmt(s)}</div></div>`).join('');
+     <div class="sc num">${fmt(s)}</div></div>`).join(''):'';
 
-  /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) ---- */
-  const awarded=new Set(done.slice(0,3).map(s=>s.p.id));
+  /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) — 항상 전체(doneAll) 기준, 요약 뷰에서만 노출 ---- */
+  $('#awardsBox').style.display=summaryView?'':'none';
+  const awarded=new Set(doneAll.slice(0,3).map(s=>s.p.id));
   let aw='';
   const podRow=(label,s,color)=>s?`<div class="pod"><div class="medal">🏅</div>
       <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''} · ${s.p.sex} ${s.p.age}세</span></div>
@@ -5937,7 +5966,7 @@ function renderResult(){
      <div class="info"><b>${s.p.name}</b><span>${s.p.club||''}</span></div>
      <div class="sc"><b class="num">${s.tot}</b><span class="num${s.topar<0?' minus':''}">${s.topar===0?'E':(s.topar>0?'+':'')+s.topar}</span></div></div>`).join('')
     +outs.map(s=>
-    `<div class="rrow" style="opacity:.5"><div class="rk" style="background:#FBE2DB;color:#a83c26;font-size:12px">${s.p.st==='wd'?'WD':'DQ'}</div>
+    `<div class="rrow" style="opacity:.5"><div class="rk" style="background:#FBE9E4;color:#C4523A;font-size:12.5px">${s.p.st==='wd'?'WD':'DQ'}</div>
      <div class="info"><b>${s.p.name}</b><span>${s.p.club||''}</span></div>
      <div class="sc"><b class="num">${s.thru?s.tot:'–'}</b></div></div>`).join('')
     ||'<p class="sub" style="text-align:center;padding:26px 0">아직 순위가 없습니다</p>';
