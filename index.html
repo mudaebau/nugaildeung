@@ -624,7 +624,14 @@ tr:last-child td{border-bottom:none}
 .rrow .sc span{font-size:13px;color:var(--muted)}
 .rrow .sc span.minus{color:var(--red)}
 .printonly{display:none}
-@media print{.printonly{display:table}}
+/* CH32-C⑭: 결과지 인쇄 — 화면 크롬을 숨기고 결과표만 상단에 격리해 인쇄/PDF로 저장 */
+@media print{
+  body{visibility:hidden;background:#fff}
+  #rtablePrint{visibility:visible;display:table;position:absolute;top:0;left:0;width:100%;border-collapse:collapse;font-size:12px}
+  #rtablePrint *{visibility:visible}
+  #rtablePrint th,#rtablePrint td{border:1px solid #ccc;padding:5px 7px}
+  #rtablePrint .tac{text-align:center}
+}
 
 /* ===== 조편성 카드 ===== */
 .gcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
@@ -1149,6 +1156,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <span class="tt"><b>TV 전체화면으로 보기</b><span>대회장 TV·노트북에 연결해 크게 띄워요</span></span>
         <span class="chev">›</span>
       </div>
+      <!-- CH32-C⑭: 구 리더보드 필터 통합 — 부문(전체·남자부·여자부) × 범위(종합·코스별) -->
+      <div id="resultFilterRow" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px"></div>
       <p class="sub" id="resultSub">경기 진행 전입니다.</p>
       <div id="roundResultBox">
         <div class="podium" id="podium"></div>
@@ -1170,7 +1179,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
         <div class="card" id="periodAwardsBox" style="display:none;font-size:13.5px;line-height:2"></div>
       </div>
       <button class="btn ghost full" style="margin-top:12px" onclick="exportResultCSV()">📄 최종 순위 CSV 내보내기</button>
-      <div id="roundResultActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="toast('실서비스: 시상식 결과지 PDF 생성')">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
+      <div id="roundResultActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn ghost" onclick="window.print()">결과지 인쇄</button><button class="btn ghost" onclick="toast('실서비스: 개인 성적표 문자 발송')">성적표 발송</button></div>
     </div>
   </section>
 
@@ -1891,6 +1900,7 @@ function mgShow(id){
 // 기간형 대회의 리더보드가 라운드 분기로 렌더되다 sums()에서 예외(또는 빈 순위)로 끝나
 // "무표시"가 됐다. 지난 단계 스냅숏(pastStageSnap) 열람 중엔 스냅숏을 보존한다.
 async function renderResultFresh(){
+  resultGender='all';resultScope=-1; // CH32-C⑭: 탭 재진입 시 필터 초기화(종합·전체)
   if(config.id&&!pastStageSnap&&!judgeTokenMode){
     try{await syncActiveStageState(config.id)}
     catch(e){console.error(e);toast('순위를 불러오는 중 오류가 발생했습니다')}}
@@ -5821,10 +5831,13 @@ function fullBoard(){const el=$('#boardShell');
 
 /* ================= 결과 ================= */
 function renderPeriodResult(){
-  const st=periodStandings();
+  // CH32-C⑭: 기간형 리더보드에도 부문(전체/남/여) 필터 적용 — 범위는 종합 고정.
+  const pool=resultGender==='all'?players:players.filter(p=>p.sex===resultGender);
+  const st=periodStandings(pool);
   const done=st.filter(s=>s.completed>0&&!s.out);
   const outs=st.filter(s=>s.out);
-  const fullyDone=done.filter(s=>s.completed>=ROUNDS);
+  // 부문 수상은 항상 전체 기준(필터와 무관)
+  const fullyDone=periodStandings().filter(s=>s.completed>0&&!s.out).filter(s=>s.completed>=ROUNDS);
   // CH32-A 보완2 R9: 설계 확인 — 순위 "확정"(컷·수상·확정 CSV)은 전 코스 완주자만, 진행 중에는
   // 현재 페이스순으로 표시한다(CH30-B 설계 그대로). 문제는 이 규칙이 화면에 안내되지 않아
   // 일부 코스만 입력한 선수가 "순위 없음"으로 오해된 것 — 부분입력 선수에 진행 표기를 붙인다.
@@ -5876,30 +5889,58 @@ function renderPeriodResult(){
   $('#periodAwardsBox').style.display=aw?'block':'none';
   $('#periodAwardsBox').innerHTML=aw?`<b style="font-size:13px;color:var(--deep)">🏆 부문 수상</b><br>${aw}`:'';
 }
+// CH32-C⑭: 리더보드 필터 — 부문(전체/남/여) × 범위(종합/코스별). 라운드·기간형 공용.
+let resultGender='all',resultScope=-1;
+function renderResultFilters(isPeriod){
+  const box=$('#resultFilterRow');if(!box){return}
+  if(resultScope>=ROUNDS)resultScope=-1;
+  let h='';
+  if(config.fields.sex){
+    [['all','전체'],['남','남자부'],['여','여자부']].forEach(([g,lb])=>
+      h+=`<span class="mtab ${resultGender===g?'on':''}" onclick="setResultGender('${g}')">${lb}</span>`)}
+  // 범위(종합/코스별)는 라운드형 다코스에서만 — 기간형은 코스별 베스트 합산이 본질이라 종합 고정
+  if(!isPeriod&&ROUNDS>=2){
+    if(h)h+='<span style="flex:1"></span>';
+    h+=`<span class="mtab ${resultScope===-1?'on':''}" onclick="setResultScope(-1)">종합</span>`;
+    for(let r=0;r<ROUNDS;r++)h+=`<span class="mtab ${resultScope===r?'on':''}" onclick="setResultScope(${r})">${r+1}코스</span>`}
+  box.innerHTML=h;box.style.display=h?'flex':'none'}
+function setResultGender(g){resultGender=g;renderResult()}
+function setResultScope(r){resultScope=r;renderResult()}
 function renderResult(){
   const isPeriod=boardStageKind==='period'||boardStageRecordMode==='total';
   $('#roundResultBox').style.display=isPeriod?'none':'block';
   $('#roundResultActions').style.display=isPeriod?'none':'grid';
   $('#periodResultBox').style.display=isPeriod?'block':'none';
+  renderResultFilters(isPeriod);
   if(isPeriod){renderPeriodResult();return}
-  const st=standings();
+  const pool=resultGender==='all'?players:players.filter(p=>p.sex===resultGender);
+  const st=standings(pool,resultScope);
   const done=st.filter(s=>s.thru>0&&!s.out);
   const outs=st.filter(s=>s.out);
+  // 부문 수상은 항상 전체 기준으로 계산(필터와 무관)
+  const doneAll=standings().filter(s=>s.thru>0&&!s.out);
+  const summaryView=resultGender==='all'&&resultScope===-1; // 포디움·부문 수상은 종합+전체에서만
   const finished=players.length>0&&players.filter(p=>!isOut(p)).every(p=>p.scores.every(s=>s!=null));
+  const scopeLabel=resultScope>=0?`${resultScope+1}코스 순위`:'';
+  const genderLabel=resultGender==='남'?'남자부':resultGender==='여'?'여자부':'';
+  const filterNote=[genderLabel,scopeLabel].filter(Boolean).join(' · ');
   $('#resultSub').textContent=!players.length?'참가자 등록 후 이용할 수 있습니다.'
     :done.length===0?'경기 진행 전입니다.'
-    :finished?`전 코스 홀아웃 완료 — 동점은 ${config.tie}(으)로 처리.`:'중간 집계입니다.';
+    :filterNote?filterNote:(finished?`전 코스 홀아웃 완료 — 동점은 ${config.tie}(으)로 처리.`:'중간 집계입니다.');
   const t=tournaments.find(x=>x.mine);
-  if(t&&finished&&done.length){t.winner=`${done[0].p.name} (${done[0].p.sex}·${done[0].p.age})`;renderHome()}
+  if(t&&finished&&doneAll.length){t.winner=`${doneAll[0].p.name} (${doneAll[0].p.sex}·${doneAll[0].p.age})`;renderHome()}
   const medals=['🥇','🥈','🥉'];
   const fmt=s=>`${s.tot}타 (${s.topar===0?'E':(s.topar>0?'+':'')+s.topar})`;
-  $('#podium').innerHTML=done.slice(0,3).map((s,i)=>
+  // 포디움은 종합+전체 요약에서만(필터 적용 시엔 순위 리스트로 대체)
+  $('#podium').style.display=summaryView?'':'none';
+  $('#podium').innerHTML=summaryView?done.slice(0,3).map((s,i)=>
     `<div class="pod ${i===0?'first':''}"><div class="medal">${medals[i]}</div>
      <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''}${config.fields.sex?' · '+s.p.sex:''}${config.fields.age?' '+s.p.age+'세':''}</span></div>
-     <div class="sc num">${fmt(s)}</div></div>`).join('');
+     <div class="sc num">${fmt(s)}</div></div>`).join(''):'';
 
-  /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) ---- */
-  const awarded=new Set(done.slice(0,3).map(s=>s.p.id));
+  /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) — 항상 전체(doneAll) 기준, 요약 뷰에서만 노출 ---- */
+  $('#awardsBox').style.display=summaryView?'':'none';
+  const awarded=new Set(doneAll.slice(0,3).map(s=>s.p.id));
   let aw='';
   const podRow=(label,s,color)=>s?`<div class="pod"><div class="medal">🏅</div>
       <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''} · ${s.p.sex} ${s.p.age}세</span></div>
