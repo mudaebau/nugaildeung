@@ -2345,6 +2345,8 @@ function cutPreviewText(cut){
   if(cut.total)return`진출 ${cut.total}명`;
   if(cut.m||cut.f)return`진출 남${cut.m||0}·여${cut.f||0}`;
   return''}
+// CH32-A 보완4 ①(b): 여정 부제의 날짜는 목업처럼 M.D 축약("2026-08-05"→"8.5")
+function mdShort(d){if(!d)return'';const p=d.split('-');return p.length===3?`${+p[1]}.${+p[2]}`:d}
 function stageActiveProgressText(stage){
   const dd=dday(stage.date_end||stage.date_start);
   if(stage.kind==='period'){
@@ -2399,7 +2401,10 @@ async function renderJourneyChecklist(){
       rows.push(journeyRowHTML('cur',seq,titleInProgress,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
       reachedNextStart=false;
     }else{ // waiting
-      const preview=[cutPreviewText(stage.advance_cut),(stage.date_start||'').replaceAll('-','.')].filter(Boolean).join(' · ');
+      // CH32-A 보완4 ①(a): 이 단계로 "들어오는" 진출 조건은 이전 단계의 advance_cut이다 —
+      // 자기 단계의 컷(다음 단계로 나가는 조건, 마지막 단계는 항상 없음)을 읽던 것을 교정.
+      const prevCut=i>0?stages[i-1].advance_cut:null;
+      const preview=[cutPreviewText(prevCut),mdShort(stage.date_start)].filter(Boolean).join(' · ');
       if(reachedNextStart){
         rows.push(journeyRowHTML('cur',seq,titleInProgress,preview,`${stage.name} 시작`,'',`checkStageStart('${stage.id}')`));
         reachedNextStart=false;
