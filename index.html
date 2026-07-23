@@ -389,8 +389,11 @@ tr:last-child td{border-bottom:none}
 .mgpane{display:none}
 .mgpane.on{display:block}
 .seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
-.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer}
 .seg div.on{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+/* CH32-B⑪: 단계 세그먼트(.seg) 하위의 [명단|조편성] 탭 — 목업 장면3의 .mtab(개별 라운드 칩) */
+.mtab{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:9px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
+.mtab.on{background:var(--main-deep);border-color:var(--main-deep);color:#fff;font-weight:700}
 .psegpane{display:none}
 .psegpane.on{display:block}
 /* CH30-B②: 일괄 입력 — 컬럼 선언 칩 + 예시 줄 */
@@ -415,6 +418,8 @@ tr:last-child td{border-bottom:none}
 .jstep.cur{background:#F4F9FE}
 .jact.sec{background:var(--main-soft);color:var(--main-deep)}
 .jact.dis{background:#EDF1F6;color:#9AAAB9}
+/* CH32-B 보완: 마감 완료 단계 버튼 — 민트(완료 상태), 탭 시 안내 토스트(무반응 아님) */
+.jact.done{background:#E7F5EE;color:#2E8B63}
 /* CH30-B④: 점수 목록 조별 스티키 헤더 */
 .pgHead{position:sticky;top:0;z-index:2;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:700;padding:6px 14px;border-bottom:1px solid var(--line)}
 .stagechips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
@@ -1001,13 +1006,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
             <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
           </div>
         </div>
-        <!-- CH32-A 보완2 R10: 구 요강 탭 제거로 실종됐던 요강 미리보기·링크 공유·완성도 진입 복구.
-             B 브랜치의 정보수정 통합 허브가 이 기능을 수렴하면 이 행은 그쪽으로 흡수된다(임시 진입). -->
-        <div class="trow" onclick="mgShow('mgNotice')">
-          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg></span>
-          <span class="tt"><b>대회 요강</b><span>공개 요강 미리보기·링크 공유 · 완성도 채우기</span></span>
-          <span class="chev">›</span>
-        </div>
+        <!-- CH32-B⑫: A의 임시 [대회 요강] 행은 정보 수정 통합 허브(여정 첫 줄 [정보 수정])의
+             📋요강 내용 > [요강 미리보기·공유] 행으로 흡수됨 — 여기서는 제거. -->
         <div class="trow" onclick="mgShow('mgStaff')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg></span>
           <span class="tt"><b>심판진</b><span id="staffRowSummary">점수 입력할 분 추가·문자 링크 발송</span></span>
@@ -1042,16 +1042,17 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 
     <!-- 참가자 -->
     <div class="mgpane" id="mgPlayers">
-      <div class="seg" id="playersSeg">
-        <div class="on" data-seg="pList" onclick="playersSegShow('pList')">명단</div>
-        <div data-seg="pGroups" onclick="playersSegShow('pGroups')">조편성</div>
-        <div data-seg="pWait" onclick="playersSegShow('pWait')">대기 <span id="segWaitCount">0</span></div>
+      <!-- CH32-B⑪: 단계 세그먼트[예선 N|결승 N|…|대기 N](구조 따라 자동) × 하위 [명단|조편성].
+           대기는 최상위 세그먼트로 이동, 각 단계는 자기 명단·조편성을 가진다(목업 장면3). -->
+      <div class="seg" id="playerStageSeg"></div>
+      <div id="playerSubSeg" style="display:flex;gap:8px;margin-bottom:12px">
+        <span class="mtab on" data-seg="pList" onclick="playerSubShow('pList')">명단</span>
+        <span class="mtab" data-seg="pGroups" id="pSubGroups" onclick="playerSubShow('pGroups')">조편성</span>
       </div>
 
       <!-- 명단 -->
       <div class="psegpane on" id="pList">
         <p class="sub" id="playersStageLabel" style="margin-bottom:8px;font-weight:700;color:var(--main-deep)"></p>
-        <div class="stagechips" id="playersStageChips" style="display:none"></div>
         <div id="pListCurrent">
           <div class="card" id="rosterConfirmCard" style="display:none;text-align:center"></div>
           <button class="btn full" style="margin-bottom:12px" onclick="openAddPlayer()">+ 참가자 추가</button>
@@ -1878,11 +1879,8 @@ function mgShow(id){
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
   if(id==='mgHome'){renderStageSub();renderJourneyChecklist();renderOpsStats();renderScoreBadge()}
   if(id==='mgNotice')renderNoticeCompletion();
-  if(id==='mgPlayers'){playersStageId=null;
-    const waitTab=document.querySelector('#playersSeg [data-seg="pWait"]');
-    if(waitTab)waitTab.style.display=config.capUnlimited?'none':'';
-    if(config.capUnlimited&&curPlayersSeg==='pWait')curPlayersSeg='pList';
-    renderPlayersForStage().then(()=>playersSegShow(curPlayersSeg))}
+  // CH32-B⑪: 탭 진입 시 단계 선택을 활성 단계로 리셋(빌드가이드 "진입 시 활성 단계 리셋이 기본")
+  if(id==='mgPlayers'){playersStageId=null;playerStageSel=null;renderPlayersTab()}
   if(id==='mgStaff')renderTools();
   if(id==='mgScore'){scoreStageId=null;renderScoreTab(true);$('#scoreBadge').style.display='none'}
   if(id==='mgBoard'){boardStageSel=null;renderBoardTab()}
@@ -1917,37 +1915,65 @@ async function renderScoreBadge(){
   const badge=$('#scoreBadge'),todo=$('#scoreTodo');
   if(badge)badge.style.display='none';
   if(todo)todo.style.display='none'}
-let curPlayersSeg='pList';
-function playersSegShow(seg){
-  curPlayersSeg=seg;
-  document.querySelectorAll('#playersSeg > div').forEach(d=>d.classList.toggle('on',d.dataset.seg===seg));
-  document.querySelectorAll('.psegpane').forEach(p=>p.classList.remove('on'));
-  const pane=$('#'+seg);if(pane)pane.classList.add('on');
-  if(seg==='pList'){playersStageId=null;renderPlayersForStage()}
-  if(seg==='pGroups')renderGroupsSeg();
-  if(seg==='pWait')renderWait()}
-function enterPlayersSeg(seg){enterMgmt('mgPlayers');playersSegShow(seg)}
+let curPlayersSeg='pList';       // 하위 탭: 'pList' | 'pGroups'
+let playerStageSel=null;         // 최상위 단계 세그먼트 선택: 단계 id 또는 '__wait__'
 let playersStageId=null,playersActiveStage=null;
-async function renderPlayersForStage(){
+// CH32-B⑪: 참가자 탭 진입/갱신 — 단계 세그먼트를 그리고 선택 단계 뷰를 적용한다.
+async function renderPlayersTab(){
   const stages=await loadAllStages(config.id);
-  const advanced=stages.some(s=>s.status==='done');
-  // CH31⑧: 명단 화면 상단에 지금 어느 단계 명단을 보고 있는지 항상 명시(단일 단계도 예외 없이)
-  const stageLabel=$('#playersStageLabel');
-  if(stages.length<=1||!advanced){
-    $('#playersStageChips').style.display='none';
-    $('#pListCurrent').style.display='block';$('#pListPast').style.display='none';
-    playersActiveStage=curActiveStage(stages)||stages[0]||null;
-    if(stageLabel)stageLabel.textContent=playersActiveStage?`📋 ${playersActiveStage.name} 명단`:'';
-    $('#callUpBtn').style.display='none';$('#rosterConfirmCard').style.display='none';
-    renderPlayers();return}
-  if(!playersStageId||!stages.find(s=>s.id===playersStageId))playersStageId=(curActiveStage(stages)||stages[0]).id;
-  $('#playersStageChips').style.display='flex';
-  $('#playersStageChips').innerHTML=stageChipsHTML(stages,playersStageId,'selectPlayersStage');
-  const sel=stages.find(s=>s.id===playersStageId);
   const active=curActiveStage(stages);
   playersActiveStage=active;
-  if(stageLabel)stageLabel.textContent=`📋 ${sel.name} 명단${sel.id===active.id?' (진행 중)':' (지난 단계)'}`;
-  if(sel.id===active.id){
+  const valid=id=>id==='__wait__'||stages.some(s=>s.id===id);
+  if(!playerStageSel||!valid(playerStageSel))playerStageSel=(active||stages[0]||{}).id||null;
+  // 무제한 정원이면 대기 세그먼트는 존재하지 않으므로 선택도 명단으로 되돌린다
+  if(playerStageSel==='__wait__'&&config.capUnlimited)playerStageSel=(active||stages[0]||{}).id||null;
+  const allRows=await fetchPlayers(config.id);
+  const byStage={};stages.forEach(s=>{byStage[s.id]=allRows.filter(p=>p.status!=='wait'&&(p.current_stage||1)>=s.seq).length});
+  const waitN=allRows.filter(p=>p.status==='wait').length;
+  renderPlayerStageSeg(stages,byStage,waitN);
+  await applyPlayerStageView(stages)}
+function renderPlayerStageSeg(stages,byStage,waitN){
+  const box=$('#playerStageSeg');if(!box)return;
+  let html=stages.map(s=>
+    `<div class="${playerStageSel===s.id?'on':''}" onclick="selectPlayerStage('${s.id}')">${s.name} ${byStage[s.id]||0}</div>`).join('');
+  if(!config.capUnlimited)
+    html+=`<div class="${playerStageSel==='__wait__'?'on':''}" onclick="selectPlayerStage('__wait__')">대기 ${waitN}</div>`;
+  box.innerHTML=html;
+  // 단일 단계 + 무제한 정원이면 세그먼트가 1칸뿐 → 숨겨 깔끔하게(하위 [명단|조편성]만 노출)
+  box.style.display=(stages.length<=1&&config.capUnlimited)?'none':'flex'}
+function applyPlayerStageView(stages){
+  const sub=$('#playerSubSeg');
+  if(playerStageSel==='__wait__'){
+    if(sub)sub.style.display='none';
+    document.querySelectorAll('.psegpane').forEach(p=>p.classList.remove('on'));
+    $('#pWait').classList.add('on');
+    renderWait();return Promise.resolve()}
+  if(sub)sub.style.display='flex';
+  playersStageId=playerStageSel;
+  return playerSubShow(curPlayersSeg)}
+// 단계를 바꾸면 하위 탭은 명단으로 리셋(목업 장면3: 단계 진입 시 명단이 기본 활성)
+function selectPlayerStage(idOrWait){playerStageSel=idOrWait;if(idOrWait!=='__wait__')curPlayersSeg='pList';renderPlayersTab()}
+function playerSubShow(seg){
+  if(playerStageSel==='__wait__')return Promise.resolve();
+  curPlayersSeg=seg;
+  document.querySelectorAll('#playerSubSeg .mtab').forEach(m=>m.classList.toggle('on',m.dataset.seg===seg));
+  ['pList','pGroups','pWait'].forEach(id=>{const p=$('#'+id);if(p)p.classList.remove('on')});
+  const pane=$('#'+seg);if(pane)pane.classList.add('on');
+  if(seg==='pGroups'){renderGroupsSeg();return Promise.resolve()}
+  return renderPlayersForStage()}
+// 외부 진입(탭 버튼·안내 링크): 하위 탭을 정하고 참가자 탭으로 — 단계는 활성 단계로 리셋
+function enterPlayersSeg(seg){curPlayersSeg=(seg==='pGroups')?'pGroups':'pList';playerStageSel=null;enterMgmt('mgPlayers')}
+async function renderPlayersForStage(){
+  const stages=await loadAllStages(config.id);
+  const active=curActiveStage(stages);
+  playersActiveStage=active;
+  const sel=stages.find(s=>s.id===(playersStageId||(active&&active.id)))||active||stages[0]||null;
+  const stageLabel=$('#playersStageLabel');
+  const isActive=!!(sel&&active&&sel.id===active.id);
+  // CH31⑧/CH32-B⑪: 어느 단계 명단을 보고 있는지 라벨로 항상 명시(다단계일 때 진행/지난/진행 전 표시)
+  if(stageLabel)stageLabel.textContent=sel
+    ?`📋 ${sel.name} 명단${stages.length>1?(isActive?' (진행 중)':(sel.status==='done'?' (지난 단계)':' (진행 전)')):''}`:'';
+  if(isActive){
     $('#pListCurrent').style.display='block';$('#pListPast').style.display='none';
     const confirmed=active.seq===1||active.roster_confirmed;
     $('#callUpBtn').style.display=active.seq>1?'block':'none';
@@ -1960,8 +1986,9 @@ async function renderPlayersForStage(){
     renderPlayers();
   }else{
     $('#pListCurrent').style.display='none';$('#pListPast').style.display='block';
+    $('#callUpBtn').style.display='none';$('#rosterConfirmCard').style.display='none';
     const allRows=await fetchPlayers(config.id);
-    const pastRows=allRows.filter(p=>p.current_stage>=sel.seq&&p.status!=='wait')
+    const pastRows=allRows.filter(p=>p.current_stage>=(sel?sel.seq:1)&&p.status!=='wait')
       .sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
     $('#ptablePast').innerHTML=(pastRows||[]).length?pastRows.map(p=>
       `<div class="toolrow" style="${p.status==='wd'||p.status==='dq'?'opacity:.5':''}">
@@ -1969,7 +1996,6 @@ async function renderPlayersForStage(){
         <span class="num">${maskPhone(p.phone)}${p.club?' · '+p.club:''}</span></div>
       </div>`).join('')
       :'<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>'}}
-function selectPlayersStage(id){playersStageId=id;renderPlayersForStage()}
 async function confirmStageRoster(){
   if(!playersActiveStage)return;
   const{error}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:playersActiveStage.id,p_owner_secret:user.secret});
@@ -2217,11 +2243,9 @@ async function renderBoardTab(){
   if(!boardStageSel||!stages.find(s=>s.id===boardStageSel))boardStageSel=(curActiveStage(stages)||stages[0]).id;
   $('#boardStageChips').innerHTML=stageChipsHTML(stages,boardStageSel,'selectBoardStage');
   const sel=stages.find(s=>s.id===boardStageSel);
-  $('#boardFinalizeBtn').style.display=sel.status==='open'?'block':'none';
-  if(sel.status==='open'){
-    const openIdx=stages.findIndex(s=>s.status==='open');
-    const hasNext=openIdx>=0&&openIdx+1<stages.length;
-    $('#boardFinalizeBtn').textContent=hasNext?`${sel.name} 최종순위 확정`:'결과 · 시상 확정하기'}}
+  // CH32-B 보완③(P28): 단계 마감·종료 확정은 여정(대회홈)이 단일 소유 — 리더보드/전광판 쪽
+  // 확정 버튼은 숨긴다(과거 openStageSheet 직결 버튼은 마감/확정 분리 후 의미가 어긋남).
+  $('#boardFinalizeBtn').style.display='none'}
 function selectBoardStage(id){
   boardStageSel=id;
   loadAllStages(config.id).then(stages=>{
@@ -2399,7 +2423,10 @@ async function renderJourneyChecklist(){
     // — 버튼 라벨은 그대로 단계 이름만 쓴다("예선 마감"/"결승 시작"). 완료된 단계는 붙이지 않는다.
     const titleInProgress=`${stage.name} 진행`;
     if(stage.status==='done'){
-      rows.push(journeyRowHTML('done',seq,stage.name,'완료','결과 보기','sec',`viewStageResult('${stage.id}')`));
+      // CH32-B 보완①: 마감 완료 단계 — ✓민트 번호 + "✓ 마감됨" 민트 버튼(탭=안내 토스트, 무반응 아님).
+      // 부제에 마감 시점(단계 종료일)을 유지. 결과 열람은 리더보드 탭 단계 칩으로.
+      const closedSub=stage.date_end||stage.date_start?`${mdShort(stage.date_end||stage.date_start)} 마감`:'마감 완료';
+      rows.push(journeyRowHTML('done',seq,stage.name,closedSub,'✓ 마감됨','done',`toast('이미 마감된 단계예요 — 결과는 리더보드 탭에서 볼 수 있어요')`));
       reachedNextStart=true; // 방금 단계가 끝났으니 다음 단계가 이제 시작 대상
     }else if(stage.status==='open'){
       rows.push(journeyRowHTML('cur',seq,titleInProgress,stageActiveProgressText(stage),`${stage.name} 마감`,'','openStageSheet()'));
@@ -2424,7 +2451,8 @@ async function renderJourneyChecklist(){
   if(finished){
     rows.push(journeyRowHTML('done',n++,'대회 종료','완료','결과 보기','sec',"mgShow('mgResult')"));
   }else if(readyToFinish){
-    rows.push(journeyRowHTML('cur',n++,'대회 종료','결과·시상 확정 준비됨','종료 확정','','openStageSheet()'));
+    // CH32-B 보완②: 모든 단계 마감됨 + 아직 미확정 → [종료 확정]이 유일한 파랑(마감과 확정 분리).
+    rows.push(journeyRowHTML('cur',n++,'대회 종료','결과·시상 확정 준비됨','종료 확정','','openFinalizeSheet()'));
   }else{
     rows.push(journeyRowHTML('todo',n++,'대회 종료','결과·시상 확정','종료 확정','dis',
       `toast('모든 단계를 마쳐야 종료를 확정할 수 있어요')`));
@@ -2439,7 +2467,9 @@ async function checkStageStart(stageId){
   const stages=await loadAllStages(config.id);
   const stage=stages.find(s=>s.id===stageId);
   if(stage)openStageStartSheet(stage)}
+let startStageCtx=null;
 function openStageStartSheet(stage){
+  startStageCtx=stage; // CH32-B 보완: [시작] 확정 시 이 단계를 open_stage로 실제로 연다
   let html=`<p class="sheetli"><b>✓</b><span>참가자 ${players.length}명 등록됨</span></p>`;
   // CH32-A③: 명단 확정 여부(2단계 이상만 해당 — 1단계는 접수 명단이 곧 명단)
   if(stage.seq>1){
@@ -2458,10 +2488,17 @@ function openStageStartSheet(stage){
   $('#stageStartList').innerHTML=html;
   $('#stageStartOv').classList.add('on')}
 function closeStageStart(){$('#stageStartOv').classList.remove('on')}
-function confirmStageStart(){
+async function confirmStageStart(){
+  const stage=startStageCtx;startStageCtx=null;
   closeStageStart();
+  // CH32-B 보완②: 단계를 실제로 연다(waiting→open). seq 1은 개설 시 이미 open이라 호출해도 무해(멱등).
+  if(stage&&config.id){
+    const{error}=await sb.rpc('open_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
+    if(error){toast('단계 시작 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+    await syncActiveStageState(config.id)}
   enterMgmt('mgScore');
-  toast('스코어 탭에서 점수를 입력하면 대회가 시작됩니다')}
+  renderJourneyChecklist();
+  toast('단계를 시작했습니다 — 스코어 탭에서 점수를 입력하세요')}
 function openRegCloseSheet(){
   $('#regCloseCountLine').textContent=`현재 신청 ${players.length}명 · 대기 ${waitlist.length}명이 확정 명단이 됩니다`;
   $('#regCloseOv').classList.add('on')}
@@ -2568,12 +2605,15 @@ async function openStageSheet(){
   $('#stageAdvConfirmBtn').style.display='block';
 
   if(!hasNext){
-    $('#stageAdvTitle').textContent='결과를 확정할까요?';
+    // CH32-B 보완②: 마지막 단계 [마감]은 단계만 마감(close_stage) — 대회 확정(finalize)은 분리된
+    // [종료 확정] 단계에서. 마감 직후 여정의 [종료 확정]이 유일한 파랑이 된다.
+    $('#stageAdvTitle').textContent=`${curStage.name}을 마감할까요?`;
     $('#stageAdvList').innerHTML=`
-      <p class="sheetli"><b>✓</b><span>최종 순위가 확정되고 요강·참가자 화면에 반영됩니다</span></p>
-      <p class="sheetli warn"><b>!</b><span>확정 후에는 기록을 수정할 수 없습니다</span></p>`;
-    $('#stageAdvConfirmBtn').textContent='확정하기';
-    stageSheetCtx={type:'finalize'};
+      <p class="sheetli"><b>✓</b><span>${curStage.name} 순위가 마감됩니다</span></p>
+      <p class="sheetli warn"><b>!</b><span>마감 후에는 ${curStage.name} 기록을 입력·수정할 수 없습니다</span></p>
+      <p class="sheetli"><b>✓</b><span>마감하면 여정 [종료 확정]에서 결과·시상을 확정할 수 있어요</span></p>`;
+    $('#stageAdvConfirmBtn').textContent='마감하기';
+    stageSheetCtx={type:'close',curStage};
     $('#stageAdvOv').classList.add('on');
     return}
 
@@ -2677,7 +2717,28 @@ async function confirmStageSheet(){
   const ctx=stageSheetCtx;
   closeStageAdv();
   if(ctx.type==='finalize'){await finalizeTournament();return}
+  if(ctx.type==='close'){await doCloseStage(ctx.curStage);return}
   await doAdvanceStage(ctx.curStage,ctx.nextStage,ctx.advanced)}
+// CH32-B 보완②: 마지막 단계 마감 — 대회는 확정하지 않고 단계만 done으로. 이후 [종료 확정]이 활성화.
+async function doCloseStage(stage){
+  const{error}=await sb.rpc('close_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
+  if(error){toast('마감 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  toast(`${stage.name}을 마감했습니다 — 여정 [종료 확정]으로 결과를 확정하세요`);
+  await syncActiveStageState(config.id);
+  renderStageSub();renderJourneyChecklist();renderOpsStats()}
+// CH32-B 보완②: 종료 확정 — 모든 단계 마감 후 대회를 done으로 확정(단계 마감과 분리된 별도 시트).
+function openFinalizeSheet(){
+  if(!config.id)return;
+  $('#stageAdvTieBox').style.display='none';$('#stageAdvTieBox').innerHTML='';
+  $('#stageAdvConfirmBtn').style.display='block';
+  cutResolution=null;
+  $('#stageAdvTitle').textContent='대회 결과를 확정할까요?';
+  $('#stageAdvList').innerHTML=`
+    <p class="sheetli"><b>✓</b><span>최종 순위·부문 시상이 확정되고 요강·참가자 화면에 반영됩니다</span></p>
+    <p class="sheetli warn"><b>!</b><span>확정 후에는 기록을 수정할 수 없습니다</span></p>`;
+  $('#stageAdvConfirmBtn').textContent='종료 확정하기';
+  stageSheetCtx={type:'finalize'};
+  $('#stageAdvOv').classList.add('on')}
 async function doAdvanceStage(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return}
   const ids=advanced.map(p=>p.id);
@@ -3205,17 +3266,19 @@ async function renderEditInfo(){
   try{await fn()}
   catch(e){console.error(e);toast('화면을 여는 중 오류가 발생했습니다 — 다시 시도해 주세요');
     editInfoSection=null;renderEditInfoList()}}
-function editSectionRow(key,icon,title,desc,tier){
-  // CH32-A P1③: tier===3(잠금)은 실제로 editStageLocked(해당 단계 기록 존재)일 때만
-  // "잠금" 배지를 붙인다 — 이전엔 tier 값만 보고 개설 직후부터 항상 잠금 배지를 붙여
-  // 신규 대회에서도 잠긴 것처럼 보였다(실제 클릭은 열렸음 — 배지만 거짓 표시).
-  const locked=tier===3&&editStageLocked;
-  const badge=tier===2?'<span class="pill" style="background:#FDF3DC;color:#8A6A1E;margin-left:8px">경고</span>'
-    :locked?'<span class="pill" style="background:#F3E4E0;color:#9A4A34;margin-left:8px">잠금</span>':'';
-  return`<div class="trow" style="cursor:pointer" onclick="showEditSection('${key}')">
+// CH32-B⑫: 통합 허브 행 — 📋요강 항목엔 완성 상태(✓/채우기), 🔴잠김 항목엔 잠김 배지.
+// onclick 기본값은 편집 섹션 진입(showEditSection), 미리보기 등은 opts.onclick으로 대체.
+function editHubRow(key,icon,title,desc,opts){
+  opts=opts||{};
+  let right='<span class="chev">›</span>';
+  if(opts.locked)right='<span class="pill" style="background:#F3E4E0;color:#9A4A34">잠김</span>';
+  else if(opts.status==='ok')right='<span style="font-size:12.5px;color:#2E8B63;font-weight:700">✓</span>';
+  else if(opts.status==='todo')right='<span style="font-size:12.5px;color:#C9930A;font-weight:700">채우기 ›</span>';
+  const onclick=opts.onclick||`showEditSection('${key}')`;
+  return`<div class="trow" style="cursor:pointer${opts.locked?';opacity:.6':''}" onclick="${onclick}">
     <span class="tic">${icon}</span>
-    <span class="tt"><b>${title}${badge}</b><span>${desc}</span></span>
-    <span class="chev">›</span>
+    <span class="tt"><b>${title}</b>${desc?`<span>${desc}</span>`:''}</span>
+    ${right}
   </div>`}
 async function renderEditInfoList(){
   const box=$('#editInfoBody');
@@ -3225,24 +3288,38 @@ async function renderEditInfoList(){
   const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
   const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
   editStageLocked=(scoreCount+playCount)>0;
+  const ne=config.noticeExtra||{};
+  const st=f=>f?'ok':'todo';
+  const awardsFilled=!!(config.prizeTotal||config.prizes.some(p=>p.label));
+  const feeFilled=!!(ne.fee||ne.contact);
+  const rulesFilled=!!ne.rules;
+  const pct=noticeCompletionPct();
+  // 목업 장면6: 완성도 카드 → 📋요강 내용 → 🟡공지 확인 → 🔴잠김. 편집 화면은 모두 기존 것 재사용.
   box.innerHTML=`
-    <p class="sub" style="margin-bottom:6px;font-weight:700">자유 — 즉시 저장</p>
-    <div class="card" style="padding:0 18px;margin-bottom:16px">
-      ${editSectionRow('basic','🏷️','대회명·주최','대회명, 주최·주관',1)}
-      ${editSectionRow('awards','🏆','시상·요강 정보','시상 부문, 상금, 문의처·참가비·규칙',1)}
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>요강 완성도</span><span style="color:var(--main-deep)">${pct}%</span></div>
+      <div class="pct" style="margin-top:8px"><i style="width:${pct}%"></i></div>
     </div>
-    <p class="sub" style="margin-bottom:6px;font-weight:700">경고 후 수정 — 참가자 공지 필요</p>
+    <p class="sub" style="margin-bottom:6px;font-weight:700">📋 요강 내용 — 언제든 수정</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
-      ${editSectionRow('schedule','📅','일정·대회장소','시작일·종료일 · 대회가 열리는 곳',2)}
-      ${editSectionRow('venue','⛳','대회코스','치는 코스 이름 (개수 변경 불가 · 대회장소는 [일정]에서)',2)}
-      ${editSectionRow('cap','👥','정원','모집 정원 · 초과분은 자동 대기 전환',2)}
-      ${editSectionRow('fields','📝','참가자 정보 항목','접수 시 받을 정보(성별·나이·소속 등)',2)}
-      ${editSectionRow('eligibility','✅','참여 대상','참가 자격 제한 여부',2)}
-      ${editSectionRow('visibility','🔒','공개 설정','공개/비공개 · 입장 비밀번호',2)}
+      ${editHubRow('basic','🏷️','대회명·주최','요강 맨 위에 나오는 이름')}
+      ${editHubRow('awards','🏆','시상 내역','종합·부문 시상과 상금',{status:st(awardsFilled)})}
+      ${editHubRow('awards','💰','참가비·문의처','참가비·문의 연락처',{status:st(feeFilled)})}
+      ${editHubRow('awards','📖','게임룰','경기 방식·규칙 안내',{status:st(rulesFilled)})}
+      ${editHubRow('notice','👁','요강 미리보기·공유','참가자가 보는 화면 확인 · 단톡방용 이미지 저장',{onclick:`openNotice('${config.id}')`})}
     </div>
-    <p class="sub" style="margin-bottom:6px;font-weight:700">잠금 — '${editStage.name}' 단계에 점수가 있으면 수정 불가</p>
+    <p class="sub" style="margin-bottom:6px;font-weight:700">🟡 수정 시 참가자 공지 확인</p>
+    <div class="card" style="padding:0 18px;margin-bottom:16px">
+      ${editHubRow('schedule','📅','일정·대회장소','시작일·종료일 · 대회가 열리는 곳')}
+      ${editHubRow('venue','⛳','대회코스','치는 코스 이름 (개수 변경 불가)')}
+      ${editHubRow('cap','👥','정원','모집 정원 · 초과분은 자동 대기 전환')}
+      ${editHubRow('eligibility','✅','참여 대상','참가 자격 제한 여부')}
+      ${editHubRow('visibility','🔒','공개 설정','공개/비공개 · 입장 비밀번호')}
+      ${editHubRow('fields','📝','참가자 정보 항목','접수 시 받을 정보(성별·나이·소속 등)')}
+    </div>
+    <p class="sub" style="margin-bottom:6px;font-weight:700">🔴 ${editStageLocked?`'${editStage.name}' 단계에 경기 기록이 있어 잠김`:'경기 기록이 생기면 잠김'}</p>
     <div class="card" style="padding:0 18px">
-      ${editSectionRow('course','⛳','코스·단계 구성','코스별 파 · 진출 컷 (코스 개수·코스명 제외)',3)}
+      ${editHubRow('course','⛳','코스·단계 구조·컷·동점','코스별 파 · 진출 컷 (코스 개수·코스명 제외)',{locked:editStageLocked})}
     </div>
     <div id="editHistoryCard" class="card" style="margin-top:16px"></div>`;
   renderEditHistory()}
@@ -4655,7 +4732,6 @@ function promoteHint(){if(waitlist.length&&players.length<config.cap)toast('빈�
 
 /* ===== 대기자 ===== */
 function renderWait(){
-  const segCount=$('#segWaitCount');if(segCount)segCount.textContent=waitlist.length;
   const card=$('#waitCard');if(!card)return;
   $('#waitCnt').textContent=waitlist.length+'명';
   const space=players.length<config.cap;
