@@ -767,7 +767,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="54">54홀 (3개 코스)</option>
                 <option value="72">72홀 (4개 코스)</option>
               </select>
-              <label class="fl">골프장 (코스별 · 최대 4개) </label>
+              <!-- CH32-A 보완2 R5: 대회코스=치는 코스(예 "양평 A코스") · 대회장소(요강 표시용)는 별개 필드 -->
+              <label class="fl">대회코스 (코스별 · 최대 4개)</label>
               <div id="venueBox"></div>
               <label class="fl">기록 방식</label>
               <div class="optrow" id="recordModeRow1">
@@ -786,7 +787,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="5">5개 코스</option>
                 <option value="6">6개 코스</option>
               </select>
-              <label class="fl">코스명 · 총파</label>
+              <label class="fl">대회코스 · 총파</label>
               <div id="screenVenueBox"></div>
               <p class="sub" style="margin-top:8px">참가자가 기간 중 자유롭게 방문해 기록을 제출하는 방식입니다 — 조편성 없이 진행돼요.</p>
             </div>
@@ -823,7 +824,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="54">54홀 (3개 코스)</option>
                 <option value="72">72홀 (4개 코스)</option>
               </select>
-              <label class="fl">골프장 (코스별)</label>
+              <label class="fl">대회코스 (코스별)</label>
               <div id="venueBox2"></div>
               <label class="fl">기록 방식</label>
               <div class="optrow" id="recordModeRow2">
@@ -839,7 +840,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="2">2개 코스</option>
                 <option value="3">3개 코스</option>
               </select>
-              <label class="fl">코스명 · 총파</label>
+              <label class="fl">대회코스 · 총파</label>
               <div id="screenVenueBox2"></div>
             </div>
             <div class="card" id="stage2CutBox" style="display:none;margin-top:14px">
@@ -875,7 +876,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="54">54홀 (3개 코스)</option>
                 <option value="72">72홀 (4개 코스)</option>
               </select>
-              <label class="fl">골프장 (코스별)</label>
+              <label class="fl">대회코스 (코스별)</label>
               <div id="venueBox3"></div>
               <label class="fl">기록 방식</label>
               <div class="optrow" id="recordModeRow3">
@@ -891,7 +892,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
                 <option value="2">2개 코스</option>
                 <option value="3">3개 코스</option>
               </select>
-              <label class="fl">코스명 · 총파</label>
+              <label class="fl">대회코스 · 총파</label>
               <div id="screenVenueBox3"></div>
             </div>
           </div>
@@ -964,7 +965,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div id="journeyChecklist"></div>
       <div class="stats" id="opStats"></div>
       <div id="advanceResultBox"></div>
-      <!-- CH32-A④: 홈 하단 4행(부제 포함) — 정보 수정은 여정 첫 줄로 이동했으므로 여기서 제외 -->
+      <!-- CH32-A④: 홈 하단 도구 행(부제 포함) — 정보 수정은 여정 첫 줄로 이동. 보완2 R10에서 요강 행 추가(5행) -->
       <div class="tools">
         <div class="trow" id="trowBoard" onclick="toggleTool('Board')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
@@ -995,6 +996,13 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
             <button class="btn sm ghost" onclick="copyApplyShareLink()">주소 복사</button>
             <button class="btn sm" onclick="openApply(config.id)">미리보기</button>
           </div>
+        </div>
+        <!-- CH32-A 보완2 R10: 구 요강 탭 제거로 실종됐던 요강 미리보기·링크 공유·완성도 진입 복구.
+             B 브랜치의 정보수정 통합 허브가 이 기능을 수렴하면 이 행은 그쪽으로 흡수된다(임시 진입). -->
+        <div class="trow" onclick="mgShow('mgNotice')">
+          <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg></span>
+          <span class="tt"><b>대회 요강</b><span>공개 요강 미리보기·링크 공유 · 완성도 채우기</span></span>
+          <span class="chev">›</span>
         </div>
         <div class="trow" onclick="mgShow('mgStaff')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg></span>
@@ -1181,7 +1189,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="info"><b id="jName">—</b><span id="jDuty">문자 링크 접속 · 가입 불필요</span></div>
       <select id="jSel" style="width:auto;padding:8px 10px;font-size:.8rem" onchange="curStaff=+this.value;renderJudge()"></select>
     </div>
-    <label class="fl" style="margin-top:0">코스 (골프장)</label>
+    <label class="fl" style="margin-top:0">대회코스</label>
     <div class="chiprow" id="jRoundChips"></div>
     <label class="fl" id="jGroupLabel">조 선택</label>
     <div class="chiprow" id="jGroupChips"></div>
@@ -1712,8 +1720,9 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   <div class="pad">
     <h3>이 기준으로 편성할까요?</h3>
     <div id="groupConfirmBody" style="margin:10px 0 18px"></div>
+    <!-- CH32-A 보완2 R6: 기본은 4인 조 우선(끄면 6명=4+2) — 켜면 3인 조를 섞어 고르게 나눔(6명=3+3) -->
     <div style="display:flex;align-items:center;justify-content:space-between;background:#F0F5FA;border-radius:13px;padding:12px 15px;margin-bottom:12px;font-size:14px;font-weight:700">
-      <span>3인 조 허용</span>
+      <span>3인 조 섞어 고르게 나누기</span>
       <span class="tglsw" id="groupAllow3Sw" onclick="toggleGroupAllow3()"><i></i></span>
     </div>
     <button class="btn full" style="margin-bottom:8px" onclick="confirmGroupPlan()">편성 실행</button>
@@ -1828,7 +1837,10 @@ function navTo(view,page){
   renderLoc()}
 window.addEventListener('popstate',()=>{
   const l=navStack.pop();
-  if(l){curView=l.v;curPage=l.p;renderLoc()}});
+  if(l){curView=l.v;curPage=l.p;renderLoc();
+    // CH32-A 보완2 R8: 입력 화면(Judge)에서 뒤로가기로 스코어 탭에 돌아오면 본문을 최신
+    // 상태로 다시 그린다 — autoOpen=false라 자동 재진입 루프는 생기지 않는다.
+    if(curView==='Owner'&&curPage==='opMgmt'&&curMgTab==='mgScore')renderScoreTab(false)}});
 function navBack(){if(navStack.length)history.back()}
 function backToOwner(){navBack()}
 function openJudge(i){
@@ -1868,7 +1880,7 @@ function mgShow(id){
     if(config.capUnlimited&&curPlayersSeg==='pWait')curPlayersSeg='pList';
     renderPlayersForStage().then(()=>playersSegShow(curPlayersSeg))}
   if(id==='mgStaff')renderTools();
-  if(id==='mgScore'){scoreStageId=null;renderScoreTab();$('#scoreBadge').style.display='none'}
+  if(id==='mgScore'){scoreStageId=null;renderScoreTab(true);$('#scoreBadge').style.display='none'}
   if(id==='mgBoard'){boardStageSel=null;renderBoardTab()}
   if(id==='mgResult')renderResult();
   window.scrollTo(0,0)}
@@ -2023,7 +2035,7 @@ function stageChipsHTML(stages,selId,onclickFn){
 let scoreStageId=null,scoreMode='player',gridPlayerIdx=null,gridCourseIdx=0;
 function selectScoreStage(id){scoreStageId=id;renderScoreTab()}
 function setScoreMode(m){scoreMode=m;renderScoreTab()}
-async function renderScoreTab(){
+async function renderScoreTab(autoOpen=false){
   const stages=await loadAllStages(config.id);
   if(!stages.length)return;
   if(!scoreStageId||!stages.find(s=>s.id===scoreStageId))scoreStageId=(curActiveStage(stages)||stages[0]).id;
@@ -2038,11 +2050,29 @@ async function renderScoreTab(){
     return}
 
   const box=$('#mgScoreBody');if(!box)return;
-  // CH32-A⑤(중간 문 제거): "기록 입력 화면 열기" 버튼 없이 스코어 탭 진입과 동시에 바로 입력
-  // 화면으로 들어간다 — CSV 내보내기는 대회홈의 [파일로 저장] 시트에서 항상 가능하므로
-  // 이 화면을 거치지 않아도 접근성이 줄지 않는다.
+  // CH32-A⑤(중간 문 제거) + 보완2 R8: 탭을 직접 누르면(autoOpen) 바로 입력 화면으로 들어가되,
+  // 뒤에 남는 탭 본문도 항상 진행 현황으로 채운다 — 이전엔 본문을 비워둔 채 이동만 해서
+  // 입력 후 뒤로가기로 돌아오면 빈 화면이 남았다(뒤로가기는 mgShow를 다시 타지 않음).
   if(judgeStageKind==='period'||stageRecordMode==='total'){
-    openJudge(0);
+    $('#scoreModeSeg').style.display='none';
+    const list=players.filter(p=>!isOut(p));
+    const doneCnt=list.filter(p=>p.best&&Object.keys(p.best).length>=ROUNDS).length;
+    box.innerHTML=`
+      <div class="trow" style="cursor:pointer" onclick="openJudge(0)">
+        <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/></svg></span>
+        <span class="tt"><b>점수 입력 이어서 하기</b><span>${stageRecordMode==='total'?'총점 입력':'코스별 기록 제출'} — 한 명씩·여러 명 붙여넣기</span></span>
+        <span class="chev">›</span>
+      </div>
+      <p class="sub" style="margin:12px 0 6px;font-weight:700">진행 현황 — 참가 ${list.length}명 · 전 코스 완료 ${doneCnt}명</p>
+      <div class="card" style="padding:0 18px">${list.length?list.map(p=>{
+        const bestArr=Array.from({length:ROUNDS},(_,c)=>p.best&&p.best[c]!=null?p.best[c]:null);
+        const cnt=bestArr.filter(v=>v!=null).length;
+        const sum=bestArr.reduce((a,b)=>a+(b||0),0);
+        return`<div class="toolrow"><div class="avatar">${p.name[0]}</div>
+          <div class="info"><b>${p.name}</b><span class="num">${bestArr.map((v,c)=>`${c+1}C ${v!=null?v:'—'}`).join(' · ')}</span></div>
+          <b class="num" style="margin-left:auto">${cnt?sum:'—'}</b></div>`}).join('')
+        :'<p class="sub" style="text-align:center;padding:20px 0">참가자가 없습니다</p>'}</div>`;
+    if(autoOpen)openJudge(0);
     return}
   if(!groups.length){
     $('#scoreModeSeg').style.display='none';
@@ -2111,8 +2141,12 @@ function openGridPlayerPage(pi){
   renderGridCard()}
 function closeGridPlayerPage(){navBack();renderPlayerListRows()}
 function openGridPad(pi,gi){
-  if(!judges().length){toast('입력 권한이 있는 스탭이 있어야 합니다 — 심판진 탭에서 추가하세요');return}
-  if(curStaff>=judges().length)curStaff=0;
+  // CH32-A 보완2 R1: 이전엔 judges()(실제 등록 심판만)로 게이트해서 심판 0명이면 개설자도
+  // "권한없음" 토스트로 차단됐다 — CH31⑩의 scorerOptions()(운영자 가상 항목 포함) 기준으로 교체.
+  // 개설자 대시보드에선 항상 1명 이상(나(운영자))이므로 사실상 게이트가 사라지고,
+  // 심판 토큰 모드에서만 실제 권한 검사로 남는다.
+  if(!scorerOptions().length){toast('점수 입력 권한이 없습니다 — 심판 링크를 다시 확인하세요');return}
+  if(curStaff>=scorerOptions().length)curStaff=0;
   openPad(pi,gi)}
 function selectGridCourse(c){gridCourseIdx=c;renderGridCard()}
 function renderGridCard(){
@@ -3147,7 +3181,12 @@ async function renderEditInfo(){
   const fns={basic:renderEditBasic,awards:renderEditAwards,schedule:renderEditSchedule,
     venue:renderEditVenue,cap:renderEditCap,eligibility:renderEditEligibility,
     visibility:renderEditVisibility,course:renderEditCourse,fields:renderEditFields};
-  const fn=fns[editInfoSection];if(fn)await fn()}
+  const fn=fns[editInfoSection];if(!fn)return;
+  // CH32-A 보완2 R2(조용한 실패 금지): 섹션 렌더 중 예외가 나면 이전 화면이 그대로 남아
+  // "눌러도 무반응"으로 보인다 — 반드시 사용자에게 오류를 알리고 콘솔에 남긴다.
+  try{await fn()}
+  catch(e){console.error(e);toast('화면을 여는 중 오류가 발생했습니다 — 다시 시도해 주세요');
+    editInfoSection=null;renderEditInfoList()}}
 function editSectionRow(key,icon,title,desc,tier){
   // CH32-A P1③: tier===3(잠금)은 실제로 editStageLocked(해당 단계 기록 존재)일 때만
   // "잠금" 배지를 붙인다 — 이전엔 tier 값만 보고 개설 직후부터 항상 잠금 배지를 붙여
@@ -3176,8 +3215,8 @@ async function renderEditInfoList(){
     </div>
     <p class="sub" style="margin-bottom:6px;font-weight:700">경고 후 수정 — 참가자 공지 필요</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
-      ${editSectionRow('schedule','📅','일정','대회 시작일·종료일',2)}
-      ${editSectionRow('venue','⛳','코스명','코스별 이름 (개수는 변경 불가, 대회장소는 [일정]에서)',2)}
+      ${editSectionRow('schedule','📅','일정·대회장소','시작일·종료일 · 대회가 열리는 곳',2)}
+      ${editSectionRow('venue','⛳','대회코스','치는 코스 이름 (개수 변경 불가 · 대회장소는 [일정]에서)',2)}
       ${editSectionRow('cap','👥','정원','모집 정원 · 초과분은 자동 대기 전환',2)}
       ${editSectionRow('fields','📝','참가자 정보 항목','접수 시 받을 정보(성별·나이·소속 등)',2)}
       ${editSectionRow('eligibility','✅','참여 대상','참가 자격 제한 여부',2)}
@@ -3292,8 +3331,8 @@ function renderEditSchedule(){
     </div>
     <div class="card">
       <label class="fl" style="margin-top:0">대회장소</label>
-      <input type="text" id="eiVenuePlace" placeholder="예: 양평파크골프장">
-      <p class="sub" style="margin-top:6px">요강·신청 화면에 표시되는 이름이에요. 코스별 정확한 코스명은 [장소] 메뉴에서 따로 관리해요.</p>
+      <input type="text" id="eiVenuePlace" placeholder="예: ○○스크린골프장 · 양평파크골프장">
+      <p class="sub" style="margin-top:6px">대회가 열리는 곳 — 요강·신청 화면에 표시돼요. 치는 코스 이름(예: 양평 A코스)은 [대회코스] 메뉴에서 따로 관리해요.</p>
     </div>
     <button class="btn full" style="margin-top:14px" onclick="saveEditSchedule()">저장</button>`;
   $('#eiDateS').value=config.dateS;$('#eiDateE').value=config.dateE;
@@ -3324,21 +3363,21 @@ function renderEditVenue(){
   const names=(editStage.venues&&editStage.venues.length?editStage.venues:config.venues)||[];
   box.innerHTML=`
     <button class="btn ghost sm" onclick="editInfoBack()">← 목록으로</button>
-    <p class="sub" style="margin:10px 0">'${editStage.name}' 단계 코스명입니다. 코스 개수는 여기서 바꿀 수 없어요.</p>
+    <p class="sub" style="margin:10px 0">'${editStage.name}' 단계에서 치는 코스 이름입니다. 코스 개수는 여기서 바꿀 수 없고, 요강에 표시되는 대회장소는 [일정]에서 관리해요.</p>
     <div class="card">
-      ${names.map((n,i)=>`<label class="fl" style="margin-top:${i===0?0:'10px'}">${i+1}코스명</label><input type="text" class="eiVenueIn" data-i="${i}">`).join('')}
+      ${names.map((n,i)=>`<label class="fl" style="margin-top:${i===0?0:'10px'}">${i+1}코스 이름</label><input type="text" class="eiVenueIn" data-i="${i}" placeholder="예: 양평 A코스">`).join('')}
     </div>
     <button class="btn full" style="margin-top:14px" onclick="saveEditVenue()">저장</button>`;
   document.querySelectorAll('.eiVenueIn').forEach((el,i)=>el.value=names[i]||'')}
 function saveEditVenue(){
   const names=[...document.querySelectorAll('.eiVenueIn')].map((el,i)=>el.value.trim()||`${i+1}코스`);
   const oldNames=(editStage.venues&&editStage.venues.length?editStage.venues:config.venues)||[];
-  openWarnEdit(`'${editStage.name}' 단계 코스명이 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
+  openWarnEdit(`'${editStage.name}' 단계 대회코스 이름이 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
     const{error}=await sb.rpc('update_stage_venues',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,p_venues:names});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
     editStage.venues=names;config.venues=names;
-    await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`장소 수정: ${oldNames.join(', ')} → ${names.join(', ')}`});
-    editInfoBack();toast('코스명을 저장했습니다')})}
+    await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`대회코스 수정: ${oldNames.join(', ')} → ${names.join(', ')}`});
+    editInfoBack();toast('대회코스 이름을 저장했습니다')})}
 
 /* --- ②경고: 정원 --- */
 function renderEditCap(){
@@ -3534,9 +3573,19 @@ async function renderEditCourse(){
   const hasNext=stages.some(s=>s.seq===editStage.seq+1);
   const cut=editStage.advance_cut||{total:24};
   const isRound=editStage.kind==='round';
+  // CH32-A 보완2 R2: 기간형(스크린) 단계의 course_pars는 [18홀 파 배열]이 아니라 [코스 총파 숫자]다.
+  // 이전 코드는 배열만 가정하고 c.reduce를 호출해 기간형 단계에서 예외 → 화면 무반응이었다.
+  const isNumericPars=editCoursePars.some(c=>!Array.isArray(c));
+  const parsCardHTML=isNumericPars
+    ?editCoursePars.map((c,i)=>`
+        <label class="fl" style="margin-top:${i===0?0:'14px'}">${i+1}코스 총파</label>
+        <input type="tel" class="eiTotalParIn" data-i="${i}" value="${+c||0}">`).join('')
+    :editCoursePars.map((c,i)=>`
+        <label class="fl" style="margin-top:${i===0?0:'14px'}">${i+1}코스 파 (합계 <span class="num" id="eiParSum${i}">${c.reduce((a,b)=>a+b,0)}</span>)</label>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px" id="eiParGrid${i}"></div>`).join('');
   box.innerHTML=`
     <button class="btn ghost sm" onclick="editInfoBack()">← 목록으로</button>
-    <p class="sub" style="margin:10px 0">'${editStage.name}' 단계 — 코스 개수·코스명은 여기서 바꿀 수 없어요(코스명은 [장소] 메뉴에서).</p>
+    <p class="sub" style="margin:10px 0">'${editStage.name}' 단계 — 코스 개수·코스 이름은 여기서 바꿀 수 없어요(코스 이름은 [대회코스] 메뉴에서).</p>
     ${isRound?`<div class="card">
       <label class="fl" style="margin-top:0">기록 방식</label>
       <div class="optrow" id="eiRecordModeRow">
@@ -3545,9 +3594,7 @@ async function renderEditCourse(){
       </div>
     </div>`:''}
     <div class="card">
-      ${editCoursePars.map((c,i)=>`
-        <label class="fl" style="margin-top:${i===0?0:'14px'}">${i+1}코스 파 (합계 <span class="num" id="eiParSum${i}">${c.reduce((a,b)=>a+b,0)}</span>)</label>
-        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px" id="eiParGrid${i}"></div>`).join('')}
+      ${parsCardHTML}
     </div>
     ${hasNext?`<div class="card">
       <label class="fl" style="margin-top:0">진출 방식</label>
@@ -3559,7 +3606,7 @@ async function renderEditCourse(){
       </div>
     </div>`:''}
     <button class="btn full" style="margin-top:14px" onclick="saveEditCourse()">저장</button>`;
-  editCoursePars.forEach((c,i)=>drawEditParGrid(i));
+  if(!isNumericPars)editCoursePars.forEach((c,i)=>drawEditParGrid(i));
   if(hasNext)$('#eiCutMode').onchange=()=>{
     const g=$('#eiCutMode').value==='gender';
     $('#eiCutTotalBox').style.display=g?'none':'block';
@@ -3575,6 +3622,10 @@ function setEditRecordMode(mode){
   editRecordMode=mode;
   document.querySelectorAll('#eiRecordModeRow .opt').forEach(o=>o.classList.toggle('on',(o.textContent==='홀별 기록'?'hole':'total')===mode))}
 async function saveEditCourse(){
+  // CH32-A 보완2 R2: 기간형(총파 숫자 입력) 단계는 입력 필드에서 값을 걷어 editCoursePars를 갱신
+  document.querySelectorAll('.eiTotalParIn').forEach(el=>{
+    const i=+el.dataset.i,v=+el.value;
+    if(Number.isFinite(v)&&v>0)editCoursePars[i]=v});
   const stages=await loadAllStages(config.id);
   const hasNext=stages.some(s=>s.seq===editStage.seq+1);
   let cut=editStage.advance_cut;
@@ -3592,7 +3643,7 @@ async function saveEditCourse(){
     editStage.course_pars=editCoursePars;editStage.advance_cut=cut;editStage.record_mode=newRecordMode;
     const active=curActiveStage(stages);
     if(active&&editStage.id===active.id){
-      coursePars=editCoursePars;PAR_TOT=editCoursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
+      coursePars=editCoursePars;PAR_TOT=editCoursePars.reduce((a,c)=>a+courseParTotal(c),0);
       judgeStageKind=editStage.kind;boardStageKind=editStage.kind;
       stageRecordMode=newRecordMode;boardStageRecordMode=newRecordMode}
     await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`'${editStage.name}' 단계 코스 파${hasNext?'·진출 컷':''}${modeChanged?'·기록 방식':''} 수정`});
@@ -3752,7 +3803,7 @@ function renderVenues(){
     const sum=coursePars[i].reduce((a,b)=>a+b,0);
     const preset=sum===66&&coursePars[i].join()===PRESET66.join()?'66':sum===54?'54':'custom';
     return`<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="venueIn" style="flex:1;min-width:0" placeholder="${i+1}코스 골프장명" value="${VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="venueIn" style="flex:1;min-width:0" placeholder="${i+1}코스 이름 (예: 양평 A코스)" value="${VENUE_DEFAULTS[i]||''}">
       <select class="parSel" style="width:118px;flex:0 0 auto;padding:12px 8px;font-size:15px" onchange="parPreset(${i},this.value)">
         <option value="66" ${preset==='66'?'selected':''}>파 66</option>
         <option value="54" ${preset==='54'?'selected':''}>전홀 파3</option>
@@ -3768,7 +3819,7 @@ function renderVenues2(){
     const sum=coursePars2[i].reduce((a,b)=>a+b,0);
     const preset=sum===66&&coursePars2[i].join()===PRESET66.join()?'66':'54';
     return`<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="venueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스 골프장명" value="${VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="venueIn2" style="flex:1;min-width:0" placeholder="${i+1}코스 이름 (예: 양평 A코스)" value="${VENUE_DEFAULTS[i]||''}">
       <select class="parSel2" style="width:118px;flex:0 0 auto;padding:12px 8px;font-size:15px" onchange="coursePars2[${i}]=this.value==='66'?[...PRESET66]:[...PRESET54]">
         <option value="66" ${preset==='66'?'selected':''}>파 66</option>
         <option value="54" ${preset==='54'?'selected':''}>전홀 파3</option>
@@ -3782,7 +3833,7 @@ function renderVenues3(){
     const sum=coursePars3[i].reduce((a,b)=>a+b,0);
     const preset=sum===66&&coursePars3[i].join()===PRESET66.join()?'66':'54';
     return`<div style="display:flex;gap:8px;margin-top:${i?10:0}px;align-items:center">
-      <input type="text" class="venueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스 골프장명" value="${VENUE_DEFAULTS[i]||''}">
+      <input type="text" class="venueIn3" style="flex:1;min-width:0" placeholder="${i+1}코스 이름 (예: 양평 A코스)" value="${VENUE_DEFAULTS[i]||''}">
       <select class="parSel3" style="width:118px;flex:0 0 auto;padding:12px 8px;font-size:15px" onchange="coursePars3[${i}]=this.value==='66'?[...PRESET66]:[...PRESET54]">
         <option value="66" ${preset==='66'?'selected':''}>파 66</option>
         <option value="54" ${preset==='54'?'selected':''}>전홀 파3</option>
@@ -4698,7 +4749,7 @@ async function persistGroups(){
 /* 차수27②: 조편성 실행 전 확인 시트 — [조편성하기]/[다시 편성하기] 공통 진입점.
    "3인 조 허용" ON(기본, 기존 알고리즘과 동일) = 인원을 최대한 고르게 나눠 3·4인 조가 섞임.
    OFF = 4인 조만 만들고 나머지는 별도의 작은 조 하나로 둔다(그룹 크기가 5 이상이 되지 않게). */
-let groupAllow3=true;
+let groupAllow3=false; // CH32-A 보완2 R6: 기본 = 4인 조 우선(6명=4+2)
 function computeGroupPlan(count,allow3){
   if(!count)return{n:0,sizes:[]};
   if(allow3){
@@ -4740,8 +4791,10 @@ async function openGroupConfirm(){
     const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===stage.id).length;
     const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===stage.id).length;
     if(scoreCount+playCount>0){toast('이미 입력된 점수가 있어 재편성할 수 없습니다');return}}
-  groupAllow3=true;
-  $('#groupAllow3Sw').classList.add('on');
+  // CH32-A 보완2 R6: 기본값을 "4인 조 우선"으로 — 6명이면 4+2로 편성된다(최소 2인 보장은
+  // computeGroupPlan의 나머지 1명 재배분이 담당). 토글을 켜면 3인 조를 섞어 고르게 나눈다(6명=3+3).
+  groupAllow3=false;
+  $('#groupAllow3Sw').classList.remove('on');
   renderGroupConfirmBody();
   $('#groupConfirmOv').classList.add('on')}
 function closeGroupConfirm(){$('#groupConfirmOv').classList.remove('on')}
@@ -4752,7 +4805,7 @@ function toggleGroupAllow3(){
 async function confirmGroupPlan(){
   closeGroupConfirm();
   await makeGroups(true,groupAllow3)}
-async function makeGroups(announce,allow3=true){
+async function makeGroups(announce,allow3=false){
   swapSel=null;
   if(!players.length){groups=[];groupsSource=null;renderGroupsSeg();return}
   const activeIdx=players.map((p,i)=>i).filter(i=>!isOut(players[i]));
@@ -5297,12 +5350,13 @@ window.addEventListener('online',flushQueue);
 setInterval(flushQueue,15000);
 updateQueueBadge();
 async function submitScoreToServer(pi,gi,v,reason){
-  const playerId=players[pi].id;if(!playerId)return;
-  // CH32-A P1①②: 개설자는 토큰이 없다(scorerOptions 설계상 정상) — 이전엔 이 사실을 확인하지
-  // 않고 !token만 보고 조용히 return해서, 개설자가 홀별 입력을 저장해도 아무 반응이 없었다.
+  // CH32-A 보완2 R2(조용한 실패 금지): 어떤 사전 조건 미충족도 무반응으로 끝내지 않는다 —
+  // 화면엔 입력된 것처럼 보이는데 서버엔 안 간 상태가 최악이므로 반드시 토스트로 알린다.
+  const playerId=players[pi].id;
+  if(!playerId){toast('서버에 등록되지 않은 참가자입니다 — 저장 실패');return}
   const isOwner=judgeIsOwner();
   const token=currentJudgeToken();
-  if(!isOwner&&!token)return;
+  if(!isOwner&&!token){toast('점수 입력 권한이 없습니다 — 저장되지 않았습니다');return}
   const params=isOwner
     ?{t_id:config.id,p_owner_secret:user.secret,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null}
     :{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null};
@@ -5320,7 +5374,9 @@ async function setScore(v){if(!padTarget)return;
     $('#corrDesc').innerHTML=`<b>${players[pi].name}</b> · ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀<br>기록된 점수 <b class="num">${old}타</b> → 새 점수 <b class="num" style="color:var(--main-deep)">${v}타</b>`;
     $('#corrOv').classList.add('on');return}
   players[pi].scores[gi]=v;
-  const who=(judges()[curStaff]||{name:'운영자'}).name;
+  // CH32-A 보완2 R1: curStaff는 scorerOptions(0=나(운영자)) 인덱스 — judges() 인덱스로 읽으면
+  // 심판이 등록돼 있을 때 로그에 엉뚱한 이름이 찍힌다.
+  const who=(scorerOptions()[curStaff]||{name:'운영자'}).name;
   if(v!=null){addLog(`${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 <b>${players[pi].name}</b> ${v}타 — ${who} 심판`);
     $('#jLive').style.display='inline-flex';clearTimeout(window._lv);window._lv=setTimeout(()=>$('#jLive').style.display='none',2500)}
   closePad();renderHole();refreshAll();
@@ -5328,7 +5384,7 @@ async function setScore(v){if(!padTarget)return;
 async function applyCorr(reason){if(!corrPend)return;
   const{pi,gi,old,v}=corrPend;
   players[pi].scores[gi]=v;
-  const who=(judges()[curStaff]||{name:'운영자'}).name;
+  const who=(scorerOptions()[curStaff]||{name:'운영자'}).name;
   addLog(`<b style="color:var(--coral)">🔁 정정</b> ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 <b>${players[pi].name}</b> ${old}→${v}타 · 사유: ${reason} — ${who} 심판`);
   corrPend=null;$('#corrOv').classList.remove('on');
   renderHole();refreshAll();toast('점수를 정정하고 이력에 기록했습니다');
@@ -5675,15 +5731,18 @@ function renderPeriodResult(){
   const done=st.filter(s=>s.completed>0&&!s.out);
   const outs=st.filter(s=>s.out);
   const fullyDone=done.filter(s=>s.completed>=ROUNDS);
+  // CH32-A 보완2 R9: 설계 확인 — 순위 "확정"(컷·수상·확정 CSV)은 전 코스 완주자만, 진행 중에는
+  // 현재 페이스순으로 표시한다(CH30-B 설계 그대로). 문제는 이 규칙이 화면에 안내되지 않아
+  // 일부 코스만 입력한 선수가 "순위 없음"으로 오해된 것 — 부분입력 선수에 진행 표기를 붙인다.
   $('#resultSub').textContent=!players.length?'참가자 등록 후 이용할 수 있습니다.'
     :done.length===0?'경기 진행 전입니다.'
-    :`참가자 ${players.length}명 · 전 코스 완료 ${fullyDone.length}명 — 코스별 베스트 합산.`;
+    :`참가자 ${players.length}명 · 전 코스 완료 ${fullyDone.length}명 — 코스별 베스트 합산 · 전 코스 완주 시 순위가 확정돼요.`;
   const cols=`34px minmax(0,1fr) repeat(${ROUNDS},52px) 60px`;
   const headHTML=`<div class="presrow head" style="grid-template-columns:${cols}">
     <span></span><span>선수</span>${Array.from({length:ROUNDS},(_,r)=>`<span class="v">${vShort(r)}</span>`).join('')}<span class="v">합계</span></div>`;
   const rowHTML=(s,i)=>{
     const rk=i===0?'rank1':i<=2?'rank23':'';
-    const totCell=s.tot!=null?s.tot:`${s.sumSoFar||'·'}<small style="display:block;font-weight:400;color:var(--muted)">진행중</small>`;
+    const totCell=s.tot!=null?s.tot:`${s.sumSoFar||'·'}<small style="display:block;font-weight:400;color:var(--muted)">${s.completed}/${ROUNDS}코스 입력</small>`;
     return`<div class="presrow ${rk}" style="grid-template-columns:${cols}">
       <span class="r">${i+1}</span>
       <span class="nm"><b>${s.p.name}</b><small>${s.p.club||''}${config.fields.sex?' · '+s.p.sex:''}${config.fields.age?' '+s.p.age+'세':''}</small></span>
