@@ -10,10 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* 파스텔 블루 시니어 팔레트 */
-  --main:#4E8FD0;          /* 메인 블루 */
-  --main-deep:#2F6BAA;     /* 진한 블루 (헤더) */
-  --main-soft:#E3EEF9;     /* 연한 블루 (선택 배경) */
+  /* CH32-C⑮ 컬러 A안 — 파크골프 그린 액션 (구조=네이비 유지, 골드·상태색 유지).
+     대비 4.5:1 검증 통과값: 액션 그린 #0D8547(흰 글자 4.71:1), 딥그린 #116B3C(6.58:1). */
+  --main:#0D8547;          /* 액션 그린 (버튼·현재 단계·그린 텍스트) */
+  --main-deep:#116B3C;     /* 딥그린 (활성 칩·탭 밑줄·보조 버튼 텍스트) */
+  --main-soft:#E7F3EC;     /* 옅은 그린 (선택 배경·보조 버튼 배경) */
+  --stage-cur:#EEF9F2;     /* 현재 단계 행 배경 */
   --bg:#F2F5F9;            /* 연한 블루그레이 배경 */
   --paper:#FFFFFF;
   --ink:#2B3A4A;           /* 본문 잉크 */
@@ -31,7 +33,9 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:20px}
-body{font-family:'Noto Sans KR',sans-serif;background:#E7EDF4;color:var(--ink);min-height:100vh;line-height:1.5}
+/* CH32-C⑯(P95): 한글은 어절(단어) 단위로 줄바꿈 — 낱글자 쪼개짐 방지. 안전망으로 긴 토큰
+   (URL·연속 숫자 등)만 넘칠 때 break-word. 안내·부제·토스트의 어색한 말줄임을 없앤다. */
+body{font-family:'Noto Sans KR',sans-serif;background:#E7EDF4;color:var(--ink);min-height:100vh;line-height:1.5;word-break:keep-all;overflow-wrap:break-word}
 .num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 button{font-family:inherit;cursor:pointer}
 
@@ -40,7 +44,8 @@ button{font-family:inherit;cursor:pointer}
 .mobile.wide{max-width:none;box-shadow:none;padding-bottom:24px;background:var(--board-bg)}
 
 /* ===== 앱바 ===== */
-.appbar{background:var(--main-deep);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
+/* CH32-C⑮: A안 — 앱바·뼈대는 네이비 유지(액션만 그린) */
+.appbar{background:var(--navy);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;border-radius:0 0 22px 22px;min-height:70px}
 .abk{width:46px;height:46px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:600;display:none;align-items:center;justify-content:center;flex:0 0 auto}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:21px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
 .logo .flag{width:20px;height:20px;background:url('brand/app-icon.svg') center/contain no-repeat}
@@ -306,7 +311,7 @@ tr:last-child td{border-bottom:none}
 .scbtn{width:74px;height:64px;border-radius:16px;border:2.5px solid var(--line);background:var(--bg);font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:#AEBBC9}
 .scbtn.filled{color:var(--ink);border-color:var(--main);background:var(--main-soft)}
 .scbtn.birdie{background:#FDEEEA;border-color:#F3B3A2;color:var(--red)}
-.scbtn.over{background:#EAF2FB;border-color:#B8D2EE;color:#2F6BAA}
+.scbtn.over{background:#EEF1F4;border-color:#D7DFE8;color:var(--muted)}
 .holeprog{padding:14px 18px;font-size:16px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;background:#F7FAFD}
 .dots{display:flex;gap:5px;flex-wrap:wrap}
 .dots i{width:12px;height:12px;border-radius:4px;background:var(--line)}
@@ -400,7 +405,7 @@ tr:last-child td{border-bottom:none}
 .colchip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .colchip span{font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
 .colchip span.req{border-color:var(--ink);background:var(--ink);color:#fff}
-.colchip span.on{border-color:var(--main);background:#F4F9FE;color:var(--main-deep)}
+.colchip span.on{border-color:var(--main);background:#EEF9F2;color:var(--main-deep)}
 .exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
 .exline b{font-weight:700}
 /* CH32-A②: 여정 체크리스트 — 줄마다 자기 버튼(대칭), 3색 상태 언어 */
@@ -415,7 +420,7 @@ tr:last-child td{border-bottom:none}
 .jstep small{font-size:12px;color:var(--muted)}
 .jstep.todo b{color:#9AAAB9;font-weight:500}
 .jstep .jact{margin-left:auto;background:var(--main);color:#fff;font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;flex:0 0 auto;border:none;cursor:pointer}
-.jstep.cur{background:#F4F9FE}
+.jstep.cur{background:#EEF9F2}
 .jact.sec{background:var(--main-soft);color:var(--main-deep)}
 .jact.dis{background:#EDF1F6;color:#9AAAB9}
 /* CH32-B 보완: 마감 완료 단계 버튼 — 민트(완료 상태), 탭 시 안내 토스트(무반응 아님) */
@@ -442,7 +447,7 @@ tr:last-child td{border-bottom:none}
 .hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
 .hc b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
 .hc.empty b{color:#B9C6D4}
-.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#EEF9F2}
 .hc.birdie b{color:var(--red)}
 .sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
 .sumrow b{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--main-deep)}
@@ -962,9 +967,9 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       <div class="mgmtname" id="mgmtName">—</div>
       <p class="sub" id="mgSub">—</p>
     </div>
-    <!-- CH32-A①: 7탭→4탭(대회홈·참가자·스코어·리더보드). 요강·심판진·결과 탭 버튼은 없앴지만
-         패널(mgNotice/mgStaff/mgResult)과 기능은 그대로 두고 진입 경로만 대회홈 여정·하단 행·
-         리더보드로 옮긴다(mgShow()는 탭 버튼 없이도 정상 동작). -->
+    <!-- CH32-A①: 7탭→4탭(대회홈·참가자·스코어·리더보드). 심판진·결과 탭 버튼은 없앴지만
+         패널(mgStaff/mgResult)과 기능은 그대로 두고 진입 경로만 대회홈 여정·하단 행·리더보드로
+         옮긴다(mgShow()는 탭 버튼 없이도 정상 동작). 구 요강 탭(mgNotice)은 CH32-C⑰에서 제거. -->
     <div class="tabA">
       <button class="ti on" data-mg="mgHome" onclick="mgShow('mgHome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>대회홈</span></button>
       <button class="ti" data-mg="mgPlayers" onclick="enterPlayersSeg('pList')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></button>
@@ -1017,7 +1022,7 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
              📋요강 내용 > [요강 미리보기·공유] 행으로 흡수됨 — 여기서는 제거. -->
         <div class="trow" onclick="mgShow('mgStaff')">
           <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg></span>
-          <span class="tt"><b>심판진</b><span id="staffRowSummary">점수 입력할 분 추가·문자 링크 발송</span></span>
+          <span class="tt"><b>심판진</b><span id="staffRowSummary">심판 추가·링크 발송</span></span>
           <span class="chev">›</span>
         </div>
         <div class="trow" onclick="openExportSheet()">
@@ -1028,24 +1033,8 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
       </div>
     </div>
 
-    <!-- 요강 -->
-    <div class="mgpane" id="mgNotice">
-      <div class="card" id="noticeCompletionCard" style="display:none">
-        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>요강 완성도</span><span id="noticeCompletionPct" style="color:var(--main-deep)">0%</span></div>
-        <div class="pct"><i id="noticeCompletionBar" style="width:0%"></i></div>
-        <p class="sub" id="noticeCompletionNote">완료됐어요</p>
-      </div>
-      <div class="laterlist" id="noticeCompletionList" style="margin-bottom:14px"></div>
-      <div class="card">
-        <label class="fl" style="margin-top:0">대회 요강</label>
-        <p class="sub" style="margin-bottom:12px">참가자에게 공유할 수 있는 공개 요강 페이지입니다.</p>
-        <div style="display:flex;gap:8px">
-          <button class="btn sm ghost" onclick="openEditInfo()">수정하기</button>
-          <button class="btn sm ghost" onclick="copyNoticeLink(config.id)">링크 복사</button>
-          <button class="btn sm" onclick="openNotice(config.id)">보기</button>
-        </div>
-      </div>
-    </div>
+<!-- CH32-C⑰: 구 mgNotice(요강) 패널 제거 — CH32-B에서 정보 수정 통합 허브가 완성도·미리보기·
+     공유를 모두 흡수했고 진입 경로(홈 [대회 요강] 행)도 이미 제거돼 도달 불가능한 죽은 코드였다. -->
 
     <!-- 참가자 -->
     <div class="mgpane" id="mgPlayers">
@@ -1887,7 +1876,6 @@ function mgShow(id){
   const pane=$('#'+id);if(pane)pane.classList.add('on');
   document.querySelectorAll('.tabA .ti').forEach(b=>b.classList.toggle('on',b.dataset.mg===id));
   if(id==='mgHome'){renderStageSub();renderJourneyChecklist();renderOpsStats();renderScoreBadge()}
-  if(id==='mgNotice')renderNoticeCompletion();
   // CH32-B⑪: 탭 진입 시 단계 선택을 활성 단계로 리셋(빌드가이드 "진입 시 활성 단계 리셋이 기본")
   if(id==='mgPlayers'){playersStageId=null;playerStageSel=null;renderPlayersTab()}
   if(id==='mgStaff')renderTools();
@@ -2406,7 +2394,7 @@ async function renderJourneyChecklist(){
   // 1. 개설 — 항상 상시 가능(옅파랑)
   const pct=noticeCompletionPct();
   rows.push(journeyRowHTML('done',n++,'대회 개설',
-    `요강 완성도 <b style="color:#C9930A">${pct}%</b> · 일정·구조 관리`,
+    `요강 완성도 <b style="color:#C9930A">${pct}%</b>`,
     '정보 수정','sec','openEditInfo()'));
 
   // 2. 모집 — 시작 전엔 지금 할 일(파랑), 시작 후엔 완료(재개는 옅파랑으로 상시)
@@ -2471,7 +2459,7 @@ async function renderJourneyChecklist(){
   box.innerHTML=`<div class="jlist">${rows.join('')}</div>`;
   // CH32-A④: 심판진 행 부제 — 나(운영자) 포함 인원수를 매번 갱신
   const staffRow=$('#staffRowSummary');
-  if(staffRow)staffRow.textContent=`점수 입력할 분 추가·문자 링크 발송 — 나(운영자) 포함 ${scorerOptions().length}명`}
+  if(staffRow)staffRow.textContent=`심판 추가·링크 발송 · 나 포함 ${scorerOptions().length}명`}
 // 대기 중인 단계의 [시작] 버튼 — 사전 점검 시트를 먼저 연다(CH32-A③)
 async function checkStageStart(stageId){
   const stages=await loadAllStages(config.id);
@@ -3246,18 +3234,8 @@ function noticeCompletionItems(){
 function noticeCompletionPct(){
   const items=noticeCompletionItems();
   return Math.round(items.filter(i=>i.filled).length/items.length*100)}
-function renderNoticeCompletion(){
-  const box=$('#noticeCompletionList');if(!box)return;
-  const items=noticeCompletionItems();
-  const filledCount=items.filter(i=>i.filled).length;
-  const pct=noticeCompletionPct();
-  box.innerHTML=items.map(i=>`<div class="lrow">${i.label} <span class="st3 ${i.filled?'ok':''}" style="cursor:pointer" onclick="openEditInfo().then(()=>showEditSection('${i.key}'))">${i.filled?'완료':'채우기 ›'}</span></div>`).join('');
-  const card=$('#noticeCompletionCard');
-  if(pct>=100){card.style.display='none';return}
-  card.style.display='block';
-  $('#noticeCompletionPct').textContent=pct+'%';
-  $('#noticeCompletionBar').style.width=pct+'%';
-  $('#noticeCompletionNote').textContent=`${items.length-filledCount}개 항목을 채우면 요강이 완성돼요`}
+// CH32-C⑰: renderNoticeCompletion 제거 — 죽은 mgNotice 패널 전용 렌더러였다. 완성도 계산
+// (noticeCompletionItems/noticeCompletionPct)은 허브·여정 부제에서 계속 쓰므로 남긴다.
 async function openEditInfo(){
   editInfoSection=null;
   navTo('EditInfo');
@@ -3316,7 +3294,7 @@ async function renderEditInfoList(){
       ${editHubRow('awards','🏆','시상 내역','종합·부문 시상과 상금',{status:st(awardsFilled)})}
       ${editHubRow('awards','💰','참가비·문의처','참가비·문의 연락처',{status:st(feeFilled)})}
       ${editHubRow('awards','📖','게임룰','경기 방식·규칙 안내',{status:st(rulesFilled)})}
-      ${editHubRow('notice','👁','요강 미리보기·공유','참가자가 보는 화면 확인 · 단톡방용 이미지 저장',{onclick:`openNotice('${config.id}')`})}
+      ${editHubRow('notice','👁','요강 미리보기·공유','참가자 화면 확인 · 이미지 저장',{onclick:`openNotice('${config.id}')`})}
     </div>
     <p class="sub" style="margin-bottom:6px;font-weight:700">🟡 수정 시 참가자 공지 확인</p>
     <div class="card" style="padding:0 18px;margin-bottom:16px">
@@ -3329,7 +3307,7 @@ async function renderEditInfoList(){
     </div>
     <p class="sub" style="margin-bottom:6px;font-weight:700">🔴 ${editStageLocked?`'${editStage.name}' 단계에 경기 기록이 있어 잠김`:'경기 기록이 생기면 잠김'}</p>
     <div class="card" style="padding:0 18px">
-      ${editHubRow('course','⛳','코스·단계 구조·컷·동점','코스별 파 · 진출 컷 (코스 개수·코스명 제외)',{locked:editStageLocked})}
+      ${editHubRow('course','⛳','코스·단계 구조·컷·동점','코스별 파 · 진출 컷',{locked:editStageLocked})}
     </div>
     <div id="editHistoryCard" class="card" style="margin-top:16px"></div>`;
   renderEditHistory()}
@@ -4111,7 +4089,7 @@ async function renderTools(){
       <div class="who"><b>${s.name}</b><span>${s.duty||'담당 미지정'} · ${maskPhone(s.phone)}</span></div>
       ${st}
       <span class="jmore" onclick="openStaffAction('${s.id}')">⋯</span>
-    </div>`}).join(''):'<p class="sub" style="text-align:center;padding:20px 0">추가 심판이 없어요 — 필요하면 위 [＋ 심판 추가]로 등록하세요.</p>');
+    </div>`}).join(''):'<p class="sub" style="text-align:center;padding:20px 0">아직 추가 심판이 없어요 — 위 버튼으로 추가하세요</p>');
   $('#sendAllBtn').style.display=sent===js.length&&js.length?'none':'block'}
 function sendLinks(){
   const js=judges();
@@ -4241,7 +4219,8 @@ async function openApply(id){
   const f=applyFields(t);
   const fieldLabels={name:'이름',nick:'닉네임',sex:'성별',age:'나이',club:'소속 클럽',region:'지역'};
   const items=['전화번호',...Object.keys(fieldLabels).filter(k=>f[k]).map(k=>fieldLabels[k])];
-  $('#apPrivacyText').textContent=`수집 항목: ${items.join(', ')} · 목적: 대회 운영·참가자 관리·순위 집계 · 보유기간: 대회 종료 후 1년(이후 파기)`;
+  // CH32-C⑯: 법적 고지(내용 유지) — 내부 중점에 공백을 둬 어절 경계에서 깔끔히 줄바꿈
+  $('#apPrivacyText').textContent=`수집 항목: ${items.join(', ')} · 목적: 대회 운영 · 참가자 관리 · 순위 집계 · 보유기간: 대회 종료 후 1년(이후 파기)`;
   $('#apPrivacyCheck').checked=false;
   renderSingleFields();
   if(t.regClosed){
