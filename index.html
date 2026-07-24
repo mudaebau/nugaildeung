@@ -6389,28 +6389,424 @@ async function renderCnsMain(w){
   w.innerHTML=util+rail+`<div class="body2">${snav}${body}</div>`}
 function cnsStrip(kpis){return `<div class="strip">${kpis.map(k=>`<div class="kpi"><b class="num"${k.c?` style="color:${k.c}"`:''}>${k.v}</b><p>${k.l}</p></div>`).join('')}</div>`}
 function cnsBodyHTML(m,subKey,model){
-  const A=players.filter(p=>!isOut(p)).length;
+  // 화면 귀속 현황 스트립 + 작업 화면. 모든 로직은 기존 함수(RPC·집계) 재사용.
+  if(m.key==='setup')return cnsScrSetup(subKey,model);
+  if(m.key==='recruit')return cnsScrRecruit(subKey,model);
+  if(m.key==='award')return cnsScrAward(subKey,model);
+  if(m.key==='close')return cnsScrClose(subKey,model);
+  if(m.stage)return cnsScrStage(m.stage,subKey,model);
+  return ''}
+/* ===== 콘솔 공용 소도구 ===== */
+function cnsSexPill(p){return p.st==='wd'?' <span class="pill" style="background:#FBE9E4;color:#C4523A">기권</span>':p.st==='dq'?' <span class="pill" style="background:#FBE9E4;color:#C4523A">실격</span>':''}
+function cnsToolbar(btns){return `<span style="margin-left:auto"></span>${btns.join('')}`}
+function openCnsSheet(html){$('#cnsSheet').innerHTML=html;$('#cnsSheetOv').classList.add('on')}
+// strip 닫는 </div> 앞에 우측 도구를 끼운다(kpi 내부 </div>가 아니라 마지막 것에).
+function cnsStripAppend(stripHTML,extra){const i=stripHTML.lastIndexOf('</div>');return i<0?stripHTML+extra:stripHTML.slice(0,i)+extra+stripHTML.slice(i)}
+function cnsStageOpen(stage){return stage&&stage.status==='open'}
+function cnsStageIsPeriod(stage){return stage&&(stage.kind==='period'||stage.record_mode==='total')}
+/* ===== 개설(setup) — 요강·모집 시작 안내(생성은 W에서, 정밀 편집은 CH33-C 허브) ===== */
+function cnsScrSetup(subKey,model){
+  const strip=cnsStrip([{v:noticeCompletionPct()+'%',l:'요강 완성도',c:'var(--goldtx)'},{v:players.length+waitlist.length,l:'신청'}]);
+  const map={basic:'기본 정보',awards:'참가비·시상',notice:'요강 완성',recStart:'모집 시작'};
+  let body;
+  if(subKey==='recStart'){
+    body=`<div class="grp" style="padding:20px"><h5>모집 시작 — 신청 링크 공유</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px">아래 링크를 단톡방에 공유하면 참가자가 폰으로 바로 신청합니다. 신청이 들어오면 [모집] 대단계의 <b>신청 접수</b>에서 확인·관리하세요.</p>
+      <button class="btn" onclick="copyApplyShareLink()">🔗 신청 링크 복사</button>
+      <button class="btn soft" style="margin-left:8px" onclick="openBoard()">📺 전광판 미리보기</button></div>`;
+  }else{
+    body=`<div class="grp" style="padding:20px"><h5>${cnsEsc(map[subKey]||'개설 준비')}</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">대회 정보·참가비·시상·요강 상세 편집은 유틸바 <b>⚙️ 대회 정보</b>(정보 수정 허브)에서 한 곳에 모여 있어요. 요강 완성도 ${noticeCompletionPct()}% — 게임룰까지 채우면 100%.</p>
+      <button class="btn soft" style="margin-top:12px" onclick="toast('정보 수정 허브는 CH33-C에서 열려요 — 지금은 모바일 ⚙️로 편집하세요')">⚙️ 대회 정보 열기</button></div>`}
+  return strip+body}
+/* ===== 모집(recruit) — 신청 접수·입금·명단 확정 (화면 2) ===== */
+function cnsRecruitStrip(model){
   const paid=players.filter(p=>p.paid).length;
-  const kpiRecruit=cnsStrip([{v:players.length+waitlist.length,l:'신청'},{v:paid,l:'입금',c:'var(--minttx)'},{v:model.regClosed?'마감':(config.capUnlimited?'∞':Math.max(0,config.cap-players.length)),l:'남은 자리'},{v:waitlist.length,l:'대기',c:'var(--goldtx)'}]);
-  const stage=m.stage;
-  let strip='',title='';
-  if(m.key==='recruit'){strip=kpiRecruit;title='신청 접수 · 입금 · 명단 확정'}
-  else if(stage){strip=cnsStrip([{v:A,l:'참가'},{v:'—',l:'완주'},{v:model.stages.length,l:'단계'}]);title=stage.name+' 진행'}
-  else if(m.key==='setup'){strip=cnsStrip([{v:noticeCompletionPct()+'%',l:'요강 완성도',c:'var(--goldtx)'},{v:players.length,l:'신청'}]);title='개설 준비'}
-  else if(m.key==='award'){strip=cnsStrip([{v:A,l:'완주'},{v:model.stages.length,l:'단계'}]);title='시상'}
-  else if(m.key==='close'){strip='';title='마감'}
-  const subName=(cnsSubsFor(m,model).find(x=>x.k===subKey)||{}).n||'';
-  return `${strip}
-    <div class="grp" style="padding:22px 20px">
-      <h5 style="color:var(--act);font-size:14px;margin-bottom:6px">${cnsEsc(m.name)} › ${cnsEsc(subName)}</h5>
-      <p style="font-size:14.5px;color:var(--sub);line-height:1.8">이 작업 화면(${cnsEsc(subName)})의 세부 UI는 CH33-B/C에서 목업대로 구현됩니다.<br>현재는 3층 프레임·이동 정책·현황 스트립까지 동작합니다.</p>
-    </div>`}
+  return cnsStrip([{v:players.length+waitlist.length,l:'신청'},{v:paid,l:'입금',c:'var(--minttx)'},
+    {v:model.regClosed?'마감':(config.capUnlimited?'∞':Math.max(0,config.cap-players.length)),l:'남은 자리'},
+    {v:waitlist.length,l:'대기',c:'var(--goldtx)'}])}
+function cnsApplyTable(){
+  if(!players.length&&!waitlist.length)return '<table><tr><th>이름</th></tr><tr><td style="color:var(--dim);padding:22px 13px">아직 신청자가 없습니다 — [＋ 추가]나 [붙여넣기]로 등록하세요</td></tr></table>';
+  const rows=players.map((p,i)=>`<tr style="${isOut(p)?'opacity:.55':''}">
+    <td><b>${cnsEsc(p.name)}</b>${cnsSexPill(p)}</td><td>${cnsEsc(p.sex||'—')}</td><td>${cnsEsc(p.club||'—')}</td>
+    <td style="color:var(--sub)">${cnsEsc(maskPhone(p.phone||''))}</td>
+    <td><span class="pill ${p.paid?'mint':'dim'}" style="cursor:pointer" onclick="cnsTogglePaid(${i})">${p.paid?'입금':'미입금'}</span></td></tr>`).join('');
+  const wrows=waitlist.map(p=>`<tr style="background:#FFFBEF">
+    <td><b>${cnsEsc(p.name)}</b></td><td>${cnsEsc(p.sex||'—')}</td><td>${cnsEsc(p.club||'—')}</td>
+    <td style="color:var(--sub)">${cnsEsc(maskPhone(p.phone||''))}</td><td><span class="pill gold">대기</span></td></tr>`).join('');
+  return `<table><tr><th>이름</th><th style="width:64px">성별</th><th>클럽</th><th style="width:150px">전화</th><th style="width:92px">입금</th></tr>${rows}${wrows}</table>`}
+function cnsScrRecruit(subKey,model){
+  const strip=cnsRecruitStrip(model);
+  if(subKey==='recStart'){
+    return strip+`<div class="grp" style="padding:20px"><h5>모집 시작 — 신청 링크</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px">신청 링크를 단톡방에 공유하세요. 신청이 들어오면 아래 <b>신청 접수</b>에서 확인합니다.</p>
+      <button class="btn" onclick="copyApplyShareLink()">🔗 신청 링크 복사</button></div>`}
+  if(subKey==='recClose'){
+    if(model.regClosed){
+      return strip+`<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ 명단 확정됨</h5>
+        <p style="color:var(--sub);font-size:14.5px;line-height:1.9">확정 인원 <b>${players.length}명</b>${waitlist.length?` · 대기 ${waitlist.length}명`:''}. 이제 첫 단계를 시작할 수 있어요. 실수로 마감했다면 재개할 수 있습니다.</p>
+        <button class="btn soft" style="margin-top:12px" onclick="cnsReopenReg()">모집 재개</button></div>`}
+    return strip+`<div class="grp" style="padding:20px"><h5>모집 마감 · 명단 확정</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">현재 신청 <b>${players.length}명</b>${waitlist.length?` · 대기 ${waitlist.length}명`:''}이 확정 명단이 됩니다. 마감 후에는 첫 단계를 시작할 수 있어요.</p>
+      <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">⚠ 마감해도 참가자 추가·수정은 가능합니다(재개 없이도).</p>
+      <button class="btn" onclick="cnsConfirmRoster()">모집 마감 · 명단 확정</button></div>`}
+  // apply / paid — 같은 명단표, 입금 탭은 미입금 강조 안내만 다름
+  const tools=cnsToolbar([`<button class="btn soft" onclick="cnsOpenPaste()">📋 여러 명 붙여넣기</button>`,`<button class="btn" style="margin-left:8px" onclick="cnsOpenAddPlayer()">＋ 추가</button>`]);
+  const hint=subKey==='paid'?`<p class="cap">입금 셀을 눌러 입금/미입금을 바로 바꿉니다 — 미입금 ${players.filter(p=>!p.paid).length}명</p>`:'';
+  return cnsStripAppend(strip,tools)+hint+cnsApplyTable()}
+/* ===== 시상(award) — 최종 순위·부문 수상·발표 (화면 6) ===== */
+function cnsFinalRows(){
+  const period=cnsStageIsPeriod(model_lastStage());
+  const st=(period?periodStandings():standings()).filter(s=>!s.out&&(period?s.tot!=null:s.thru>0));
+  return st.map((s,i)=>{
+    const top=i===0;
+    const tot=period?s.tot:(s.tot!=null?s.tot:'—');
+    return `<tr style="${top?'background:#FFF9E8;border-left:4px solid var(--gold)':''}">
+      <td><b class="num" style="font-size:${top?20:18}px;${top?'color:var(--goldtx)':''}">${i+1}</b></td>
+      <td><b>${cnsEsc(s.p.name)}</b></td><td>${cnsEsc(s.p.sex||'—')}</td><td>${cnsEsc(s.p.club||'—')}</td>
+      <td><b class="num" style="font-size:${top?20:18}px;${top?'color:var(--goldtx)':''}">${tot}</b></td></tr>`}).join('')}
+function model_lastStage(){const ss=cnsModel?cnsModel.stages:[];return ss[ss.length-1]}
+function cnsScrAward(subKey,model){
+  const A=players.filter(p=>!isOut(p)).length;
+  const strip=cnsStrip([{v:A,l:'완주'},{v:model.stages.length,l:'단계'}]);
+  const table=`<table style="margin-bottom:12px"><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th>클럽</th><th style="width:100px">합계</th></tr>${cnsFinalRows()}</table>`;
+  if(subKey==='divAward'){
+    return strip+table+`<div class="grp"><h5 style="color:var(--goldtx)">🏆 부문 수상</h5>
+      <p>부문별 1위·특별상은 최종 순위에서 자동 산출됩니다 <span style="color:var(--sub);font-size:12.5px">(중복 수상 제외 적용)</span> — 상세는 모바일 결과 화면과 동일 규칙.</p></div>`}
+  if(subKey==='announce'){
+    return strip+table+`<div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="openBoard()">📺 전광판에 결과 띄우기</button>
+      <button class="btn soft" onclick="window.print()">🖨 결과지 인쇄</button>
+      <button class="btn soft" onclick="exportResultCSV()">📤 CSV</button></div>`}
+  return strip+table+`<p class="cap">최종 순위입니다 — 확인 후 <b>부문 수상 확인</b>·<b>결과 발표</b>로 진행하세요.</p>`}
+/* ===== 마감(close) — 종료 확정·기록 보관 ===== */
+function cnsScrClose(subKey,model){
+  if(subKey==='archive'){
+    return `<div class="grp" style="padding:20px"><h5>기록 보관</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">대회가 종료되면 명단·조편성·점수·결과를 CSV로 내려받아 보관하세요. 유틸바 <b>📤 내보내기</b>에서 4종(참가자·조편성·점수·결과)을 한 번에 받을 수 있어요.</p>
+      <button class="btn soft" style="margin-top:12px" onclick="openExportSheet()">📤 내보내기 열기</button></div>`}
+  if(model.finished){
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ 대회 종료됨</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">결과·시상이 확정되었습니다. 기록은 <b>기록 보관</b>에서 내려받으세요.</p></div>`}
+  return `<div class="grp" style="padding:20px"><h5>종료 확정</h5>
+    <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">모든 단계가 마감되면 최종 순위·부문 시상이 확정되고 요강·참가자 화면에 반영됩니다.</p>
+    <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">⚠ 확정 후에는 기록을 수정할 수 없습니다.</p>
+    <button class="btn" onclick="cnsFinalize()">종료 확정하기</button></div>`}
 function selectCnsMajor(key){
   const m=(cnsModel?cnsModel.majors:[]).find(x=>x.key===key);if(!m)return;
   if(m.status==='todo'){toast('아직 시작할 수 없어요 — 이전 단계를 먼저 마쳐야 해요');return} // 미래=준비물 안내
   cnsMajorSel=key;cnsSubSel=null;renderConsole()}
 function selectCnsSub(key){cnsSubSel=key;renderConsole()}
 function closeCnsSheet(){$('#cnsSheetOv').classList.remove('on')}
+/* ===== 단계(stage) 화면 — 명단·조편성·시작·스코어·확정·진출자·마감 ===== */
+let cnsRankView=false,cnsEditCell=null,cnsCutSel={},cnsCutFinal={};
+function cnsStageStrip(stage,extra){
+  const A=players.filter(p=>!isOut(p)).length;
+  const period=cnsStageIsPeriod(stage);
+  const st=(period?periodStandings():standings()).filter(s=>!s.out);
+  const done=period?st.filter(s=>s.tot!=null).length:st.filter(s=>s.thru>=HOLES).length;
+  return cnsStrip([{v:A,l:'참가'},{v:done,l:'완주',c:'var(--act)'}].concat(extra||[]))}
+function cnsScrStage(stage,subKey,model){
+  const period=cnsStageIsPeriod(stage);
+  if(subKey==='roster')return cnsStageStrip(stage)+cnsScrRoster(stage);
+  if(subKey==='groups')return cnsStageStrip(stage)+cnsScrGroups(stage);
+  if(subKey==='start')return cnsStageStrip(stage)+cnsScrStart(stage);
+  if(subKey==='score')return cnsScrScore(stage,period);
+  if(subKey==='lock')return cnsStageStrip(stage)+cnsScrLock(stage);
+  if(subKey==='cut')return cnsStageStrip(stage)+cnsScrCut(stage,model);
+  if(subKey==='close')return cnsStageStrip(stage)+cnsScrClose2(stage);
+  return cnsStageStrip(stage)}
+/* 명단 확정(콜업 포함) — round 단계, seq>1 */
+function cnsScrRoster(stage){
+  if(stage.roster_confirmed)
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ 명단 확정됨</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">${cnsEsc(stage.name)} 명단 ${players.filter(p=>!isOut(p)).length}명. 다음 순서는 <b>조편성</b>입니다.</p></div>`;
+  return `<div class="grp" style="padding:20px"><h5>${cnsEsc(stage.name)} 명단 확정</h5>
+    <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px">진출자 확정(컷)으로 넘어온 명단을 검토한 뒤 확정하면 조편성을 할 수 있어요. 이전 단계 참가자를 추가로 불러오려면 콜업을 사용하세요.</p>
+    <button class="btn" onclick="cnsStageRoster('${stage.id}')">${cnsEsc(stage.name)} 명단 확정</button>
+    <button class="btn soft" style="margin-left:8px" onclick="openCallUp()">＋ 콜업(이전 단계 불러오기)</button></div>`}
+/* 조편성(화면 3) — 조 카드 그리드 */
+function cnsScrGroups(stage){
+  if(stage.seq>1&&!stage.roster_confirmed)
+    return `<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">'${cnsEsc(stage.name)}' 명단을 먼저 확정해야 조편성을 할 수 있어요.</p>
+      <button class="btn soft" style="margin-top:10px" onclick="cnsStageRoster('${stage.id}')">명단 확정하기</button></div>`;
+  const formed=groups.length&&groups.some(g=>g.length);
+  const assigned=groups.reduce((a,g)=>a+g.length,0);
+  const unassigned=players.filter(p=>!isOut(p)).length-assigned;
+  const strip=cnsStrip([{v:players.filter(p=>!isOut(p)).length,l:'진출'},{v:groups.filter(g=>g.length).length,l:'조 편성됨',c:'var(--act)'},{v:Math.max(0,unassigned),l:'미배정'}]);
+  const tools=`<span style="margin-left:auto"></span><button class="btn soft" onclick="cnsOpenPaste(true)">📋 조 포함 붙여넣기</button><button class="btn" style="margin-left:8px" onclick="cnsAutoGroups()">🔀 자동 편성</button>`;
+  let cards;
+  if(!formed){
+    cards=`<div class="grp" style="padding:22px 20px;text-align:center"><p style="font-size:15px;margin-bottom:4px">확정 참가자 <b class="num" style="font-size:20px">${players.filter(p=>!isOut(p)).length}명</b></p>
+      <p style="color:var(--sub);font-size:14px;line-height:1.8">4인 1조 기준으로 자동 편성합니다(최소 2인). 같은 클럽은 서로 다른 조로 분산돼요.</p></div>`;
+  }else{
+    cards=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${groups.map((g,i)=>`<div class="grp"><h5>${i+1}조</h5><p>${g.map(pi=>cnsEsc(players[pi]?players[pi].name:'')).filter(Boolean).join(' · ')||'<span style="color:var(--dim)">비어 있음</span>'}</p></div>`).join('')}</div>
+    <p class="cap">직접 지정 후 [자동 편성]=덮어씀 경고 · 최소 2인 조 · 조 편집은 모바일 조편성과 동일 규칙</p>`}
+  return cnsStripAppend(strip,tools)+cards}
+/* 시작(사전 점검, 화면 4는 모달) */
+function cnsScrStart(stage){
+  if(cnsStageOpen(stage))
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ ${cnsEsc(stage.name)} 진행 중</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">스코어 입력에서 기록을 받으세요.</p></div>`;
+  return `<div class="grp" style="padding:20px"><h5>${cnsEsc(stage.name)} 시작</h5>
+    <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px">시작 전 준비 상태(명단·조편성·심판)를 확인합니다. 시작하면 스코어 입력이 열립니다.</p>
+    <button class="btn" onclick="cnsOpenStartSheet('${stage.id}')">${cnsEsc(stage.name)} 시작 — 사전 점검</button></div>`}
+/* 스코어 입력(화면 1) + [현재 순위 보기] 토글 */
+function cnsScrScore(stage,period){
+  const locked=!!stage.scores_locked;
+  const toggle=`<button class="btn soft" onclick="cnsRankView=!cnsRankView;renderConsole()" style="margin-left:auto">${cnsRankView?'✎ 입력으로':'📊 현재 순위 보기'}</button>`;
+  const paste=locked?'':`<button class="btn soft" style="margin-left:8px" onclick="cnsOpenScorePaste('${stage.id}')">📋 점수 붙여넣기</button>`;
+  const strip=cnsStripAppend(cnsStageStrip(stage,[{v:'D-'+cnsDdayLeft(),l:'기간 마감'}]),toggle+paste);
+  const banner=locked?`<div class="grp" style="padding:12px 16px;background:#FFF9E8;border-color:#EFD9A0;margin-bottom:12px"><p style="font-size:14px;color:var(--goldtx);font-weight:700">🔒 스코어가 확정(잠금)되었습니다 — 입력·정정이 모든 경로에서 차단됩니다. 정정하려면 [스코어 확정] 화면에서 확정을 취소하세요.</p></div>`:'';
+  if(cnsRankView)return strip+banner+cnsRankTable(stage,period);
+  if(!cnsStageOpen(stage))return strip+`<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">${cnsEsc(stage.name)}이 아직 시작되지 않았어요 — <b>시작</b>에서 먼저 시작하세요.</p></div>`;
+  return strip+banner+cnsScoreTable(stage,period,locked)}
+function cnsDdayLeft(){
+  if(!config.dateE)return '—';
+  const end=new Date(config.dateE+'T23:59:59'),now=new Date();
+  const d=Math.ceil((end-now)/86400000);return d<0?'0':String(d)}
+function cnsScoreTable(stage,period,locked){
+  if(!players.length)return '<table><tr><th>이름</th></tr><tr><td style="color:var(--dim);padding:22px 13px">참가자가 없습니다</td></tr></table>';
+  const cols=Array.from({length:ROUNDS},(_,c)=>`<th style="width:110px">${c+1}코스</th>`).join('');
+  const rows=players.filter(p=>!isOut(p)).map(p=>{
+    const best=p.best||{};
+    const cells=Array.from({length:ROUNDS},(_,c)=>cnsScoreCell(p,c,best[c],locked)).join('');
+    const done=Array.from({length:ROUNDS},(_,c)=>best[c]!=null).filter(Boolean).length;
+    const sum=Array.from({length:ROUNDS},(_,c)=>best[c]).reduce((a,b)=>a+(b||0),0);
+    const tot=done===ROUNDS?`<b class="num" style="font-size:19px;color:var(--act)">${sum}</b>`:done>0?`<span style="color:var(--sub);font-size:13.5px">${done}/${ROUNDS}코스</span>`:`<span style="color:var(--dim);font-size:13.5px">미입력</span>`;
+    return `<tr><td><b>${cnsEsc(p.name)}</b></td><td style="color:var(--sub)">${cnsEsc(p.club||'—')}</td>${cells}<td>${tot}</td></tr>`}).join('');
+  return `<table><tr><th>이름</th><th>클럽</th>${cols}<th style="width:120px">베스트 합계</th></tr>${rows}</table>`}
+function cnsScoreCell(p,c,val,locked){
+  const key=p.id+':'+c;
+  if(cnsEditCell===key&&!locked)
+    return `<td style="background:var(--act-soft)"><input class="cfield" id="cnsSc_${p.id}_${c}" type="tel" value="${val!=null?val:''}" placeholder="총타수" style="width:64px;padding:6px 8px;display:inline-block" onkeydown="if(event.key==='Enter')cnsScoreSave('${p.id}',${c})"><button class="btn" style="padding:6px 9px;margin-left:5px;font-size:12.5px" onclick="cnsScoreSave('${p.id}',${c})">✓</button></td>`;
+  if(val!=null)
+    return `<td${locked?'':' style="cursor:pointer" onclick="cnsScoreEdit(\''+p.id+'\','+c+')"'}><b class="num" style="font-size:19px">${val}</b></td>`;
+  if(locked)return `<td><span style="color:var(--dim);font-size:13.5px">—</span></td>`;
+  return `<td style="background:var(--act-soft);cursor:pointer" onclick="cnsScoreEdit('${p.id}',${c})"><span style="color:var(--act);font-weight:700;font-size:14px">▸ 입력</span></td>`}
+function cnsRankTable(stage,period){
+  const st=(period?periodStandings():standings()).filter(s=>!s.out);
+  if(!st.length)return '<table><tr><th>순위</th></tr><tr><td style="color:var(--dim);padding:22px 13px">아직 기록이 없습니다</td></tr></table>';
+  const rows=st.map((s,i)=>{
+    const tot=period?(s.tot!=null?s.tot:(s.completed>0?s.sumSoFar+'*':'—')):(s.tot!=null?s.tot:'—');
+    const rankShow=(period?s.completed>0:s.thru>0);
+    return `<tr><td>${rankShow?`<b class="num" style="font-size:18px">${i+1}</b>`:'<span style="color:var(--dim)">—</span>'}</td>
+      <td><b>${cnsEsc(s.p.name)}</b></td><td>${cnsEsc(s.p.sex||'—')}</td><td>${cnsEsc(s.p.club||'—')}</td>
+      <td><b class="num" style="font-size:18px">${tot}</b></td></tr>`}).join('');
+  return `<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th>클럽</th><th style="width:100px">합계</th></tr>${rows}</table>
+    <p class="cap">진행 중 실시간 순위 — 미완주자는 완주자 아래로. * 표시는 일부 코스만 입력된 잠정 합계입니다.</p>`}
+/* 스코어 확정(잠금)/확정 취소 */
+function cnsScrLock(stage){
+  if(!cnsStageOpen(stage))
+    return `<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">${cnsEsc(stage.name)}이 진행 중이어야 확정할 수 있어요.</p></div>`;
+  if(stage.scores_locked)
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">🔒 스코어 확정됨(정정 잠금)</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">입력·정정이 모든 경로(운영자·심판·모바일)에서 차단됩니다. 진출자 확정은 이 상태를 전제로 합니다.</p>
+      <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">마감 전에는 확정을 취소해 정정을 재개할 수 있어요(로그 기록).</p>
+      <button class="btn soft" onclick="cnsUnlock('${stage.id}')">확정 취소 — 정정 재개</button></div>`;
+  return `<div class="grp" style="padding:20px"><h5>${cnsEsc(stage.name)} 스코어 확정</h5>
+    <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">확정하면 이 단계의 입력·정정이 <b>모든 경로에서 잠깁니다</b>. 진출자 확정(컷)은 확정을 전제로 합니다.</p>
+    <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">⚠ 마감 전에는 [확정 취소]로 되돌릴 수 있어요.</p>
+    <button class="btn" onclick="cnsLock('${stage.id}')">스코어 확정 — 정정 잠금</button></div>`}
+/* 진출자 확정(컷 미리보기, 화면 5) */
+function cnsBuildCut(stage){
+  const period=cnsStageIsPeriod(stage);
+  const done=(period?periodStandings():standings()).filter(s=>!s.out&&(period?s.tot!=null:s.thru>0));
+  const cut=stage.advance_cut;
+  const tieRule=stage.tie_rule||config.tie||'최종 코스 카운트백';
+  const groups=[];
+  if(cut&&cut.total)groups.push({key:'total',label:'',cutN:cut.total,res:resolveCut(done,cut.total,tieRule)});
+  else if(cut&&(cut.m||cut.f)){
+    const men=done.filter(s=>s.p.sex==='남'),women=done.filter(s=>s.p.sex==='여');
+    if(cut.m)groups.push({key:'남',label:'남자부',cutN:cut.m,res:resolveCut(men,cut.m,tieRule)});
+    if(cut.f)groups.push({key:'여',label:'여자부',cutN:cut.f,res:resolveCut(women,cut.f,tieRule)})}
+  return{period,done,cut,tieRule,groups}}
+function cnsCutAdvanced(cx){
+  let adv=[];
+  cx.groups.forEach(g=>{
+    if(g.res.autoResolved){adv=adv.concat(g.res.advanced);return}
+    const picks=(cnsCutFinal[g.key]||[]).map(id=>g.res.tied.find(p=>p.id===id)).filter(Boolean);
+    adv=adv.concat(g.res.base,picks)});
+  return adv}
+function cnsScrCut(stage,model){
+  if(!stage.scores_locked)
+    return `<div class="grp" style="padding:20px"><h5>진출자 확정 — 스코어 확정 먼저</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px">진출자 확정(컷)은 스코어 <b>확정(잠금)</b>을 전제로 합니다. 기록이 더 바뀌지 않도록 먼저 확정하세요.</p>
+      <button class="btn soft" onclick="cnsSubSel='lock';renderConsole()">스코어 확정으로 이동</button></div>`;
+  const idx=model.stages.indexOf(stage),nextStage=model.stages[idx+1];
+  if(!nextStage)return `<div class="grp" style="padding:20px"><p style="color:var(--sub)">다음 단계가 없어 진출자 확정이 필요 없습니다 — <b>마감</b>으로 진행하세요.</p></div>`;
+  const cx=cnsBuildCut(stage);
+  if(!cx.cut||!cx.groups.length)
+    return `<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">이 단계에 컷 조건이 설정돼 있지 않아요 — 전원 진출로 처리하거나 대회 정보에서 컷을 지정하세요.</p>
+      <button class="btn" style="margin-top:12px" onclick="cnsCutApply('${stage.id}')">전원 진출 — ${cnsEsc(nextStage.name)} 명단 만들기</button></div>`;
+  const adv=cnsCutAdvanced(cx);
+  const advIds=new Set(adv.map(p=>p.id));
+  const tiedIds=new Set();cx.groups.forEach(g=>{if(!g.res.autoResolved)g.res.tied.forEach(p=>tiedIds.add(p.id))});
+  const unresolved=cx.groups.filter(g=>!g.res.autoResolved&&!(cnsCutFinal[g.key]&&cnsCutFinal[g.key].length));
+  const cutLabel=cx.cut.total?`상위 ${cx.cut.total}명`:`남 ${cx.cut.m||0}·여 ${cx.cut.f||0}`;
+  const warn=tiedIds.size?`<p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 경계 동점 — ${unresolved.length?'수동 선택 필요':'규칙 자동 적용됨'}</p>`:'';
+  const applyBtn=`<button class="btn"${unresolved.length?' style="opacity:.5;pointer-events:none"':''} onclick="cnsCutApply('${stage.id}')">컷 적용 — ${cnsEsc(nextStage.name)} 명단 만들기</button>`;
+  const strip=cnsStripAppend(cnsStrip([{v:cx.done.length,l:'완주'},{v:cutLabel,l:'진출 컷',c:'var(--act)'}]),warn+applyBtn);
+  let firstOut=true;
+  const rows=cx.done.map((s,i)=>{
+    const adv=advIds.has(s.p.id),tie=tiedIds.has(s.p.id);
+    const line=(!adv&&firstOut)?'border-top:2.5px dashed #C4523A;':'';if(!adv)firstOut=false;
+    const bg=tie?'background:#FFF9E8;':'';
+    return `<tr style="${bg}${line}"><td><b class="num" style="font-size:18px;${adv?'':'color:var(--dim)'}">${i+1}</b></td>
+      <td><b${adv?'':' style="color:var(--sub)"'}>${cnsEsc(s.p.name)}</b></td><td>${cnsEsc(s.p.sex||'—')}</td>
+      <td class="num">${s.tot}</td><td><span class="pill ${adv?'mint':'dim'}">${adv?'진출':'탈락'}</span>${tie?' <span style="font-size:11.5px;color:var(--goldtx)">경계 동점</span>':''}</td></tr>`}).join('');
+  const tieUI=unresolved.map(g=>{
+    const needed=g.cutN-g.res.base.length;const sel=cnsCutSel[g.key]||new Set();
+    return `<div class="grp" style="margin-top:12px;background:#FFF9E8;border-color:#EFD9A0"><h5 style="color:var(--goldtx)">${g.label?g.label+' ':''}${g.cutN}위 경계 동점 ${g.res.tied.length}명 — 자동 해소 불가(규칙: ${cnsEsc(cx.tieRule)})</h5>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">${g.res.tied.map(p=>`<button class="pill" style="cursor:pointer;padding:8px 14px;${sel.has(p.id)?'background:var(--act);color:#fff':'background:#fff;border:1.5px solid var(--line);color:var(--ink)'}" onclick="cnsTieToggle('${g.key}','${p.id}')">${sel.has(p.id)?'✓ ':''}${cnsEsc(p.name)}</button>`).join('')}</div>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:8px">잔여 진출 ${needed}자리 — 필요한 인원만 고르거나 전원 진출(컷 확대)</p>
+      <button class="btn soft" onclick="cnsTieExpand('${g.key}')">동점자 전원 진출(컷 확대)</button>
+      <button class="btn" style="margin-left:8px;${sel.size===needed?'':'opacity:.5;pointer-events:none'}" onclick="cnsTieConfirm('${g.key}',${needed})">선택 완료(${sel.size}/${needed})</button></div>`}).join('');
+  return strip+`<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th></tr>${rows}</table>${tieUI}
+    <p class="cap">빨간 점선=컷 라인 · 골드 행=경계 동점(판정 사유 병기) · [컷 적용]이 ${cnsEsc(nextStage.name)} 명단을 만들고 그 단계의 '명단 확정'이 ✓로 바뀝니다.</p>`}
+/* 단계 마감 */
+function cnsScrClose2(stage){
+  if(stage.status==='done')
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ ${cnsEsc(stage.name)} 마감됨</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">기록이 마감되었습니다. 다음 단계 또는 시상으로 진행하세요.</p></div>`;
+  return `<div class="grp" style="padding:20px"><h5>${cnsEsc(stage.name)} 마감</h5>
+    <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">${cnsEsc(stage.name)} 순위가 마감됩니다.</p>
+    <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">⚠ 마감 후에는 ${cnsEsc(stage.name)} 기록을 입력·수정할 수 없습니다.</p>
+    <button class="btn" onclick="cnsCloseStage('${stage.id}')">${cnsEsc(stage.name)} 마감하기</button></div>`}
+/* ===== 콘솔 액션 핸들러(모두 기존 RPC·로직 재사용) ===== */
+async function cnsTogglePaid(i){await togglePaidRow(i);renderConsole()}
+async function cnsConfirmRoster(){await confirmRegClose();renderConsole()}
+async function cnsReopenReg(){await reopenRegistration();renderConsole()}
+async function cnsStageRoster(stageId){
+  const{error}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
+  if(error){toast('확정 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  await syncActiveStageState(config.id);toast('명단이 확정되었습니다 — 이제 조편성을 할 수 있어요');renderConsole()}
+async function cnsAutoGroups(){
+  if(groups.some(g=>g.length)&&!confirm('이미 편성된 조가 있어요 — 자동 편성으로 덮어쓸까요?'))return;
+  await makeGroups(true,false);renderConsole()}
+function cnsOpenStartSheet(stageId){
+  const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
+  const period=cnsStageIsPeriod(stage);
+  const doneG=groups.length&&groups.every(g=>g.length>0);
+  let chk=`<div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 참가자 <b style="margin-left:auto">${players.filter(p=>!isOut(p)).length}명 등록</b></div>`;
+  if(stage.seq>1)chk+=stage.roster_confirmed
+    ?`<div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> ${cnsEsc(stage.name)} 명단 <b style="margin-left:auto">확정됨</b></div>`
+    :`<div class="chk"><span style="color:var(--goldtx);font-weight:700">⚠</span> ${cnsEsc(stage.name)} 명단 <b style="margin-left:auto">미확정</b></div>`;
+  if(!period)chk+=doneG
+    ?`<div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 조편성 <b style="margin-left:auto">${groups.length}개 조</b></div>`
+    :`<div class="chk"><span style="color:var(--goldtx);font-weight:700">⚠</span> 조편성 <b style="margin-left:auto">미완료</b></div>`;
+  chk+=`<div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 점수 입력 가능 <b style="margin-left:auto">${scorerOptions().length}명(나 포함)</b></div>`;
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:4px">${cnsEsc(stage.name)}을 시작할까요?</h3>
+    <p style="font-size:13.5px;color:var(--sub);margin-bottom:10px">시작 전 준비 상태를 확인하세요</p>${chk}
+    <p style="font-size:12.5px;color:var(--sub);margin:10px 0 14px">심판 접속이 안 됐어도 시작할 수 있어요 — 개설자는 언제든 직접 입력 가능</p>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsConfirmStart('${stage.id}')">${cnsEsc(stage.name)} 시작</button></div>`)}
+async function cnsConfirmStart(stageId){
+  closeCnsSheet();
+  const{error}=await sb.rpc('open_stage',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
+  if(error){toast('단계 시작 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  await syncActiveStageState(config.id);
+  cnsSubSel='score';toast('단계를 시작했습니다 — 스코어를 입력하세요');renderConsole()}
+function cnsScoreEdit(pid,c){cnsEditCell=pid+':'+c;renderConsole();setTimeout(()=>{const el=$('#cnsSc_'+pid+'_'+c);if(el){el.focus();el.select()}},0)}
+async function cnsScoreSave(pid,c){
+  const input=$('#cnsSc_'+pid+'_'+c);if(!input)return;
+  const strokes=+input.value;
+  if(!strokes||strokes<18||strokes>200){toast('총타수를 확인해 주세요 — 투파(±)가 아닌 총타수를 입력하세요');return}
+  const p=players.find(x=>x.id===pid);const prevBest=p&&p.best?p.best[c]:null;
+  const params={t_id:config.id,p_owner_secret:user.secret,p_player_id:pid,p_course_no:c,p_strokes_total:strokes,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()};
+  const{data,error}=await sb.rpc('submit_play_owner',params);
+  if(error){toast('저장 실패: '+error.message);console.error(error);return}
+  if(p){p.best=p.best||{};if(prevBest==null||strokes<prevBest)p.best[c]=strokes;}
+  addLog(`${c+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출(콘솔)`);
+  cnsEditCell=null;
+  toast(prevBest==null?'기록이 저장되었습니다':strokes<prevBest?`베스트 경신! ${prevBest}→${strokes}`:`기존 베스트(${prevBest}) 유지`);
+  renderConsole()}
+async function cnsLock(stageId){
+  const{error}=await sb.rpc('lock_stage_scores',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
+  if(error){toast('확정 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  await syncActiveStageState(config.id);toast('스코어를 확정했습니다 — 정정이 잠겼습니다');renderConsole()}
+async function cnsUnlock(stageId){
+  const{error}=await sb.rpc('unlock_stage_scores',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
+  if(error){toast('확정 취소 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  await syncActiveStageState(config.id);toast('확정을 취소했습니다 — 정정을 재개할 수 있어요');renderConsole()}
+function cnsTieToggle(key,pid){const s=cnsCutSel[key]=cnsCutSel[key]||new Set();if(s.has(pid))s.delete(pid);else s.add(pid);renderConsole()}
+function cnsTieConfirm(key,needed){const s=cnsCutSel[key];if(!s||s.size!==needed)return;cnsCutFinal[key]=[...s];toast('선택을 확정했습니다');renderConsole()}
+function cnsTieExpand(key){
+  const stage=(cnsModel.stages||[]).find(s=>s.status==='open')||cnsModel.stages[0];
+  const cx=cnsBuildCut(stage);const g=cx.groups.find(x=>x.key===key);
+  if(g){cnsCutFinal[key]=g.res.tied.map(p=>p.id);toast('동점자 전원 진출(컷 확대)');renderConsole()}}
+async function cnsCutApply(stageId){
+  const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
+  const idx=cnsModel.stages.indexOf(stage),nextStage=cnsModel.stages[idx+1];
+  if(!nextStage){toast('다음 단계가 없습니다');return}
+  const cx=cnsBuildCut(stage);
+  let advanced;
+  if(!cx.cut||!cx.groups.length)advanced=cx.done.map(s=>s.p);
+  else{
+    const unresolved=cx.groups.filter(g=>!g.res.autoResolved&&!(cnsCutFinal[g.key]&&cnsCutFinal[g.key].length));
+    if(unresolved.length){toast('경계 동점자 처리를 먼저 완료하세요');return}
+    advanced=cnsCutAdvanced(cx);
+    const logLines=cx.groups.filter(g=>!g.res.autoResolved).map(g=>`${g.label||'전체'} ${g.cutN}위 동점 ${g.res.tied.length}명 중 ${(cnsCutFinal[g.key]||[]).length}명 수동 선택`);
+    if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${stage.name}→${nextStage.name} 컷 동점 처리(규칙: ${cx.tieRule}) — ${logLines.join(' / ')}`})}
+  cnsCutSel={};cnsCutFinal={};
+  await doAdvanceStage(stage,nextStage,advanced);
+  renderConsole()}
+async function cnsCloseStage(stageId){
+  const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
+  await doCloseStage(stage);renderConsole()}
+async function cnsFinalize(){await finalizeTournament();renderConsole()}
+/* 콘솔 빠른 등록/붙여넣기 — 파싱·검증·add_player 로직 재사용 */
+function cnsOpenAddPlayer(){
+  const fields=config.fields||{};
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:10px">참가자 추가</h3>
+    <input class="cfield" id="cnsAdName" placeholder="이름" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:8px"><select class="cfield" id="cnsAdSex" style="flex:1"><option value="남">남</option><option value="여">여</option></select>
+    <input class="cfield" id="cnsAdClub" placeholder="클럽(선택)" style="flex:2"></div>
+    <input class="cfield" id="cnsAdPhone" placeholder="전화번호 010-1234-5678" style="margin-bottom:14px">
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsAddPlayer()">등록</button></div>`)}
+async function cnsAddPlayer(){
+  const name=$('#cnsAdName').value.trim();if(!name){toast('이름을 입력해 주세요');return}
+  const phone=normalizePhone($('#cnsAdPhone').value||'');
+  const sex=$('#cnsAdSex').value,club=$('#cnsAdClub').value.trim();
+  const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:name,p_phone:phone||null,p_sex:sex,p_age:null,p_club:club||null,p_region:null,p_nick:null,p_status:'ok'});
+  if(error){toast(error.code==='23505'?'이미 등록된 전화번호입니다':'등록 중 오류가 발생했습니다');console.error(error);return}
+  players.push({name,sex,club,phone:phone||'',region:'',nick:'',id:data.id,scores:Array(HOLES).fill(null),group:-1,best:{}});
+  syncMine();closeCnsSheet();toast(`${name} 님 등록`);renderConsole()}
+function cnsOpenPaste(withGroup){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">여러 명 붙여넣기</h3>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px">한 줄에 한 명 — 이름·전화번호${withGroup?'·조':''} 순서(탭·쉼표 구분). 카톡 명단을 그대로 붙여도 됩니다.</p>
+    <textarea class="cfield" id="cnsPasteBox" style="width:100%;height:160px;resize:vertical" placeholder="홍길동 010-1234-5678"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsPasteApply(${withGroup?'true':'false'})">인식 후 등록</button></div>`)}
+async function cnsPasteApply(withGroup){
+  const cols=bulkColumns(config.fields||{},!!withGroup);
+  const{parsed,total}=bulkParseAll($('#cnsPasteBox').value,cols);
+  if(!total){toast('입력된 줄이 없습니다');return}
+  let added=0,dup=0,ga=0;
+  for(const r of parsed){
+    const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:r.name,p_phone:r.phone,p_sex:r.sex||null,p_age:r.age||null,p_club:r.club||null,p_region:r.region||null,p_nick:r.nick||null,p_status:'ok'});
+    if(error){if(error.code==='23505')dup++;else console.error(error);continue}
+    const ni=players.push({...r,id:data.id,scores:Array(HOLES).fill(null),group:r.group!=null?r.group:-1,best:{}})-1;
+    if(withGroup&&r.group!=null&&r.group>=0){while(groups.length<=r.group)groups.push([]);groups[r.group].push(ni);ga++}
+    added++}
+  syncMine();if(ga){groupsSource='manual';await persistGroups()}
+  closeCnsSheet();toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외`:''}${ga?` · 조 배정 ${ga}명`:''}`);renderConsole()}
+function cnsOpenScorePaste(stageId){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">점수 붙여넣기</h3>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:8px">코스를 고르고, 한 줄에 <b>이름 총타수</b>로 붙여넣으세요.</p>
+    <select class="cfield" id="cnsScCourse" style="margin-bottom:8px">${Array.from({length:ROUNDS},(_,c)=>`<option value="${c}">${c+1}코스</option>`).join('')}</select>
+    <textarea class="cfield" id="cnsScBox" style="width:100%;height:150px;resize:vertical" placeholder="홍길동 66"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsScorePasteApply()">기록 저장</button></div>`)}
+async function cnsScorePasteApply(){
+  const c=+$('#cnsScCourse').value;const lines=$('#cnsScBox').value.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  let saved=0,best=0;
+  for(const line of lines){
+    const m=line.match(/^(.+?)[\s,\t]+(\d{2,3})$/);if(!m)continue;
+    const nm=m[1].trim(),strokes=+m[2];if(strokes<18||strokes>200)continue;
+    const p=players.find(x=>x.name===nm&&!isOut(x));if(!p||!p.id)continue;
+    const prev=p.best?p.best[c]:null;
+    const{error}=await sb.rpc('submit_play_owner',{t_id:config.id,p_owner_secret:user.secret,p_player_id:p.id,p_course_no:c,p_strokes_total:strokes,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()});
+    if(error){console.error(error);continue}
+    p.best=p.best||{};if(prev==null||strokes<prev){p.best[c]=strokes;best++}saved++}
+  closeCnsSheet();toast(`${saved}명 저장${best?` · 베스트 경신 ${best}건`:''}`);renderConsole()}
 window.addEventListener('resize',()=>{if(curView==='Console'&&!isConsoleViewport())location.reload()});
 (async()=>{
   const qs=new URLSearchParams(location.search);
