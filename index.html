@@ -637,6 +637,83 @@ tr:last-child td{border-bottom:none}
 .rrow .sc b{display:block;font-size:15px}
 .rrow .sc span{font-size:14px;color:var(--muted)}
 .rrow .sc span.minus{color:var(--red)}
+/* ============================================================
+   CH33 PC 운영 콘솔 — V2 디자인 토큰(코발트). 모든 선택자를 #viewConsole
+   스코프로 국한해 모바일(라임) 토큰·클래스와 완전 격리한다. 목업 기준:
+   design/nuga1-pc-full.html (렌더 대조 대상). */
+#viewConsole{--act:#1B64DA;--act-deep:#1550B4;--act-soft:#EAF2FF;--ink:#1F2937;--sub:#64748B;--dim:#9AAAB9;--line:#DFE8F4;--cbg:#F5F8FC;--gold:#F7CF5C;--goldtx:#8A6A10;--mint:#E7F5EE;--minttx:#2E8B63;
+  display:none;min-height:100vh;background:#E8EDF2;color:var(--ink);font-family:'Noto Sans KR',sans-serif;word-break:keep-all;overflow-wrap:break-word}
+#viewConsole .cwrap{max-width:1180px;margin:0 auto;min-height:100vh;background:var(--cbg);box-shadow:0 0 40px rgba(29,61,92,.10)}
+#viewConsole button{font-family:inherit;cursor:pointer;border:none;background:none}
+/* 유틸바 */
+#viewConsole .util{background:linear-gradient(95deg,#1B64DA,#2E7BE8);padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,80,180,.25);position:sticky;top:0;z-index:40}
+#viewConsole .lg{display:inline-flex;align-items:center;background:#fff;color:var(--act);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer}
+#viewConsole .lg i{font-style:normal;color:#C9930A;margin:0 1px}
+#viewConsole .tname{font-size:17px;font-weight:700;color:#fff}
+#viewConsole .util .tools{margin-left:auto;display:flex;gap:8px;font-size:13.5px;font-weight:700}
+#viewConsole .util .tools button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 13px;font-weight:700;font-size:13.5px}
+#viewConsole .util .tools button.acct{background:#F7CF5C;border-color:#F7CF5C;color:#1F2937}
+/* 대단계 레일 */
+#viewConsole .rail{display:flex;align-items:center;background:var(--cbg);border-bottom:1.5px solid var(--line);padding:13px 16px;gap:4px}
+#viewConsole .rl{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:13px;text-align:center;padding:11px 6px;box-shadow:0 1px 4px rgba(29,61,92,.06);cursor:pointer}
+#viewConsole .rl b{font-size:14.5px;display:block}
+#viewConsole .rl small{font-size:11.5px;color:var(--sub);font-weight:700}
+#viewConsole .rl.done{background:#F6FBF8;border-color:#CDE8DA}
+#viewConsole .rl.done b{color:var(--minttx)}
+#viewConsole .rl.cur{background:linear-gradient(160deg,#1B64DA,#1550B4);border-color:var(--act-deep);box-shadow:0 5px 14px rgba(21,80,180,.35);transform:translateY(-1px)}
+#viewConsole .rl.cur b{color:#fff;font-size:15.5px}
+#viewConsole .rl.cur small{color:rgba(255,255,255,.85)}
+#viewConsole .rl.todo{background:#F4F6FA;border-color:#E5EAF2;cursor:default}
+#viewConsole .rl.todo b{color:var(--dim)}
+#viewConsole .rl.todo small{color:var(--dim)}
+#viewConsole .arw{color:#B9C8DC;font-size:15px;font-weight:700;flex:0 0 auto}
+/* 중단계 목록 + 본문 */
+#viewConsole .body2{display:flex;min-height:calc(100vh - 132px)}
+#viewConsole .snav{width:244px;flex:0 0 auto;border-right:1.5px solid var(--line);background:#F0F4FA;padding:14px 12px}
+#viewConsole .snav>p{font-size:11.5px;font-weight:700;color:var(--sub);padding:0 6px 10px}
+#viewConsole .sn{display:flex;align-items:center;gap:10px;padding:12px;border-radius:13px;font-size:15px;font-weight:700;margin-bottom:7px;background:#fff;border:1.5px solid var(--line);box-shadow:0 1px 4px rgba(29,61,92,.07);color:var(--sub);width:100%;text-align:left}
+#viewConsole .sn i{width:26px;height:26px;border-radius:50%;font-style:normal;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;background:#EDF1F6;color:var(--dim);flex:0 0 auto}
+#viewConsole .sn.done{background:#F6FBF8;border-color:#CDE8DA;color:var(--minttx)}
+#viewConsole .sn.done i{background:var(--mint);color:var(--minttx)}
+#viewConsole .sn.cur{background:#fff;border:2px solid var(--act);color:var(--act);box-shadow:0 4px 12px rgba(21,80,180,.22)}
+#viewConsole .sn.cur i{background:var(--act);color:#fff}
+#viewConsole .sn.cur:after{content:'▸';margin-left:auto;color:var(--act);font-size:15px}
+#viewConsole .sn.todo{background:#F7F9FC;border-color:#E5EAF2;box-shadow:none;color:var(--dim);font-weight:500;cursor:default}
+#viewConsole .mainA{flex:1;background:var(--cbg);padding:16px 18px;min-width:0}
+#viewConsole .strip{display:flex;gap:22px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 18px;margin-bottom:12px;box-shadow:0 1px 5px rgba(29,61,92,.06);flex-wrap:wrap}
+#viewConsole .strip .kpi b{font-family:'Oswald',sans-serif;font-size:30px}
+#viewConsole .strip .kpi p{font-size:12.5px;color:var(--sub);font-weight:700}
+/* 버튼·카드·표 */
+#viewConsole .btn{background:var(--act);color:#fff;font-weight:700;border-radius:12px;padding:11px 18px;font-size:14.5px;display:inline-block;box-shadow:0 2px 7px rgba(21,80,180,.28)}
+#viewConsole .btn.soft{background:var(--act-soft);color:var(--act);box-shadow:none}
+#viewConsole table{border-collapse:collapse;width:100%;font-size:15.5px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 5px rgba(29,61,92,.06)}
+#viewConsole th{background:#F1F5FB;text-align:left;padding:11px 13px;font-size:12.5px;color:var(--sub);border-bottom:2px solid var(--line);font-weight:700}
+#viewConsole td{padding:11px 13px;border-bottom:1px solid #EDF1F6}
+#viewConsole .num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+#viewConsole .pill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;display:inline-block}
+#viewConsole .pill.mint{background:var(--mint);color:var(--minttx)}
+#viewConsole .pill.gold{background:var(--gold);color:#1F2937}
+#viewConsole .pill.dim{background:#EDF1F6;color:var(--dim)}
+#viewConsole .cap{font-size:12.5px;line-height:1.75;color:#41505E;margin:12px 4px}
+#viewConsole .grp{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+#viewConsole .grp h5{font-size:13.5px;color:var(--act);margin-bottom:8px}
+#viewConsole .grp p{font-size:14.5px;line-height:1.95}
+/* 사전 점검 모달 */
+#viewConsole .cdim{position:fixed;inset:0;background:rgba(31,41,55,.45);display:none;align-items:center;justify-content:center;z-index:60}
+#viewConsole .cdim.on{display:flex}
+#viewConsole .sheet2{background:#fff;border-radius:18px;padding:22px 24px;width:430px;max-width:92vw;box-shadow:0 18px 44px rgba(0,0,0,.3)}
+#viewConsole .chk{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #EDF1F6;font-size:15.5px}
+/* 허브 버튼 행 */
+#viewConsole .hbtn{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:8px;font-size:15.5px;font-weight:700;box-shadow:0 1px 4px rgba(29,61,92,.07);width:100%;text-align:left}
+#viewConsole .hbtn small{font-weight:500;color:var(--sub);font-size:13.5px;margin-left:auto;text-align:right}
+#viewConsole .hbtn .go{color:var(--act);font-size:15px;font-weight:700;margin-left:8px}
+#viewConsole .hbtn.lock{background:#F1F3F7;box-shadow:none;opacity:.72;cursor:default}
+#viewConsole .hcol p.h{font-size:13px;font-weight:700;margin-bottom:9px}
+/* 진입 화면(랜딩·시작·선택·개설) 공용 */
+#viewConsole .cland{background:linear-gradient(140deg,#1B64DA,#2E7BE8);color:#fff}
+#viewConsole .cfield{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;font-size:16px;width:100%;color:var(--ink)}
+#viewConsole .cfield::placeholder{color:var(--dim)}
+#viewConsole .myband{background:linear-gradient(120deg,#1F2937,#374151)}
 .printonly{display:none}
 /* CH32-C⑭: 결과지 인쇄 — 화면 크롬을 숨기고 결과표만 상단에 격리해 인쇄/PDF로 저장 */
 @media print{
@@ -1408,6 +1485,12 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
   </section>
 </div>
 
+<!-- ============ CH33 PC 운영 콘솔 (스코프: #viewConsole) ============ -->
+<div id="viewConsole">
+  <div class="cwrap" id="cnsWrap"></div>
+  <div class="cdim" id="cnsSheetOv" onclick="if(event.target===this)closeCnsSheet()"><div class="sheet2" id="cnsSheet"></div></div>
+</div>
+
 <!-- 정보 수정 경고 확인 -->
 <div class="overlay" id="warnEditOv" onclick="if(event.target===this)closeWarnEdit()">
   <div class="pad">
@@ -1832,13 +1915,14 @@ function navGroupFor(page){
   if(page==='opMy')return 'opMy';
   return 'opHome'}
 function renderLoc(){
-  ['Owner','Judge','Board','Apply','Notice','EditInfo','Privacy','GridPage'].forEach(x=>{$('#view'+x).style.display=x===curView?'block':'none'});
+  ['Owner','Judge','Board','Apply','Notice','EditInfo','Privacy','GridPage','Console'].forEach(x=>{const el=$('#view'+x);if(el)el.style.display=x===curView?'block':'none'});
   if(curView==='Owner'){
     const grp=navGroupFor(curPage);
     document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.page===grp));
     document.querySelectorAll('#viewOwner .page').forEach(p=>p.classList.toggle('on',p.id===curPage))}
   if(curView==='Judge')renderJudge();
   if(curView==='Board')renderBoard();
+  if(curView==='Console')renderConsole(); // CH33: 다른 뷰(전광판 등)에서 복귀 시 콘솔 재렌더
   const bk=$('#abkBtn');if(bk)bk.style.display=navStack.length?'flex':'none';
   window.scrollTo(0,0)}
 function navTo(view,page){
@@ -6086,6 +6170,248 @@ function resetScores(){clearInterval(simTimer);simTimer=null;
 function refreshAll(){renderBoard();renderResult();if($('#viewJudge').style.display!=='none')renderHole();
   if(curView==='GridPage')renderGridCard()}
 setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-KR')},1000);
+
+/* ================= CH33 PC 운영 콘솔 =================
+   진입·3층 프레임. 모든 비즈니스 로직(RPC·집계·수명주기·인증)은 기존 함수를
+   그대로 호출한다(재구현 0). 콘솔 UI 상태만 여기서 관리. */
+let cnsScreen='signin';      // landing | signin | wizard | main
+let cnsMajorSel=null;        // 레일에서 선택한 대단계 key
+let cnsSubSel=null;          // 목록에서 선택한 중단계 key
+function isConsoleViewport(){return window.innerWidth>=1024}
+function openConsole(screen){cnsScreen=screen||cnsScreen;curView='Console';renderLoc();renderConsole()}
+function cnsGo(s){cnsScreen=s;renderConsole()}
+function cnsEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+async function renderConsole(){
+  const w=$('#cnsWrap');if(!w)return;
+  if(cnsScreen==='landing')return renderCnsLanding(w);
+  if(cnsScreen==='signin')return renderCnsSignin(w);
+  if(cnsScreen==='wizard')return renderCnsWizard(w);
+  if(cnsScreen==='main')return renderCnsMain(w)}
+/* ---- 화면 L: 랜딩 ---- */
+function renderCnsLanding(w){
+  const cta=user.loggedIn?`<button class="btn" style="padding:10px 18px" onclick="cnsGo('signin')">내 대회로</button>`
+    :`<button class="btn" style="padding:10px 18px" onclick="cnsGo('signin')">대회 개설하기</button>`;
+  w.innerHTML=`
+    <div style="background:#fff">
+      <div style="display:flex;align-items:center;padding:14px 26px;border-bottom:1px solid var(--line)">
+        <span class="lg" style="box-shadow:none;border:1.5px solid var(--line)">누가<i>1</i>등</span>
+        <div style="margin-left:auto;display:flex;gap:16px;align-items:center;font-size:14.5px;font-weight:700;color:var(--sub)"><span>서비스 소개</span><span>이용 안내</span>${cta}</div>
+      </div>
+      <div class="cland" style="padding:46px 26px;text-align:center">
+        <p style="font-size:13.5px;font-weight:700;opacity:.85;margin-bottom:10px">파크골프 대회 관리 플랫폼</p>
+        <h2 style="font-size:32px;line-height:1.45;margin-bottom:8px">대회 개설부터 시상까지,<br>한 번에 끝내세요</h2>
+        <p style="font-size:16px;opacity:.9;margin-bottom:20px">신청 접수 · 조편성 · 스코어 · 실시간 전광판 — 총무 혼자서도 충분합니다</p>
+        <button style="background:#fff;color:var(--act);font-weight:700;border-radius:14px;padding:15px 30px;font-size:17px" onclick="cnsGo('signin')">＋ 무료로 대회 개설하기</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:22px 26px">
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📝</p><b style="font-size:15px">단계를 따라가면 끝</b><p style="font-size:14px;color:var(--sub);margin-top:4px">개설→모집→경기→시상, 할 일이 순서대로</p></div>
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📋</p><b style="font-size:15px">카톡 명단 그대로</b><p style="font-size:14px;color:var(--sub);margin-top:4px">복사해 붙여넣으면 등록·조편성까지</p></div>
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📺</p><b style="font-size:15px">실시간 전광판</b><p style="font-size:14px;color:var(--sub);margin-top:4px">TV에 띄우는 순위 — 참가자는 링크로</p></div>
+      </div>
+    </div>`}
+/* ---- 화면 0: 시작하기 + 대회 선택 ---- */
+async function renderCnsSignin(w){
+  if(user.loggedIn){
+    const mine=tournaments.filter(t=>t.mine);
+    const order={live:0,open:1,ready:1,done:2};
+    mine.sort((a,b)=>(order[a.status]??3)-(order[b.status]??3));
+    const cards=mine.map(t=>{
+      const cur=t.status==='live';
+      const label=t.status==='live'?'진행 중':t.status==='open'?'접수 중':t.status==='done'?'종료':'개설 완료';
+      return `<button class="grp" style="width:100%;text-align:left;margin-bottom:10px;${cur?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsEnterTournament('${t.id}')">
+        <h5 style="${cur?'':'color:var(--sub)'}">${cur?'● ':''}${cnsEsc(t.name)}</h5><p style="font-size:13.5px;color:var(--sub)">${label}${t.players?' · '+t.players+'명':''}</p></button>`}).join('')
+      ||'<p style="font-size:13.5px;color:var(--sub);padding:8px 2px">아직 운영 중인 대회가 없어요 — 아래 버튼으로 시작하세요</p>';
+    w.innerHTML=`<div style="display:flex;min-height:100vh">
+      <div style="flex:1;background:linear-gradient(140deg,#1B64DA,#2E7BE8);padding:44px 30px;display:flex;align-items:center;justify-content:center;color:#fff">
+        <div style="text-align:center"><span class="lg" style="box-shadow:none">누가<i>1</i>등</span><h3 style="font-size:20px;margin:14px 0 6px">${cnsEsc(user.name)} 님, 반가워요</h3><p style="font-size:14px;opacity:.9">진행 중인 대회를 고르거나 새로 시작하세요</p></div>
+      </div>
+      <div style="flex:1;background:var(--cbg);padding:22px 24px;max-width:520px">
+        <p style="font-size:14px;font-weight:700;margin-bottom:12px">다시 오셨네요, ${cnsEsc(user.name)}님 👋</p>
+        ${cards}
+        <button class="btn soft" style="width:100%;text-align:center;margin-top:4px" onclick="cnsGo('wizard')">＋ 새 대회 개설하기</button>
+        <p style="font-size:12px;color:var(--sub);margin-top:14px;text-align:center"><span style="cursor:pointer" onclick="cnsLogout()">로그아웃</span></p>
+      </div>
+    </div>`;
+    return}
+  w.innerHTML=`<div style="display:flex;min-height:100vh">
+    <div style="flex:1;background:linear-gradient(140deg,#1B64DA,#2E7BE8);padding:44px 30px;display:flex;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:18px;padding:26px;width:340px;box-shadow:0 14px 36px rgba(0,0,0,.25)">
+        <span class="lg" style="box-shadow:none;border:1.5px solid var(--line)">누가<i>1</i>등</span>
+        <h3 style="font-size:20px;margin:14px 0 4px">전화번호로 시작해요</h3>
+        <p style="font-size:13.5px;color:var(--sub);margin-bottom:14px">가입 절차 없음 — 참가자·심판은 이 과정 없이 링크로 참여해요</p>
+        <input class="cfield" id="cnsPhone" placeholder="전화번호 (010-1234-5678)" style="margin-bottom:9px">
+        <input class="cfield" id="cnsName" placeholder="이름" style="margin-bottom:14px">
+        <button class="btn" style="display:block;width:100%;text-align:center;font-size:16px" onclick="cnsStartSignIn()">시작하기</button>
+      </div>
+    </div>
+    <div style="flex:1;background:var(--cbg)"></div>
+  </div>`}
+async function cnsStartSignIn(){
+  const phone=normalizePhone($('#cnsPhone').value),name=$('#cnsName').value.trim();
+  if(!/01[016789]/.test(phone.replace(/\D/g,''))){toast('전화번호를 확인해 주세요');return}
+  if(!name){toast('이름을 입력해 주세요');return}
+  const{data,error}=await sb.rpc('operator_signup',{p_phone:phone,p_name:name}); // 모바일과 동일 RPC 재사용
+  if(error||!data||!data.length){toast('처리 중 오류가 발생했습니다');console.error(error);return}
+  const row=data[0];
+  user.id=row.id;user.name=row.name;user.secret=row.secret;user.phone=phone;user.loggedIn=true;
+  saveOwnerSecret(phone,row.secret);saveLastUsedPhone(phone);
+  if(row.is_new){toast(`${user.name} 님, 가입 완료!`);cnsGo('wizard');return}
+  await loadTournaments();
+  toast(`${row.name} 님, 다시 오셨어요 — 진행 중 ${row.active_count||0}개`);
+  renderConsole()}
+function cnsLogout(){user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';cnsGo('signin')}
+async function cnsEnterTournament(id){
+  const ok=await loadMyTournament(id);
+  if(!ok){toast('대회 정보를 불러오지 못했습니다');return}
+  cnsMajorSel=null;cnsSubSel=null;
+  cnsGo('main')}
+/* ---- 화면 W: 개설(2패널) — 위저드 필드 세팅 후 createTournament 재사용 ---- */
+let cnsPreset='solo';
+function renderCnsWizard(w){
+  const presets=[['solo','🏆 단판 대회','본선 한 번으로 끝'],['qualify2','🪜 예선 + 결승','기간 예선 후 결승전'],['qualify3','🏟 예선 + 본선 + 결승','3단계 토너먼트']];
+  w.innerHTML=`
+    <div class="util"><span class="lg" onclick="cnsGo('signin')">누가<i>1</i>등</span><span class="tname">새 대회 개설</span></div>
+    <div style="display:flex;background:var(--cbg);min-height:calc(100vh - 56px)">
+      <div style="flex:1.2;padding:20px 22px;border-right:1.5px solid var(--line)">
+        <p style="font-size:14px;font-weight:700;margin-bottom:10px">1. 어떤 대회인가요?</p>
+        ${presets.map(([k,t,d])=>`<button class="hbtn" style="${cnsPreset===k?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsSetPreset('${k}')">${t}<small>${d}</small><span class="go">${cnsPreset===k?'✓':'›'}</span></button>`).join('')}
+        <p style="font-size:12.5px;color:var(--sub);padding:4px">선택하면 여정(대단계·중단계)이 자동 구성돼요 — 각 단계 방식은 개설 후 조정</p>
+      </div>
+      <div style="flex:1;padding:20px 22px">
+        <p style="font-size:14px;font-weight:700;margin-bottom:10px">2. 기본 정보</p>
+        <input class="cfield" id="cnsWName" placeholder="대회명 (예: 제1회 임팩트 챌린지컵)" style="margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input class="cfield" id="cnsWDateS" type="date" style="flex:1">
+          <input class="cfield" id="cnsWDateE" type="date" style="flex:1">
+        </div>
+        <input class="cfield" id="cnsWCap" type="tel" placeholder="정원 (예: 40)" value="40" style="margin-bottom:12px">
+        <button class="btn" style="display:block;width:100%;text-align:center;font-size:16px" onclick="cnsCreate()">대회 만들기 → 콘솔로</button>
+        <p style="font-size:12.5px;color:var(--sub);margin-top:8px">만들면 [개설] 대단계부터 시작합니다 — 신청 링크는 즉시 생성</p>
+      </div>
+    </div>`}
+function cnsSetPreset(k){cnsPreset=k;renderConsole()}
+async function cnsCreate(){
+  const nm=$('#cnsWName').value.trim();if(!nm){toast('대회명을 입력해 주세요');return}
+  const ds=$('#cnsWDateS').value||'2026-07-25',de=$('#cnsWDateE').value||ds;
+  // 위저드 상태·DOM 세팅 후 기존 createTournament 전체 재사용(재구현 0).
+  // 위저드 단계 DOM(코스·일정·동점·정원 필드)을 먼저 렌더해 createTournamentInner가 읽는
+  // #fTie·#fHoles·.venueIn·#fDateS 등을 존재시킨다(숨겨진 #wizBox에 생성).
+  resetWizardState();chooseStructure(cnsPreset);
+  if(typeof renderStageCards==='function')renderStageCards();
+  if(typeof renderScheduleBlocks==='function')renderScheduleBlocks();
+  const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v};
+  set('fName',nm);set('fHost',user.name);set('fDateS',ds);set('fDateE',de);set('fCap',$('#cnsWCap').value||'40');
+  await createTournament();
+  if(config.id)await cnsEnterTournament(config.id)}
+/* ---- 화면 1: 메인 3층 프레임 ---- */
+let cnsModel=null;
+async function buildConsoleModel(){
+  const stages=await loadAllStages(config.id);
+  const{data:tRow}=await sb.from('tournaments').select('status,reg_closed').eq('id',config.id).single();
+  const status=tRow?tRow.status:'ready',regClosed=!!(tRow&&tRow.reg_closed),finished=status==='done';
+  const majors=[{key:'setup',name:'개설'},{key:'recruit',name:'모집'}];
+  stages.forEach(s=>majors.push({key:'stage:'+s.id,name:s.name,stage:s}));
+  majors.push({key:'award',name:'시상'},{key:'close',name:'마감'});
+  const openStage=stages.find(s=>s.status==='open');
+  let curKey;
+  // 모집 마감(regClosed) 전에는 stage1이 개설 시 'open'이어도 항상 '모집'이 현재 대단계다
+  // (콘솔의 선형 대단계: 모집 → 각 단계). 마감 후에야 단계로 진입.
+  if(finished)curKey='close';
+  else if(!regClosed)curKey='recruit';
+  else if(openStage)curKey='stage:'+openStage.id;
+  else if(stages.length&&stages.every(s=>s.status==='done'))curKey='award';
+  else{const next=stages.find(s=>s.status!=='done');curKey=next?'stage:'+next.id:'award'}
+  const curIdx=majors.findIndex(m=>m.key===curKey);
+  majors.forEach((m,i)=>{
+    m.status=i<curIdx?'done':i===curIdx?'cur':'todo';
+    if(m.stage&&m.stage.status==='done')m.status='done';
+    if(m.key==='recruit')m.meta=regClosed?'마감':`${players.length+waitlist.length}명`;
+    if(m.stage)m.meta=m.stage.status==='open'?'진행 중':m.stage.status==='done'?'완료':(m.stage.date_start||'').slice(5).replace('-','.');
+  });
+  return{majors,curKey,curIdx,stages,regClosed,finished,status}}
+function cnsSubsFor(m,model){
+  const s=m.stage;
+  if(m.key==='setup')return[{k:'basic',n:'기본 정보'},{k:'awards',n:'참가비·시상'},{k:'notice',n:'요강 완성'},{k:'recStart',n:'모집 시작'}];
+  if(m.key==='recruit')return[{k:'recStart',n:'모집 시작'},{k:'apply',n:'신청 접수'},{k:'paid',n:'입금 확인'},{k:'recClose',n:'모집 마감 · 명단 확정'}];
+  if(m.key==='award')return[{k:'finalRank',n:'최종 순위 확인'},{k:'divAward',n:'부문 수상 확인'},{k:'announce',n:'결과 발표'}];
+  if(m.key==='close')return[{k:'finalize',n:'종료 확정'},{k:'archive',n:'기록 보관'}];
+  if(s){
+    const idx=model.stages.indexOf(s),hasNext=idx>=0&&idx+1<model.stages.length;
+    const period=s.kind==='period'||s.record_mode==='total';
+    if(period){const arr=[{k:'start',n:s.name+' 시작'},{k:'score',n:'스코어 입력'},{k:'lock',n:'스코어 확정'}];if(hasNext)arr.push({k:'cut',n:'진출자 확정'});arr.push({k:'close',n:s.name+' 마감'});return arr}
+    const arr=[{k:'roster',n:'명단 확정'},{k:'groups',n:'조편성'},{k:'start',n:s.name+' 시작'},{k:'score',n:'스코어 입력'},{k:'lock',n:'스코어 확정'}];if(hasNext)arr.push({k:'cut',n:'진출자 확정'});arr.push({k:'close',n:s.name+' 마감'});return arr}
+  return[]}
+// 현재 대단계의 현재 중단계(근사 — 세부 상태는 CH33-B에서 데이터 기반 정밀화)
+function cnsCurrentSub(m,subs,model){
+  if(m.key==='recruit')return model.regClosed?'recClose':'apply';
+  if(m.key==='award')return 'finalRank';
+  if(m.key==='close')return 'finalize';
+  if(m.stage){if(m.stage.status==='open')return 'score';return subs[0]?subs[0].k:null}
+  return subs[0]?subs[0].k:null}
+async function renderCnsMain(w){
+  if(!config.id){cnsGo('signin');return}
+  cnsModel=await buildConsoleModel();
+  const model=cnsModel;
+  const cur=model.majors.find(m=>m.key===model.curKey);
+  const selMajor=model.majors.find(m=>m.key===cnsMajorSel)||cur;
+  const subs=cnsSubsFor(selMajor,model);
+  const isCurMajor=selMajor.key===model.curKey;
+  const curSub=isCurMajor?cnsCurrentSub(selMajor,subs,model):null;
+  if(!cnsSubSel||!subs.find(x=>x.k===cnsSubSel))cnsSubSel=curSub||(subs[0]&&subs[0].k);
+  // 유틸바
+  const util=`<div class="util"><span class="lg" onclick="cnsGo('signin')">누가<i>1</i>등</span><span class="tname">${cnsEsc(config.name)}</span>
+    <div class="tools">
+      <button onclick="openBoard()">📺 전광판</button>
+      <button onclick="copyApplyShareLink()">🔗 신청 링크</button>
+      <button onclick="toast('심판진 화면은 CH33-C에서 열려요')">⚖️ 심판진</button>
+      <button onclick="toast('정보 수정 허브는 CH33-C에서 열려요')">⚙️ 대회 정보</button>
+      <button onclick="openExportSheet()">📤 내보내기</button>
+      <button class="acct" onclick="cnsGo('signin')">${cnsEsc(user.name)} ▾</button>
+    </div></div>`;
+  // 레일
+  const rail=`<div class="rail">${model.majors.map((m,i)=>{
+    const done=m.status==='done',isCur=m.status==='cur';
+    const cls=done?'done':isCur?'cur':'todo';
+    const label=`${done?'✓ ':''}${cnsEsc(m.name)}`;
+    const meta=m.meta?`<small>${cnsEsc(m.meta)}</small>`:'';
+    const arrow=i<model.majors.length-1?'<span class="arw">›</span>':'';
+    return `<div class="rl ${cls}${m.key===selMajor.key?' sel':''}" onclick="selectCnsMajor('${m.key}')"><b>${label}</b>${meta}</div>${arrow}`}).join('')}</div>`;
+  // 중단계 목록
+  const snav=`<div class="snav"><p>${cnsEsc(selMajor.name)} — 할 일 순서</p>${subs.map(su=>{
+    let st='todo';
+    if(isCurMajor){const ci=subs.findIndex(x=>x.k===curSub);const mi=subs.findIndex(x=>x.k===su.k);st=mi<ci?'done':mi===ci?'cur':'todo'}
+    else st=selMajor.status==='done'?'done':'todo';
+    const sel=su.k===cnsSubSel;
+    const icon=st==='done'?'✓':(subs.findIndex(x=>x.k===su.k)+1);
+    return `<button class="sn ${sel&&isCurMajor?'cur':st}" onclick="selectCnsSub('${su.k}')"><i>${icon}</i>${cnsEsc(su.n)}</button>`}).join('')}</div>`;
+  // 본문(현황 스트립 + 작업 화면 — 세부는 CH33-B/C)
+  const body=`<div class="mainA" id="cnsBody">${cnsBodyHTML(selMajor,cnsSubSel,model)}</div>`;
+  w.innerHTML=util+rail+`<div class="body2">${snav}${body}</div>`}
+function cnsStrip(kpis){return `<div class="strip">${kpis.map(k=>`<div class="kpi"><b class="num"${k.c?` style="color:${k.c}"`:''}>${k.v}</b><p>${k.l}</p></div>`).join('')}</div>`}
+function cnsBodyHTML(m,subKey,model){
+  const A=players.filter(p=>!isOut(p)).length;
+  const paid=players.filter(p=>p.paid).length;
+  const kpiRecruit=cnsStrip([{v:players.length+waitlist.length,l:'신청'},{v:paid,l:'입금',c:'var(--minttx)'},{v:model.regClosed?'마감':(config.capUnlimited?'∞':Math.max(0,config.cap-players.length)),l:'남은 자리'},{v:waitlist.length,l:'대기',c:'var(--goldtx)'}]);
+  const stage=m.stage;
+  let strip='',title='';
+  if(m.key==='recruit'){strip=kpiRecruit;title='신청 접수 · 입금 · 명단 확정'}
+  else if(stage){strip=cnsStrip([{v:A,l:'참가'},{v:'—',l:'완주'},{v:model.stages.length,l:'단계'}]);title=stage.name+' 진행'}
+  else if(m.key==='setup'){strip=cnsStrip([{v:noticeCompletionPct()+'%',l:'요강 완성도',c:'var(--goldtx)'},{v:players.length,l:'신청'}]);title='개설 준비'}
+  else if(m.key==='award'){strip=cnsStrip([{v:A,l:'완주'},{v:model.stages.length,l:'단계'}]);title='시상'}
+  else if(m.key==='close'){strip='';title='마감'}
+  const subName=(cnsSubsFor(m,model).find(x=>x.k===subKey)||{}).n||'';
+  return `${strip}
+    <div class="grp" style="padding:22px 20px">
+      <h5 style="color:var(--act);font-size:14px;margin-bottom:6px">${cnsEsc(m.name)} › ${cnsEsc(subName)}</h5>
+      <p style="font-size:14.5px;color:var(--sub);line-height:1.8">이 작업 화면(${cnsEsc(subName)})의 세부 UI는 CH33-B/C에서 목업대로 구현됩니다.<br>현재는 3층 프레임·이동 정책·현황 스트립까지 동작합니다.</p>
+    </div>`}
+function selectCnsMajor(key){
+  const m=(cnsModel?cnsModel.majors:[]).find(x=>x.key===key);if(!m)return;
+  if(m.status==='todo'){toast('아직 시작할 수 없어요 — 이전 단계를 먼저 마쳐야 해요');return} // 미래=준비물 안내
+  cnsMajorSel=key;cnsSubSel=null;renderConsole()}
+function selectCnsSub(key){cnsSubSel=key;renderConsole()}
+function closeCnsSheet(){$('#cnsSheetOv').classList.remove('on')}
+window.addEventListener('resize',()=>{if(curView==='Console'&&!isConsoleViewport())location.reload()});
 (async()=>{
   const qs=new URLSearchParams(location.search);
   const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply'),noticeId=qs.get('notice'),privacyFlag=qs.get('privacy');
@@ -6100,8 +6426,15 @@ setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-K
     await loadNotice(noticeId);return}
   if(privacyFlag){curView='Privacy';renderLoc();return}
   renderPlayers();renderVenues();renderPrizeRows();
+  // CH33: 콘솔 자동 로그인 시도(저장된 secret) — 모바일 enterAuthGate와 동일 RPC 재사용
+  const _ph=lastUsedPhone(),_sc=_ph?savedOwnerSecret(_ph):'';
+  if(_ph&&_sc){try{const{data}=await sb.rpc('operator_session_check',{p_phone:_ph,p_secret:_sc});
+    if(data&&data.length){const r=data[0];user.id=r.id;user.name=r.name;user.phone=_ph;user.secret=_sc;user.loggedIn=true;whoRender()}}catch(e){console.error(e)}}
   await loadTournaments();
-  if(applyId)openApply(applyId)})();
+  if(applyId){openApply(applyId);return}
+  // CH33 라우팅: 운영자 진입 — PC 폭(≥1024)이거나 ?console=1 → 콘솔, ?console=0 → 강제 모바일
+  const _cQ=qs.get('console');
+  if(_cQ==='1'||(_cQ!=='0'&&isConsoleViewport())){openConsole(user.loggedIn?'signin':'landing');return}})();
 </script>
 </body>
 </html>
