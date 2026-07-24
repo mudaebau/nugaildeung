@@ -5196,7 +5196,8 @@ async function submitPlayEntryFor(pid,correctionReason){
   const finishSaved=(playId,delayed)=>{
     addLog(`${jRound+1}코스 <b>${p?p.name:''}</b> 총 ${strokes}타 제출${correctionReason?' · 정정: '+correctionReason:''}`);
     if(correctionReason)sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:(scorerOptions()[curStaff]||{}).name||'심판',
-      what:`${p?p.name:''} ${jRound+1}코스 기록 정정 ${prevBest!=null?prevBest+'→':''}${strokes}타 — 사유: ${correctionReason}`});
+      what:`${p?p.name:''} ${jRound+1}코스 기록 정정 ${prevBest!=null?prevBest+'→':''}${strokes}타 — 사유: ${correctionReason}`})
+      .then(({error})=>{if(error)console.error('정정 로그 저장 실패',error)}); // P0 핫픽스: await/then 없으면 supabase-js가 요청을 안 보냄
     if(p){
       p.best=p.best||{};
       if(judgeStageKind==='period'){if(prevBest==null||strokes<prevBest)p.best[jRound]=strokes}
