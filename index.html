@@ -6508,12 +6508,13 @@ function cnsStageStrip(stage,extra){
   return cnsStrip([{v:A,l:'참가'},{v:done,l:'완주',c:'var(--act)'}].concat(extra||[]))}
 function cnsScrStage(stage,subKey,model){
   const period=cnsStageIsPeriod(stage);
+  // groups·score·cut은 자체 스트립을 만든다 → 공용 스트립 접두 금지(이중 스트립 방지)
   if(subKey==='roster')return cnsStageStrip(stage)+cnsScrRoster(stage);
-  if(subKey==='groups')return cnsStageStrip(stage)+cnsScrGroups(stage);
+  if(subKey==='groups')return cnsScrGroups(stage);
   if(subKey==='start')return cnsStageStrip(stage)+cnsScrStart(stage);
   if(subKey==='score')return cnsScrScore(stage,period);
   if(subKey==='lock')return cnsStageStrip(stage)+cnsScrLock(stage);
-  if(subKey==='cut')return cnsStageStrip(stage)+cnsScrCut(stage,model);
+  if(subKey==='cut')return cnsScrCut(stage,model);
   if(subKey==='close')return cnsStageStrip(stage)+cnsScrClose2(stage);
   return cnsStageStrip(stage)}
 /* 명단 확정(콜업 포함) — round 단계, seq>1 */
@@ -6560,6 +6561,10 @@ function cnsScrScore(stage,period){
   const banner=locked?`<div class="grp" style="padding:12px 16px;background:#FFF9E8;border-color:#EFD9A0;margin-bottom:12px"><p style="font-size:14px;color:var(--goldtx);font-weight:700">🔒 스코어가 확정(잠금)되었습니다 — 입력·정정이 모든 경로에서 차단됩니다. 정정하려면 [스코어 확정] 화면에서 확정을 취소하세요.</p></div>`:'';
   if(cnsRankView)return strip+banner+cnsRankTable(stage,period);
   if(!cnsStageOpen(stage))return strip+`<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">${cnsEsc(stage.name)}이 아직 시작되지 않았어요 — <b>시작</b>에서 먼저 시작하세요.</p></div>`;
+  // 홀별(지정일 라운드) 입력은 파일럿 후 차수(CH34, 화면 H) — 콘솔은 기간형 코스 입력만 제공.
+  if(!period&&stage.record_mode==='hole')
+    return strip+`<div class="grp" style="padding:20px"><h5>홀별 스코어 입력</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">이 단계는 <b>지정일 홀별(조 진행)</b> 방식이라 홀 단위 입력이 필요합니다. 콘솔 홀별 입력(화면 H)은 <b>CH34(파일럿 후)</b>에서 열립니다. 현재는 심판 화면(모바일)으로 입력하거나, 총점형 단계는 여기서 코스 총타수로 입력합니다.</p></div>`;
   return strip+banner+cnsScoreTable(stage,period,locked)}
 function cnsDdayLeft(){
   if(!config.dateE)return '—';
@@ -6641,20 +6646,35 @@ function cnsScrCut(stage,model){
       <button class="btn" style="margin-top:12px" onclick="cnsCutApply('${stage.id}')">전원 진출 — ${cnsEsc(nextStage.name)} 명단 만들기</button></div>`;
   const adv=cnsCutAdvanced(cx);
   const advIds=new Set(adv.map(p=>p.id));
-  const tiedIds=new Set();cx.groups.forEach(g=>{if(!g.res.autoResolved)g.res.tied.forEach(p=>tiedIds.add(p.id))});
   const unresolved=cx.groups.filter(g=>!g.res.autoResolved&&!(cnsCutFinal[g.key]&&cnsCutFinal[g.key].length));
+  // 미해소 동점(수동 선택 대상)
+  const tiedIds=new Set();cx.groups.forEach(g=>{if(!g.res.autoResolved)g.res.tied.forEach(p=>tiedIds.add(p.id))});
+  // 경계 동점 자동 해소 병기 — resolveCut을 건드리지 않고 렌더 계층에서 컷선 동점을 감지·판정 표기.
+  const shortRule=cx.tieRule.replace('최종 코스 ','');
+  const btMap={};
+  cx.groups.forEach(g=>{
+    const pool=g.key==='total'?cx.done:cx.done.filter(s=>s.p.sex===g.key);
+    const bv=pool[g.cutN-1]?pool[g.cutN-1].tot:null;if(bv==null)return;
+    const same=pool.filter(s=>s.tot===bv);
+    if(same.length<2)return;
+    if(!(same.some(s=>advIds.has(s.p.id))&&same.some(s=>!advIds.has(s.p.id))))return; // 컷선을 실제로 가르는 동점만
+    same.forEach(s=>{if(!tiedIds.has(s.p.id))btMap[s.p.id]=advIds.has(s.p.id)?'우세':'열세'});
+  });
+  const anyTie=tiedIds.size||Object.keys(btMap).length;
   const cutLabel=cx.cut.total?`상위 ${cx.cut.total}명`:`남 ${cx.cut.m||0}·여 ${cx.cut.f||0}`;
-  const warn=tiedIds.size?`<p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 경계 동점 — ${unresolved.length?'수동 선택 필요':'규칙 자동 적용됨'}</p>`:'';
+  const warn=anyTie?`<p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 경계 동점 — ${unresolved.length?'수동 선택 필요':cnsEsc(shortRule)+' 자동 적용됨'}</p>`:'';
   const applyBtn=`<button class="btn"${unresolved.length?' style="opacity:.5;pointer-events:none"':''} onclick="cnsCutApply('${stage.id}')">컷 적용 — ${cnsEsc(nextStage.name)} 명단 만들기</button>`;
   const strip=cnsStripAppend(cnsStrip([{v:cx.done.length,l:'완주'},{v:cutLabel,l:'진출 컷',c:'var(--act)'}]),warn+applyBtn);
   let firstOut=true;
   const rows=cx.done.map((s,i)=>{
-    const adv=advIds.has(s.p.id),tie=tiedIds.has(s.p.id);
+    const adv=advIds.has(s.p.id),tie=tiedIds.has(s.p.id),bt=btMap[s.p.id];
     const line=(!adv&&firstOut)?'border-top:2.5px dashed #C4523A;':'';if(!adv)firstOut=false;
-    const bg=tie?'background:#FFF9E8;':'';
+    const bg=(tie||bt)?'background:#FFF9E8;':'';
+    const verdict=tie?' <span style="font-size:11.5px;color:var(--goldtx)">경계 동점</span>'
+      :bt?` <span style="font-size:11.5px;color:var(--goldtx)">동점 — ${cnsEsc(shortRule)} ${bt}</span>`:'';
     return `<tr style="${bg}${line}"><td><b class="num" style="font-size:18px;${adv?'':'color:var(--dim)'}">${i+1}</b></td>
       <td><b${adv?'':' style="color:var(--sub)"'}>${cnsEsc(s.p.name)}</b></td><td>${cnsEsc(s.p.sex||'—')}</td>
-      <td class="num">${s.tot}</td><td><span class="pill ${adv?'mint':'dim'}">${adv?'진출':'탈락'}</span>${tie?' <span style="font-size:11.5px;color:var(--goldtx)">경계 동점</span>':''}</td></tr>`}).join('');
+      <td class="num">${s.tot}</td><td><span class="pill ${adv?'mint':'dim'}">${adv?'진출':'탈락'}</span>${verdict}</td></tr>`}).join('');
   const tieUI=unresolved.map(g=>{
     const needed=g.cutN-g.res.base.length;const sel=cnsCutSel[g.key]||new Set();
     return `<div class="grp" style="margin-top:12px;background:#FFF9E8;border-color:#EFD9A0"><h5 style="color:var(--goldtx)">${g.label?g.label+' ':''}${g.cutN}위 경계 동점 ${g.res.tied.length}명 — 자동 해소 불가(규칙: ${cnsEsc(cx.tieRule)})</h5>
