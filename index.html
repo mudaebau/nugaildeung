@@ -6177,6 +6177,7 @@ setInterval(()=>{$('#footClock').textContent=new Date().toLocaleTimeString('ko-K
 let cnsScreen='signin';      // landing | signin | wizard | main
 let cnsMajorSel=null;        // 레일에서 선택한 대단계 key
 let cnsSubSel=null;          // 목록에서 선택한 중단계 key
+let cnsTool=null;            // 유틸바 도구 화면: null | hub | staff | mypage | notice
 function isConsoleViewport(){return window.innerWidth>=1024}
 function openConsole(screen){cnsScreen=screen||cnsScreen;curView='Console';renderLoc();renderConsole()}
 function cnsGo(s){cnsScreen=s;renderConsole()}
@@ -6348,8 +6349,19 @@ function cnsCurrentSub(m,subs,model){
   if(m.key==='close')return 'finalize';
   if(m.stage){if(m.stage.status==='open')return 'score';return subs[0]?subs[0].k:null}
   return subs[0]?subs[0].k:null}
+function cnsUtilBarHTML(){
+  return `<div class="util"><span class="lg" onclick="cnsCloseTool();cnsGo('signin')">누가<i>1</i>등</span><span class="tname" onclick="cnsCloseTool()" style="cursor:pointer">${cnsEsc(config.name)}</span>
+    <div class="tools">
+      <button onclick="openBoard()">📺 전광판</button>
+      <button onclick="copyApplyShareLink()">🔗 신청 링크</button>
+      <button onclick="cnsOpenTool('staff')">⚖️ 심판진</button>
+      <button onclick="cnsOpenTool('hub')">⚙️ 대회 정보</button>
+      <button onclick="openExportSheet()">📤 내보내기</button>
+      <button class="acct" onclick="cnsOpenTool('mypage')">${cnsEsc(user.name)} ▾</button>
+    </div></div>`}
 async function renderCnsMain(w){
   if(!config.id){cnsGo('signin');return}
+  if(cnsTool)return renderCnsTool(w);
   cnsModel=await buildConsoleModel();
   const model=cnsModel;
   const cur=model.majors.find(m=>m.key===model.curKey);
@@ -6358,16 +6370,7 @@ async function renderCnsMain(w){
   const isCurMajor=selMajor.key===model.curKey;
   const curSub=isCurMajor?cnsCurrentSub(selMajor,subs,model):null;
   if(!cnsSubSel||!subs.find(x=>x.k===cnsSubSel))cnsSubSel=curSub||(subs[0]&&subs[0].k);
-  // 유틸바
-  const util=`<div class="util"><span class="lg" onclick="cnsGo('signin')">누가<i>1</i>등</span><span class="tname">${cnsEsc(config.name)}</span>
-    <div class="tools">
-      <button onclick="openBoard()">📺 전광판</button>
-      <button onclick="copyApplyShareLink()">🔗 신청 링크</button>
-      <button onclick="toast('심판진 화면은 CH33-C에서 열려요')">⚖️ 심판진</button>
-      <button onclick="toast('정보 수정 허브는 CH33-C에서 열려요')">⚙️ 대회 정보</button>
-      <button onclick="openExportSheet()">📤 내보내기</button>
-      <button class="acct" onclick="cnsGo('signin')">${cnsEsc(user.name)} ▾</button>
-    </div></div>`;
+  const util=cnsUtilBarHTML();
   // 레일
   const rail=`<div class="rail">${model.majors.map((m,i)=>{
     const done=m.status==='done',isCur=m.status==='cur';
@@ -6498,6 +6501,130 @@ function selectCnsMajor(key){
   cnsMajorSel=key;cnsSubSel=null;renderConsole()}
 function selectCnsSub(key){cnsSubSel=key;renderConsole()}
 function closeCnsSheet(){$('#cnsSheetOv').classList.remove('on')}
+/* ===== 유틸바 도구 화면 (화면 7·J·M·R) — 모두 기존 함수·RPC 재사용 ===== */
+function cnsOpenTool(t){cnsTool=t;renderConsole()}
+function cnsCloseTool(){cnsTool=null;renderConsole()}
+function cnsDateK(d){return(d||'').replaceAll('-','.')}
+async function renderCnsTool(w){
+  if(cnsTool==='mypage')return renderCnsMypage(w);
+  const util=cnsUtilBarHTML();
+  let body='';
+  try{
+    if(cnsTool==='hub')body=await cnsHubHTML();
+    else if(cnsTool==='staff')body=cnsStaffHTML();
+    else if(cnsTool==='notice')body=cnsNoticeHTML();
+  }catch(e){console.error(e);body='<div class="mainA" style="padding:24px"><p style="color:var(--sub)">화면을 여는 중 오류가 발생했습니다 — 다시 시도해 주세요.</p><button class="btn soft" style="margin-top:10px" onclick="cnsCloseTool()">← 콘솔로</button></div>'}
+  w.innerHTML=util+body}
+/* --- 화면 7: 정보 수정 허브(3컬럼 버튼형 + 완성도) --- */
+function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
+function cnsEditField(key){openEditInfo().then(()=>showEditSection(key))} // 기존 EditInfo 편집 뷰 재사용(복귀=콘솔)
+async function cnsHubHTML(){
+  const stages=await loadAllStages(config.id);
+  editStage=curActiveStage(stages);
+  const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
+  const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
+  editStageLocked=(scoreCount+playCount)>0;
+  const pct=noticeCompletionPct(),ne=config.noticeExtra||{};
+  const awardsFilled=!!(config.prizeTotal||(config.prizes||[]).some(p=>p.label));
+  const feeFilled=!!(ne.fee||ne.contact),rulesFilled=!!ne.rules;
+  const chk=ok=>ok?'<small style="color:var(--minttx);font-weight:700">완료 ✓</small>':'<small style="color:var(--goldtx);font-weight:700">채우기</small>';
+  const row=(icon,title,right,onclick,lock)=>`<button class="hbtn${lock?' lock':''}" ${lock?'':`onclick="${onclick}"`}>${icon} ${title}${right}${lock?'':'<span class="go">›</span>'}</button>`;
+  const lockPill='<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small>';
+  return `<div style="background:var(--cbg);padding:16px 22px 4px">
+    <div class="strip" style="margin-bottom:0"><div class="kpi"><b style="color:var(--goldtx)">${pct}<small style="font-size:15px">%</small></b><p>요강 완성도</p></div>
+      <p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100% — 완성된 요강이 신청을 늘려요</p>
+      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn soft" onclick="cnsOpenTool('notice')">👁 요강 미리보기</button><button class="btn soft" onclick="cnsCloseTool()">← 콘솔로</button></span></div></div>
+    <div style="background:var(--cbg);padding:12px 22px 22px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div class="hcol"><p class="h" style="color:var(--minttx)">📋 요강 내용 — 언제든 수정</p>
+        ${row('🏷','대회명 · 주최',`<small>${cnsEsc(config.name)}</small>`,"cnsEditField('basic')")}
+        ${row('🏆','시상 내역',chk(awardsFilled),"cnsEditField('awards')")}
+        ${row('💰','참가비 · 문의',chk(feeFilled),"cnsEditField('awards')")}
+        ${row('📖','게임룰',chk(rulesFilled),"cnsEditField('awards')")}
+        ${row('👁','요강 미리보기 · 공유','<small>이미지 저장</small>',"cnsOpenTool('notice')")}
+      </div>
+      <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인</p>
+        ${row('📅','일정 · 대회장소',`<small>${cnsDateK((config.dateS||'').slice(5))} · ${cnsEsc(config.place||'미정')}</small>`,"cnsEditField('schedule')")}
+        ${row('👥','정원 · 참여 대상',`<small>${config.capUnlimited?'무제한':config.cap+'명'}</small>`,"cnsEditField('cap')")}
+        ${row('🔒','공개 설정',`<small>${config.visibility==='private'?'비공개':'공개'}</small>`,"cnsEditField('visibility')")}
+        ${row('📝','참가자 정보 항목',`<small>${cnsFieldsSummary()}</small>`,"cnsEditField('fields')")}
+      </div>
+      <div class="hcol"><p class="h" style="color:#C4523A">🔴 ${editStageLocked?'기록이 있어 잠김':'기록이 생기면 잠김'}</p>
+        ${editStageLocked
+          ?row('⛳','코스 구성 · 파',lockPill,'',true)+row('🪜','단계 구조 · 컷 · 동점',lockPill,'',true)
+          :row('⛳','코스 · 단계 · 컷 · 동점','<small>열림</small>',"cnsEditField('course')")}
+        <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">해당 단계 기록이 없을 때만 열려요</p>
+      </div>
+    </div>`}
+/* --- 화면 J: 심판진 --- */
+function cnsStaffHTML(){
+  const js=judges(),connected=js.filter(s=>s.link_opened_at).length;
+  const ownerRow=`<tr><td><b>나 (운영자)</b></td><td>전체</td><td><span class="pill mint">상시</span></td><td><span style="font-size:13px;color:var(--sub)">— 콘솔에서 직접 입력</span></td></tr>`;
+  const rows=staff.map(s=>{
+    const st=!s.canScore?'<span class="pill dim">비활성</span>':s.link_opened_at?'<span class="pill mint">접속</span>':'<span class="pill dim">미접속</span>';
+    return `<tr${s.canScore?'':' style="opacity:.55"'}><td><b>${cnsEsc(s.name)}</b></td><td>${cnsEsc(s.duty||'담당 미지정')}</td><td>${st}</td>
+      <td><button class="btn soft" style="padding:7px 12px;font-size:13px" onclick="copyJudgeLinkById('${s.id}')">🔗 링크 복사</button>
+      <button class="btn soft" style="padding:7px 12px;font-size:13px;margin-left:4px" onclick="reissueStaffToken('${s.id}').then(()=>renderConsole())">♻ 재발급</button></td></tr>`}).join('');
+  return `<div class="mainA" style="padding:16px 22px">
+    <div class="strip"><div class="kpi"><b>${staff.length}</b><p>심판</p></div><div class="kpi"><b style="color:var(--act)">${connected}</b><p>접속 중</p></div>
+      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" onclick="cnsOpenAddStaff()">＋ 심판 추가</button><button class="btn soft" onclick="cnsCloseTool()">← 콘솔로</button></span></div>
+    <table><tr><th>이름</th><th>담당</th><th style="width:110px">상태</th><th style="width:260px">입력 링크</th></tr>${ownerRow}${rows}</table>
+    <p class="cap">재발급=구 링크 즉시 무효(P81) · 삭제 시 입력 이력 있으면 비활성 보존(모바일 심판진 탭) · 심판 링크는 문자·카톡으로 전송</p></div>`}
+function cnsOpenAddStaff(){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:10px">심판 추가</h3>
+    <input class="cfield" id="cnsStName" placeholder="이름" style="margin-bottom:8px">
+    <input class="cfield" id="cnsStPhone" placeholder="전화번호 010-1234-5678" style="margin-bottom:8px">
+    <input class="cfield" id="cnsStDuty" placeholder="담당(선택, 예: 1~2조)" style="margin-bottom:14px">
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsAddStaff()">등록</button></div>`)}
+async function cnsAddStaff(){
+  const name=$('#cnsStName').value.trim(),phone=normalizePhone($('#cnsStPhone').value||''),duty=$('#cnsStDuty').value.trim();
+  if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
+  const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,p_staff:[{name,phone,duty,can_score:true}]});
+  if(error){toast('추가 중 오류: '+(error.code==='23505'?'이미 등록된 전화번호':error.message));console.error(error);return}
+  const r=data[0];staff.push({id:r.id,name,phone:r.phone,duty,canScore:true,token:r.token,link_opened_at:null});
+  closeCnsSheet();toast(`${name} 님 등록`);renderConsole()}
+/* --- 화면 M: 마이페이지(다크 슬레이트) --- */
+function renderCnsMypage(w){
+  const mine=tournaments.filter(t=>t.mine);
+  const hist=mine.map(t=>{
+    const label=t.status==='live'?'진행 중':t.status==='open'?'접수 중':t.status==='done'?'종료':'개설 완료';
+    return `${t.status==='live'?'● ':''}${cnsEsc(t.name)} — ${label}`}).join('<br>')
+    ||'<span style="color:var(--sub)">아직 운영 중인 대회가 없습니다</span>';
+  w.innerHTML=`<div style="background:#EEF0F4;min-height:100vh">
+    <div class="myband" style="color:#fff;padding:22px 26px;display:flex;align-items:center;gap:16px">
+      <span style="width:52px;height:52px;border-radius:50%;background:#4B5563;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">${cnsEsc((user.name||'?')[0])}</span>
+      <div><b style="font-size:20px">${cnsEsc(user.name)}</b><p style="font-size:14.5px;opacity:.8">${cnsEsc(maskPhone(user.phone||''))} · 운영자</p></div>
+      <button style="margin-left:auto;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;font-size:13.5px;font-weight:700;color:#fff;cursor:pointer" onclick="cnsCloseTool()">← 콘솔로 돌아가기</button>
+    </div>
+    <div style="padding:18px 26px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="grp"><h5 style="color:#374151">내 대회 이력</h5><p style="font-size:15.5px;line-height:2">${hist}</p></div>
+      <div class="grp"><h5 style="color:#374151">계정 · 보안</h5>
+        <p style="font-size:15.5px;line-height:2.3"><span style="cursor:pointer" onclick="confirmReissueSecret()">🔑 보안키 재발급 <span style="color:var(--sub);font-size:13px">(내 대회 접근 키)</span></span><br>
+        <span style="color:#C4523A;font-weight:700;cursor:pointer" onclick="cnsLogoutFull()">로그아웃</span></p></div>
+    </div></div>`}
+function cnsLogoutFull(){const ph=user.phone;clearSavedLogin(ph);user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;cnsTool=null;whoRender();cnsGo('signin');toast('로그아웃되었습니다')}
+/* --- 화면 R: 문서 타이포 요강(미리보기·공유) --- */
+function cnsNoticeHTML(){
+  const ne=config.noticeExtra||{};
+  const period=config.dateS===config.dateE?cnsDateK(config.dateS):`${cnsDateK(config.dateS)} ~ ${cnsDateK((config.dateE||'').slice(5))}`;
+  const elig=config.eligibility||'파크골프를 사랑하는 누구나';
+  const capTxt=config.capUnlimited?'제한 없음':`선착순 ${config.cap}명`;
+  const prizes=(config.prizes||[]).filter(p=>p.label).map(p=>cnsEsc(p.label)+(p.amount?' '+cnsEsc(p.amount):'')).join(' · ');
+  const awardTxt=[config.prizeTotal?'종합 '+cnsEsc(config.prizeTotal):'',prizes].filter(Boolean).join(' · ')||'미정';
+  const fee=ne.fee?cnsEsc(ne.fee):'미정',contact=ne.contact?cnsEsc(ne.contact):'';
+  const sec=(label,body)=>`<div style="padding:16px 0;border-bottom:1px solid var(--line)"><p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">${label}</p><p style="font-size:18px;line-height:1.9">${body}</p></div>`;
+  return `<div style="background:#fff;padding:30px 0;min-height:calc(100vh - 56px)">
+    <div style="max-width:640px;margin:0 auto;padding:0 26px">
+      <div style="display:flex;align-items:center;margin-bottom:12px"><p style="font-size:15px;font-weight:700;color:var(--act)">대회 요강</p><button class="btn soft" style="margin-left:auto" onclick="cnsCloseTool()">← 콘솔로</button></div>
+      <h2 style="font-size:28px;line-height:1.4;margin-bottom:10px">${cnsEsc(config.name)}</h2>
+      <p style="font-size:17px;color:var(--sub);margin-bottom:18px">${period} · ${cnsEsc(config.place||'장소 미정')}</p>
+      <div style="border-top:2px solid var(--ink)">
+        ${sec('참가 대상 · 정원',cnsEsc(elig)+' · '+capTxt)}
+        ${sec('시상',awardTxt)}
+        ${sec('참가비 · 문의',fee+(contact?' · '+contact:''))}
+        ${ne.rules?sec('게임룰',cnsEsc(ne.rules)):''}
+      </div>
+      <div style="margin-top:20px;display:flex;gap:8px"><button class="btn" style="font-size:16px" onclick="copyApplyShareLink()">🔗 신청 링크 복사</button><button class="btn soft" onclick="openNotice('${config.id}')">👁 참가자 화면으로 보기</button></div>
+    </div></div>`}
 /* ===== 단계(stage) 화면 — 명단·조편성·시작·스코어·확정·진출자·마감 ===== */
 let cnsRankView=false,cnsEditCell=null,cnsCutSel={},cnsCutFinal={};
 function cnsStageStrip(stage,extra){
