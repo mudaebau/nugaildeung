@@ -7122,7 +7122,7 @@ function cnsScrClose2(stage){
     <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:6px">${cnsEsc(stage.name)} 순위가 마감됩니다.</p>
     <p style="color:var(--goldtx);font-size:13px;margin-bottom:12px">⚠ 마감 후에는 ${cnsEsc(stage.name)} 기록을 입력·수정할 수 없습니다.</p>
     <button class="btn" onclick="cnsCloseStage('${stage.id}')">${cnsEsc(stage.name)} 마감하기</button></div>`}
-/* ===== CH34 화면 O: 당일 준비·출석(지정일 단계 전용) ===== */
+/* ===== CH34 화면 O: 당일 준비·출석(P45 개정 후 기간형 포함 전 단계) ===== */
 async function cnsToggleCi(i){const p=players[i];if(!p||!p.id)return;const next=!p.ci;
   const{error}=await sb.rpc('update_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret,p_checked_in:next});
   if(error){toast('출석 처리 중 오류가 발생했습니다');console.error(error);return}
@@ -7135,7 +7135,7 @@ function cnsScrAttend(stage){
     <td><span class="pill ${p.ci?'mint':'dim'}" style="cursor:pointer" onclick="cnsToggleCi(${i})">${p.ci?'출석':'미출석'}</span></td>
     <td><span class="pill ${p.paid?'mint':'dim'}" style="cursor:pointer" onclick="cnsTogglePaid(${i})">${p.paid?'입금':'미입금'}</span></td></tr>`).join('');
   return strip+`<table><tr><th style="width:52px">조</th><th>이름</th><th>클럽</th><th style="width:96px">출석</th><th style="width:90px">입금</th></tr>${rows}</table>
-    <p class="cap">지정일 단계 전용 중단계 — 뱃지 클릭으로 출석·입금 즉시 전환. 기간형엔 이 중단계가 생성되지 않습니다(P45). 내보내기 CSV에 '출석' 헤더 포함.</p>`}
+    <p class="cap">뱃지 클릭으로 출석·입금 즉시 전환. 기간형을 포함한 모든 단계에 생성됩니다(P45 개정). 내보내기 CSV에 '출석' 헤더 포함.</p>`}
 /* ===== CH34 화면 H: 홀별 스코어 입력(지정일 라운드) ===== */
 let cnsHoleGroupIdx=0,cnsHolePlayerPi=null,cnsHolePendCorr=null;
 function cnsHoleProgress(pi){const sc=(players[pi]||{}).scores||[];let d=0;for(let g=0;g<HOLES;g++)if(sc[g]!=null)d++;return d}
@@ -7314,21 +7314,38 @@ function cnsScoreReasonConfirm(){
   cnsScoreCommit(changes,reason)}
 async function cnsScoreCommit(changes,reason){
   const results=[];
+  // 기존값 정정은 새 기록 제출이 아니라 그 기록 자체를 고쳐야 한다 — 기간형은 최저 타수를
+  // 유지하므로 상향 정정(68→69)을 submit_play_owner로 보내면 조용히 무시된다. 사유 시트가
+  // "기존값 N건을 수정합니다"라고 확인까지 받고 값이 안 바뀌던 문제(R11 발견).
+  let playRows=null;
+  if(changes.some(ch=>ch.valid&&ch.orig!=='')){
+    const{data}=await sb.rpc('get_plays_owner',{t_id:config.id,p_owner_secret:user.secret});
+    playRows=data||[]}
   for(const ch of changes){
     if(!ch.valid){results.push({name:cnsPlayerName(ch.pid),c:ch.c,ok:false,reason:'총타수 범위(18~200) 아님'});continue}
-    const p=players.find(x=>x.id===ch.pid),prevBest=p&&p.best?p.best[ch.c]:null;
-    // (c) 항목별 client_request_id 멱등
-    const params={t_id:config.id,p_owner_secret:user.secret,p_player_id:ch.pid,p_course_no:ch.c,p_strokes_total:ch.strokes,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()};
-    const{error}=await sb.rpc('submit_play_owner',params);
+    const p=players.find(x=>x.id===ch.pid);
+    // 정정 대상: 같은 참가자·코스에서 화면에 보이던 값(orig)과 일치하는 기록
+    const target=(ch.orig!==''&&playRows)
+      ? playRows.find(r=>r.player_id===ch.pid&&r.course_no===ch.c&&String(r.strokes_total)===String(ch.orig))
+      : null;
+    let error;
+    if(target){
+      ({error}=await sb.rpc('update_play_strokes_owner',{t_id:config.id,p_owner_secret:user.secret,p_play_id:target.id,p_strokes_total:ch.strokes}));
+      if(!error)target.strokes_total=ch.strokes
+    }else{
+      // (c) 항목별 client_request_id 멱등
+      const params={t_id:config.id,p_owner_secret:user.secret,p_player_id:ch.pid,p_course_no:ch.c,p_strokes_total:ch.strokes,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()};
+      ({error}=await sb.rpc('submit_play_owner',params))}
     if(error){results.push({name:p?p.name:ch.pid,c:ch.c,ok:false,reason:error.message});continue}
-    if(p){p.best=p.best||{};if(prevBest==null||ch.strokes<prevBest)p.best[ch.c]=ch.strokes}
     addLog(`${ch.c+1}코스 <b>${p?p.name:''}</b> 총 ${ch.strokes}타 제출(콘솔 일괄)${reason&&ch.orig!==''?' · 정정: '+reason:''}`);
     if(reason&&ch.orig!==''){await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${p?p.name:''} ${ch.c+1}코스 기록 정정 ${ch.orig}→${ch.strokes}타 — 사유: ${reason}`})} // await 필수: supabase-js 빌더는 await/then 없으면 미전송
     results.push({name:p?p.name:ch.pid,c:ch.c,ok:true,strokes:ch.strokes});
   }
   const ok=results.filter(r=>r.ok).length,fail=results.filter(r=>!r.ok);
+  // 정정으로 기록이 올라갈 수도 있으므로 best는 클라이언트 min 규칙이 아니라 서버 값을 다시 읽는다.
+  if(ok)await loadBoardData(config.id,true);
   if(typeof refreshMyTournamentStatus==='function'){try{await refreshMyTournamentStatus()}catch(e){}}
-  if(!fail.length){toast(`${ok.length}건 저장 완료`);renderConsole();return}
+  if(!fail.length){toast(`${ok}건 저장 완료`);renderConsole();return} // ok는 이미 개수(.length 중복 접근이 undefined를 냈다 — R9)
   // (b) 부분 성공 — 성공/실패 목록 반환(실패 사유 가시)
   openCnsSheet(`<h3 style="font-size:19px;margin-bottom:8px">저장 결과 — 성공 ${ok} · 실패 ${fail.length}</h3>
     ${ok?`<div style="background:var(--mint);border-radius:10px;padding:8px 12px;margin-bottom:8px"><b style="font-size:13px;color:var(--minttx)">성공 ${ok}건</b><p style="font-size:13px;line-height:1.6;color:var(--ink)">${results.filter(r=>r.ok).map(r=>cnsEsc(r.name)+' '+(r.c+1)+'코스 '+r.strokes).join(' · ')}</p></div>`:''}
