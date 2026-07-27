@@ -6271,47 +6271,73 @@ async function cnsEnterTournament(id){
   cnsMajorSel=null;cnsSubSel=null;
   cnsGo('main')}
 /* ---- 화면 W: 개설(2패널) — 위저드 필드 세팅 후 createTournament 재사용 ---- */
-let cnsPreset='solo',cnsMethod='period'; // R2: 경기 방식 — 대회기간형(period) 기본, 지정일 홀별(round=CH34)
+/* ---- 화면 W v2: 단계 카드마다 [방식(기간/지정일) × 입력(총타/홀별) × 일정] 독립 선택 ---- */
+let cnsPreset='qualify2',cnsWiz={name:'',place:'',cap:'40'},cnsWizStages={1:{},2:{},3:{}};
+function cnsWizStageCount(){return cnsPreset==='solo'?1:cnsPreset==='qualify2'?2:3}
+function cnsWizStageName(i){const c=cnsWizStageCount();return c===1?'본선':c===2?(i===1?'예선':'결승'):(i===1?'예선':i===2?'본선':'결승')}
+function cnsWizDefaults(){
+  // 프리셋별 제안 기본값(카드에서 변경 가능). 3단계 기본=기간→기간→지정일(목업 W v2).
+  cnsWizStages={
+    1:{kind:'period',rec:'total',dS:'2026-07-25',dE:'2026-07-31'},
+    2:{kind:(cnsPreset==='qualify3'?'period':'round'),rec:(cnsPreset==='qualify3'?'total':'hole'),dS:'2026-08-05',dE:'2026-08-11'},
+    3:{kind:'round',rec:'hole',dS:'2026-08-20',dE:''}}}
+function cnsWizSetPreset(k){cnsWizSyncInputs();cnsPreset=k;cnsWizDefaults();renderConsole()}
+function cnsWizSyncInputs(){const g=id=>{const el=$('#'+id);return el?el.value:''};
+  if($('#cnsWName'))cnsWiz.name=g('cnsWName');if($('#cnsWPlace'))cnsWiz.place=g('cnsWPlace');if($('#cnsWCap'))cnsWiz.cap=g('cnsWCap')||'40';
+  for(let i=1;i<=cnsWizStageCount();i++){const s=cnsWizStages[i];const dS=g('cnsWS'+i),dE=g('cnsWE'+i);if(dS)s.dS=dS;if(s.kind==='period'&&dE)s.dE=dE}}
+function cnsWizSet(i,key,val){cnsWizSyncInputs();const s=cnsWizStages[i];
+  if(key==='kind'){s.kind=val;if(val==='period')s.rec='total'}      // 기간형=총타 고정
+  else if(key==='rec'){if(s.kind==='period')return;s.rec=val}        // 기간형 입력은 총타만
+  renderConsole()}
 function renderCnsWizard(w){
-  const presets=[['solo','🏆 단판 대회','본선 한 번으로 끝'],['qualify2','🪜 예선 + 결승','기간 예선 후 결승전'],['qualify3','🏟 예선 + 본선 + 결승','3단계 토너먼트']];
-  const methodBtn=(k,t,d,dis)=>`<button class="hbtn" ${dis?'disabled style="opacity:.5;cursor:not-allowed"':`onclick="cnsMethod='${k}';renderConsole()" style="${cnsMethod===k?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}"`}>${t}<small>${d}${dis?' · 파일럿 후(CH34)':''}</small><span class="go">${cnsMethod===k?'✓':dis?'🔒':'›'}</span></button>`;
+  if(!cnsWizStages[1].kind)cnsWizDefaults();
+  const n=cnsWizStageCount();
+  const presets=[['solo','🏆 단판'],['qualify2','🪜 예선 + 결승'],['qualify3','🏟 예선 + 본선 + 결승']];
+  const chip=(on,label,onclick,dis)=>`<button ${dis?'disabled':`onclick="${onclick}"`} style="cursor:${dis?'not-allowed':'pointer'};border-radius:99px;padding:6px 12px;margin:0 6px 6px 0;border:1.5px solid ${on?'var(--act)':'var(--line)'};background:${on?'var(--act-soft)':'#fff'};color:${on?'var(--act)':dis?'var(--dim)':'var(--sub)'};font-weight:700;font-size:12.5px">${label}</button>`;
+  const cards=Array.from({length:n},(_,idx)=>{const i=idx+1,s=cnsWizStages[i];
+    const dateUI=s.kind==='period'
+      ?`<div style="display:flex;gap:6px;align-items:center;margin-top:2px"><span style="font-size:12px;color:var(--sub);font-weight:700">기간</span><input class="cfield" id="cnsWS${i}" type="date" value="${s.dS||''}" style="flex:1;font-size:13.5px;padding:7px 8px"><span style="color:var(--sub)">~</span><input class="cfield" id="cnsWE${i}" type="date" value="${s.dE||''}" style="flex:1;font-size:13.5px;padding:7px 8px"></div>`
+      :`<div style="display:flex;gap:6px;align-items:center;margin-top:2px"><span style="font-size:12px;color:var(--sub);font-weight:700">대회일</span><input class="cfield" id="cnsWS${i}" type="date" value="${s.dS||''}" style="flex:1;font-size:13.5px;padding:7px 8px"></div>`;
+    return `<div class="grp" style="margin-bottom:8px;padding:12px 14px"><h5 style="margin-bottom:6px">${cnsWizStageName(i)}</h5>
+      <div style="margin-bottom:3px"><span style="font-size:12px;color:var(--sub);font-weight:700;margin-right:4px">방식</span>${chip(s.kind==='period','📅 지정기간 라운드',`cnsWizSet(${i},'kind','period')`)}${chip(s.kind==='round','⛳ 지정일 라운드',`cnsWizSet(${i},'kind','round')`)}</div>
+      <div style="margin-bottom:3px"><span style="font-size:12px;color:var(--sub);font-weight:700;margin-right:4px">입력</span>${chip(s.rec==='total','총타수 제출',`cnsWizSet(${i},'rec','total')`)}${chip(s.rec==='hole','홀별 입력',`cnsWizSet(${i},'rec','hole')`,s.kind==='period')}</div>
+      ${dateUI}</div>`}).join('');
   w.innerHTML=`
     <div class="util"><span class="lg" onclick="cnsGo('signin')">누가<i>1</i>등</span><span class="tname">새 대회 개설</span></div>
     <div style="display:flex;background:var(--cbg);min-height:calc(100vh - 56px)">
-      <div style="flex:1.2;padding:20px 22px;border-right:1.5px solid var(--line)">
-        <p style="font-size:14px;font-weight:700;margin-bottom:10px">1. 어떤 대회인가요?</p>
-        ${presets.map(([k,t,d])=>`<button class="hbtn" style="${cnsPreset===k?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsSetPreset('${k}')">${t}<small>${d}</small><span class="go">${cnsPreset===k?'✓':'›'}</span></button>`).join('')}
-        <p style="font-size:14px;font-weight:700;margin:16px 0 10px">2. 경기 방식</p>
-        ${methodBtn('period','📅 대회기간형','기간 내 자유 라운드 · 총타수 제출')}
-        ${methodBtn('round','⛳ 지정일 홀별','정해진 날 조 편성 · 홀별 입력')}
-        <p style="font-size:12.5px;color:var(--sub);padding:4px">각 단계 방식은 개설 후 [대회 정보]에서 조정할 수 있어요</p>
-      </div>
-      <div style="flex:1;padding:20px 22px">
-        <p style="font-size:14px;font-weight:700;margin-bottom:10px">2. 기본 정보</p>
-        <input class="cfield" id="cnsWName" placeholder="대회명 (예: 제1회 임팩트 챌린지컵)" style="margin-bottom:8px">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input class="cfield" id="cnsWDateS" type="date" style="flex:1">
-          <input class="cfield" id="cnsWDateE" type="date" style="flex:1">
+      <div style="flex:1;padding:20px 22px;border-right:1.5px solid var(--line)">
+        <p style="font-size:14px;font-weight:700;margin-bottom:10px">1. 기본 정보</p>
+        <input class="cfield" id="cnsWName" placeholder="대회명 (예: 제1회 임팩트 챌린지컵)" value="${cnsEsc(cnsWiz.name)}" style="margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input class="cfield" id="cnsWPlace" placeholder="대회장소" value="${cnsEsc(cnsWiz.place)}" style="flex:1.6">
+          <input class="cfield" id="cnsWCap" type="tel" placeholder="정원" value="${cnsEsc(cnsWiz.cap)}" style="flex:1">
         </div>
-        <input class="cfield" id="cnsWCap" type="tel" placeholder="정원 (예: 40)" value="40" style="margin-bottom:12px">
-        <button class="btn" style="display:block;width:100%;text-align:center;font-size:16px" onclick="cnsCreate()">대회 만들기 → 콘솔로</button>
-        <p style="font-size:12.5px;color:var(--sub);margin-top:8px">만들면 [개설] 대단계부터 시작합니다 — 신청 링크는 즉시 생성</p>
+        <p style="font-size:14px;font-weight:700;margin:14px 0 10px">2. 대회 구조</p>
+        ${presets.map(([k,t])=>`<button class="hbtn" style="${cnsPreset===k?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsWizSetPreset('${k}')">${t}<span class="go">${cnsPreset===k?'✓':'›'}</span></button>`).join('')}
+      </div>
+      <div style="flex:1.35;padding:20px 22px">
+        <p style="font-size:14px;font-weight:700;margin-bottom:10px">3. 단계별 방식 · 입력 · 일정</p>
+        ${cards}
+        <button class="btn" style="display:block;width:100%;text-align:center;font-size:16px;margin-top:6px" onclick="cnsCreate()">대회 만들기 → 콘솔로</button>
+        <p style="font-size:12px;color:var(--sub);margin-top:8px">어떤 조합이든 가능 — 컷 인원·코스 파는 개설 후 [대회 정보]에서 조정</p>
       </div>
     </div>`}
-function cnsSetPreset(k){cnsPreset=k;renderConsole()}
 async function cnsCreate(){
-  const nm=$('#cnsWName').value.trim();if(!nm){toast('대회명을 입력해 주세요');return}
-  const ds=$('#cnsWDateS').value||'2026-07-25',de=$('#cnsWDateE').value||ds;
-  // 위저드 상태·DOM 세팅 후 기존 createTournament 전체 재사용(재구현 0).
-  // 위저드 단계 DOM(코스·일정·동점·정원 필드)을 먼저 렌더해 createTournamentInner가 읽는
-  // #fTie·#fHoles·.venueIn·#fDateS 등을 존재시킨다(숨겨진 #wizBox에 생성).
-  resetWizardState();chooseStructure(cnsPreset);
-  // R2: 경기 방식 적용 — 단판/최종 단계를 대회기간형(period)으로(파일럿 기본). setStageKind 재사용.
-  if(typeof setStageKind==='function')setStageKind(1,cnsMethod==='round'?'round':'period');
-  if(typeof renderStageCards==='function')renderStageCards();
-  if(typeof renderScheduleBlocks==='function')renderScheduleBlocks();
+  cnsWizSyncInputs();
+  const nm=(cnsWiz.name||'').trim();if(!nm){toast('대회명을 입력해 주세요');return}
+  const n=cnsWizStageCount();
+  resetWizardState();chooseStructure(cnsPreset);   // 구조·기본 DOM 셋업(재사용)
+  for(let i=1;i<=n;i++){setStageKind(i,cnsWizStages[i].kind);setRecordMode(i,cnsWizStages[i].rec)} // 단계별 방식·입력 적용
+  renderStageCards();renderScheduleBlocks();        // 변경된 kind로 카드·일정 DOM 재생성
   const set=(id,v)=>{const el=$('#'+id);if(el)el.value=v};
-  set('fName',nm);set('fHost',user.name);set('fDateS',ds);set('fDateE',de);set('fCap',$('#cnsWCap').value||'40');
+  set('fName',nm);set('fHost',user.name);set('fCap',cnsWiz.cap||'40');
+  if($('#fTie'))$('#fTie').value=config.tie||'최종 코스 카운트백';
+  for(let i=1;i<=n;i++){const suf=i===1?'':String(i),s=cnsWizStages[i];
+    set('fDateS'+suf,s.dS||'2026-07-25');
+    set('fDateE'+suf,s.kind==='period'?(s.dE||s.dS||'2026-07-25'):(s.dS||'2026-07-25'))}
+  set('fDateS',cnsWizStages[1].dS||'2026-07-25');
+  set('fDateE',cnsWizStages[1].kind==='period'?(cnsWizStages[1].dE||cnsWizStages[1].dS):cnsWizStages[1].dS);
+  if(cnsWiz.place)document.querySelectorAll('.screenVenueIn,.screenVenueIn2,.screenVenueIn3,.venueIn,.venueIn2,.venueIn3').forEach(v=>{if(!v.value)v.value=cnsWiz.place});
   await createTournament();
   if(config.id)await cnsEnterTournament(config.id)}
 /* ---- 화면 1: 메인 3층 프레임 ---- */
