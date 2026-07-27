@@ -2817,7 +2817,11 @@ async function confirmStageSheet(){
 async function doCloseStage(stage){
   const{error}=await sb.rpc('close_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
   if(error){toast('마감 중 오류가 발생했습니다: '+error.message);console.error(error);return}
-  toast(`${stage.name}을 마감했습니다 — 여정 [종료 확정]으로 결과를 확정하세요`);
+  // 다음 단계가 남아 있으면 대회 [종료 확정]을 권하면 안 된다 — 중간 단계를 닫았을 뿐이다(M3 발견).
+  const allStages=await loadAllStages(config.id);
+  const hasNext=allStages.some(s=>s.seq>stage.seq&&s.status!=='done');
+  toast(hasNext?`${stage.name}을 마감했습니다 — 다음 단계로 이어가세요`
+               :`${stage.name}을 마감했습니다 — 여정 [종료 확정]으로 결과를 확정하세요`);
   await syncActiveStageState(config.id);
   renderStageSub();renderJourneyChecklist();renderOpsStats()}
 // CH32-B 보완②: 종료 확정 — 모든 단계 마감 후 대회를 done으로 확정(단계 마감과 분리된 별도 시트).
