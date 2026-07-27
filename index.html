@@ -649,9 +649,9 @@ tr:last-child td{border-bottom:none}
 #viewConsole .util{background:linear-gradient(95deg,#1B64DA,#2E7BE8);padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,80,180,.25);position:sticky;top:0;z-index:40}
 #viewConsole .lg{display:inline-flex;align-items:center;background:#fff;color:var(--act);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer}
 #viewConsole .lg i{font-style:normal;color:#C9930A;margin:0 1px}
-#viewConsole .tname{font-size:17px;font-weight:700;color:#fff;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
-#viewConsole .util .tools{margin-left:auto;display:flex;gap:8px;font-size:13.5px;font-weight:700;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
-#viewConsole .util .tools button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 13px;font-weight:700;font-size:13.5px;white-space:nowrap}
+#viewConsole .tname{font-size:16px;font-weight:700;color:#fff;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
+#viewConsole .util .tools{margin-left:auto;display:flex;gap:6px;font-size:13px;font-weight:700;flex-shrink:1;flex-wrap:wrap;justify-content:flex-end}
+#viewConsole .util .tools button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 #viewConsole .util .tools button.acct{background:#F7CF5C;border-color:#F7CF5C;color:#1F2937}
 /* 대단계 레일 */
 #viewConsole .rail{display:flex;align-items:center;background:var(--cbg);border-bottom:1.5px solid var(--line);padding:13px 16px;gap:4px}
@@ -6320,7 +6320,9 @@ async function buildConsoleModel(){
   const stages=await loadAllStages(config.id);
   const{data:tRow}=await sb.from('tournaments').select('status,reg_closed').eq('id',config.id).single();
   const status=tRow?tRow.status:'ready',regClosed=!!(tRow&&tRow.reg_closed),finished=status==='done';
-  const majors=[{key:'setup',name:'개설'},{key:'recruit',name:'모집'}];
+  // ⑰: 각 seq에 도달한(현재 이상) 참가자 수 — 진출자 확정 완료 판정·마감 가드에 사용
+  const{data:pcRows}=await sb.from('players').select('current_stage').eq('tournament_id',config.id).neq('status','wait');
+  const rosterAtSeq=seq=>(pcRows||[]).filter(r=>(r.current_stage||1)>=seq).length;
   stages.forEach(s=>majors.push({key:'stage:'+s.id,name:s.name,stage:s}));
   majors.push({key:'award',name:'시상'},{key:'close',name:'마감'});
   const openStage=stages.find(s=>s.status==='open');
@@ -6344,7 +6346,7 @@ async function buildConsoleModel(){
     if(m.stage)m.meta=m.stage.status==='open'?'진행 중':m.stage.status==='done'?'완료':(m.stage.date_start||'').slice(5).replace('-','.');
     if(m.key==='close')m.meta=finished?'종료됨':awardReady?'확정 대기':'';
   });
-  return{majors,curKey,curIdx,stages,regClosed,finished,status,awardReady}}
+  return{majors,curKey,curIdx,stages,regClosed,finished,status,awardReady,rosterAtSeq}}
 function cnsSubsFor(m,model){
   const s=m.stage;
   if(m.key==='setup')return[{k:'basic',n:'기본 정보'},{k:'awards',n:'참가비·시상'},{k:'notice',n:'요강 완성'},{k:'recStart',n:'모집 시작'}];
@@ -6564,7 +6566,7 @@ async function renderCnsTool(w){
 function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
 /* --- CH33-D: 정보 수정 PC 네이티브 — 공통 편집 프레임 1개 + 9개 필드 폼(로직·RPC 재사용) --- */
 let cnsEditKey=null;
-function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;cnsTool='edit';renderConsole()})}
+function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
 function cnsEL(t){return `<label style="display:block;font-size:14px;font-weight:700;color:var(--sub);margin:16px 0 6px">${t}</label>`}
 function cnsEI(id,val,ph,type){return `<input id="${id}" ${type?`type="${type}"`:''} class="cfield" value="${cnsEsc(val==null?'':String(val))}" placeholder="${ph||''}" style="font-size:18px;width:100%">`}
 function cnsEditFrame(title,body,saveable){
@@ -6614,7 +6616,7 @@ async function cnsEditBody(key){
       +cnsEdOpt(config.visibility==='private','비공개 대회(홈 숨김, 입장 비밀번호)',`cnsEdVis('private')`)
       +`<div id="cnsVisBox" style="display:${config.visibility==='private'?'block':'none'}">${cnsEL('입장 비밀번호 (4~6자리 숫자)')}${cnsEI('eiAccessCode',config.accessCode,'','tel')}</div>`);
   if(key==='fields'){
-    editFieldsDraft={...config.fields};
+    if(!editFieldsDraft)editFieldsDraft={...config.fields}; // 진입 시 1회만(매 렌더 리셋 금지 — ⑮)
     const f=editFieldsDraft;
     const opt=(k,l)=>cnsEdOpt(!!f[k],l,`cnsEdField('${k}')`);
     return cnsEditFrame('참가자 정보 항목',
@@ -6962,6 +6964,11 @@ function cnsScrCut(stage,model){
       <button class="btn soft" onclick="cnsSubSel='lock';renderConsole()">스코어 확정으로 이동</button></div>`;
   const idx=model.stages.indexOf(stage),nextStage=model.stages[idx+1];
   if(!nextStage)return `<div class="grp" style="padding:20px"><p style="color:var(--sub)">다음 단계가 없어 진출자 확정이 필요 없습니다 — <b>마감</b>으로 진행하세요.</p></div>`;
+  // ⑦/⑰: 이미 진출자 확정됨(다음 단계에 명단 존재) → 재확정 방지, 마감 안내
+  if(model.rosterAtSeq&&model.rosterAtSeq(nextStage.seq)>0)
+    return `<div class="grp" style="padding:20px"><h5 style="color:var(--minttx)">✓ 진출자 확정 완료</h5>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9;margin-bottom:12px"><b>${cnsEsc(nextStage.name)}</b> 진출 명단 <b>${model.rosterAtSeq(nextStage.seq)}명</b> 확정. 이제 이 단계를 <b>마감</b>하세요(확정과 마감은 분리됨).</p>
+      <button class="btn" onclick="cnsSubSel='close';renderConsole()">${cnsEsc(stage.name)} 마감으로 →</button></div>`;
   const cx=cnsBuildCut(stage);
   if(!cx.cut||!cx.groups.length)
     return `<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">이 단계에 컷 조건이 설정돼 있지 않아요 — 전원 진출로 처리하거나 대회 정보에서 컷을 지정하세요.</p>
@@ -7225,9 +7232,17 @@ async function cnsCutApply(stageId){
     if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${stage.name}→${nextStage.name} 컷 동점 처리(규칙: ${cx.tieRule}) — ${logLines.join(' / ')}`})}
   cnsCutSel={};cnsCutFinal={};
   await doAdvanceStage(stage,nextStage,advanced);
-  renderConsole()}
+  // ⑦ 확정=진출만(마감 자동 아님). 확정 후 [마감]으로 안내(단계는 아직 open).
+  cnsModel=await buildConsoleModel();cnsMajorSel='stage:'+stageId;cnsSubSel='close';
+  toast(`진출자 ${advanced.length}명 확정 — 이제 [${stage.name} 마감]으로 단계를 닫으세요`);renderConsole()}
 async function cnsCloseStage(stageId){
   const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
+  const idx=cnsModel.stages.indexOf(stage),nextStage=cnsModel.stages[idx+1];
+  if(nextStage){
+    // ⑰ 방지: 진출자 확정 없이 마감하면 다음 단계 명단이 비어 참가자 소실 — 확정 먼저 강제
+    const{count}=await sb.from('players').select('id',{count:'exact',head:true}).eq('tournament_id',config.id).gte('current_stage',nextStage.seq);
+    if(!count){toast(`먼저 [진출자 확정]으로 ${nextStage.name} 진출자를 확정하세요 — 확정 전 마감하면 명단이 비어요`);cnsSubSel='cut';renderConsole();return}
+  }
   await doCloseStage(stage);renderConsole()}
 async function cnsFinalize(){await finalizeTournament();renderConsole()}
 /* 콘솔 빠른 등록/붙여넣기 — 파싱·검증·add_player 로직 재사용 */
@@ -7249,27 +7264,44 @@ async function cnsAddPlayer(){
   syncMine();closeCnsSheet();toast(`${name} 님 등록`);renderConsole()}
 // R2① 붙여넣기 — 선언 컬럼 계약을 칩으로 명시 + [인식] 단계에서 인식/실패 줄 가시화(P43),
 // 조용한 실패 금지. 등록은 인식 확인 후에만.
-let cnsPastePending=null;
-function cnsPasteColsHint(withGroup){
-  return bulkColumns(config.fields||{},!!withGroup).map(c=>
-    `<span style="display:inline-block;background:${c.req?'var(--act-soft)':'#F1F5FB'};color:${c.req?'var(--act)':'var(--sub)'};border-radius:8px;padding:3px 9px;font-size:12.5px;font-weight:700;margin:0 4px 4px 0">${c.label}${c.req?'*':''}</span>`).join('')}
-function cnsPasteExample(withGroup){
-  const sample={이름:'홍길동',전화번호:'010-1234-5678',성별:'남',나이:'62',소속:'미사리',조:'1'};
-  return bulkColumns(config.fields||{},!!withGroup).map(c=>sample[c.label]||'').join(' ')}
+let cnsPastePending=null,cnsPasteChips={};
+// ⑤ P42: 이름·전화만 필수. 나머지는 붙여넣는 데이터에 포함된 항목만 칩으로 켠다 → 선언한 구성에만 유효성.
+function cnsPasteAvail(withGroup){
+  const f=config.fields||{},a=[];
+  if(f.sex)a.push(['sex','성별']);if(f.age)a.push(['age','나이']);if(f.club)a.push(['club','소속']);
+  if(withGroup)a.push(['group','조']);
+  return a}
+function cnsPasteSelCols(withGroup){
+  const cols=[{k:'name',label:'이름',req:true},{k:'phone',label:'전화번호',req:true}];
+  cnsPasteAvail(withGroup).forEach(([k,l])=>{if(cnsPasteChips[k])cols.push({k,label:l})});
+  return cols}
+function cnsPasteChipRowHTML(withGroup){
+  const reqChip=l=>`<span style="display:inline-block;background:var(--act-soft);color:var(--act);border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:700;margin:0 5px 5px 0">${l}*</span>`;
+  const opt=cnsPasteAvail(withGroup).map(([k,l])=>{const on=!!cnsPasteChips[k];
+    return `<button onclick="cnsPasteToggleChip('${k}',${withGroup?'true':'false'})" style="border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:700;margin:0 5px 5px 0;cursor:pointer;border:1.5px solid ${on?'var(--act)':'var(--line)'};background:${on?'var(--act)':'#fff'};color:${on?'#fff':'var(--sub)'}">${on?'✓ ':'+ '}${l}</button>`}).join('');
+  return reqChip('이름')+reqChip('전화번호')+opt}
+function cnsPasteExampleFrom(withGroup){
+  const sample={name:'홍길동',phone:'010-1234-5678',sex:'남',age:'62',club:'미사리',group:'1'};
+  return cnsPasteSelCols(withGroup).map(c=>sample[c.k]||'').join(' ')}
+function cnsPasteToggleChip(k,withGroup){
+  cnsPasteChips[k]=!cnsPasteChips[k];
+  const cr=$('#cnsPasteChipRow');if(cr)cr.innerHTML=cnsPasteChipRowHTML(withGroup);
+  const ex=$('#cnsPasteEx');if(ex)ex.textContent='예) '+cnsPasteExampleFrom(withGroup);
+  const box=$('#cnsPasteBox');if(box)box.placeholder=cnsPasteExampleFrom(withGroup)}
 function cnsOpenPaste(withGroup){
-  cnsPastePending=null;
+  cnsPastePending=null;cnsPasteChips={};
   openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">여러 명 붙여넣기</h3>
-    <p style="font-size:13px;color:var(--sub);margin-bottom:6px">한 줄에 한 명 — 아래 <b>칩 순서</b>대로(탭·쉼표·공백 구분). *는 필수.</p>
-    <div style="margin-bottom:6px">${cnsPasteColsHint(withGroup)}</div>
-    <p style="font-size:12px;color:var(--dim);margin-bottom:8px">예) ${cnsEsc(cnsPasteExample(withGroup))}</p>
-    <textarea class="cfield" id="cnsPasteBox" style="width:100%;height:120px;resize:vertical" placeholder="${cnsEsc(cnsPasteExample(withGroup))}"></textarea>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:6px">붙여넣을 데이터에 <b>포함된 항목</b>만 칩으로 켜세요 — 이름·전화만 필수. 순서는 칩 순서대로(탭·쉼표·공백 구분).</p>
+    <div id="cnsPasteChipRow" style="margin-bottom:6px">${cnsPasteChipRowHTML(withGroup)}</div>
+    <p id="cnsPasteEx" style="font-size:12px;color:var(--dim);margin-bottom:8px">예) ${cnsEsc(cnsPasteExampleFrom(withGroup))}</p>
+    <textarea class="cfield" id="cnsPasteBox" style="width:100%;height:120px;resize:vertical" placeholder="${cnsEsc(cnsPasteExampleFrom(withGroup))}"></textarea>
     <div id="cnsPastePrev" style="margin-top:10px"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button>
       <button class="btn" style="flex:1.6" id="cnsPasteMainBtn" onclick="cnsPastePreview(${withGroup?'true':'false'})">인식</button>
     </div>`)}
 function cnsPastePreview(withGroup){
-  const cols=bulkColumns(config.fields||{},!!withGroup);
+  const cols=cnsPasteSelCols(withGroup);
   const{parsed,failed,total}=bulkParseAll($('#cnsPasteBox').value,cols);
   if(!total){toast('입력된 줄이 없습니다');return}
   cnsPastePending={rows:parsed,withGroup:!!withGroup};
