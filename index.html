@@ -6137,16 +6137,16 @@ function exportResultCSV(){
   if(!players.length){toast('참가자가 없습니다');return}
   const rows=[['순위','이름','소속','성별','나이','합계','투파','상태']];
   const toparStr=t=>t==null?'':(t===0?'E':(t>0?'+':'')+t);
-  if(boardStageKind==='period'||boardStageRecordMode==='total'){
-    const st=periodStandings();
-    const done=st.filter(s=>s.completed>0&&!s.out),outs=st.filter(s=>s.out);
-    done.forEach((s,i)=>rows.push([i+1,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.tot??'(진행중)',toparStr(s.topar),'']));
-    outs.forEach(s=>rows.push(['',s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'','','',s.p.st==='wd'?'기권':'실격']))
-  }else{
-    const st=standings();
-    const done=st.filter(s=>s.thru>0&&!s.out),outs=st.filter(s=>s.out);
-    done.forEach((s,i)=>rows.push([i+1,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.tot,toparStr(s.topar),'']));
-    outs.forEach(s=>rows.push(['',s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',s.thru?s.tot:'','',s.p.st==='wd'?'기권':'실격']))}
+  // 순위는 완주자(합계 확정, tot!=null)에게만 매긴다 — 예전엔 일부 코스만 친 사람의
+  // 잠정 합계가 완주자보다 위로 올라가 CSV 1위가 화면 1위와 달랐다(R13 발견).
+  // 미완주자는 순위 공란 + 상태 '미완주'로 뒤에 붙인다(기권·실격과 같은 취급 방식).
+  const push=(rank,s,tot,topar,state)=>rows.push([rank,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',tot,topar,state]);
+  const st=(boardStageKind==='period'||boardStageRecordMode==='total')?periodStandings():standings();
+  const outs=st.filter(s=>s.out),rest=st.filter(s=>!s.out);
+  const done=rest.filter(s=>s.tot!=null),partial=rest.filter(s=>s.tot==null);
+  done.forEach((s,i)=>push(i+1,s,s.tot,toparStr(s.topar),''));
+  partial.forEach(s=>push('',s,'','','미완주'));
+  outs.forEach(s=>push('',s,'','',s.p.st==='wd'?'기권':'실격'));
   downloadCSV(`${config.name||'대회'}_최종순위.csv`,rows)}
 
 /* ================= 시뮬레이션 ================= */
