@@ -7407,10 +7407,13 @@ async function cnsAddPlayer(){
   const name=$('#cnsAdName').value.trim();if(!name){toast('이름을 입력해 주세요');return}
   const phone=normalizePhone($('#cnsAdPhone').value||'');
   const sex=$('#cnsAdSex').value,club=$('#cnsAdClub').value.trim();
-  const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:name,p_phone:phone||null,p_sex:sex,p_age:null,p_club:club||null,p_region:null,p_nick:null,p_status:'ok'});
+  // 붙여넣기와 같은 규칙 — 정원이 찼으면 대기로 등록한다(R5).
+  const full=!config.capUnlimited&&players.length>=(config.cap||0);
+  const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:name,p_phone:phone||null,p_sex:sex,p_age:null,p_club:club||null,p_region:null,p_nick:null,p_status:full?'wait':'ok'});
   if(error){toast(error.code==='23505'?'이미 등록된 전화번호입니다':'등록 중 오류가 발생했습니다');console.error(error);return}
-  players.push({name,sex,club,phone:phone||'',region:'',nick:'',id:data.id,scores:Array(HOLES).fill(null),group:-1,best:{}});
-  syncMine();closeCnsSheet();toast(`${name} 님 등록`);renderConsole()}
+  if(full)waitlist.push({id:data.id,name,phone:phone||'',sex,age:'',club:club||'',region:'',nick:''});
+  else players.push({name,sex,club,phone:phone||'',region:'',nick:'',id:data.id,scores:Array(HOLES).fill(null),group:-1,best:{}});
+  syncMine();closeCnsSheet();toast(`${name} 님 ${full?'대기 등록 — 정원이 찼습니다':'등록'}`);renderConsole()}
 // R2① 붙여넣기 — 선언 컬럼 계약을 칩으로 명시 + [인식] 단계에서 인식/실패 줄 가시화(P43),
 // 조용한 실패 금지. 등록은 인식 확인 후에만.
 let cnsPastePending=null,cnsPasteChips={};
@@ -7468,16 +7471,24 @@ function cnsPastePreview(withGroup){
 async function cnsPasteRegister(){
   if(!cnsPastePending||!cnsPastePending.rows.length){toast('먼저 [인식]으로 명단을 확인하세요');return}
   const{rows,withGroup}=cnsPastePending;
-  let added=0,dup=0,ga=0;
+  // 정원 초과분은 대기로 넣는다 — 셀프 신청(apply_public)은 정원을 지키는데 콘솔 붙여넣기만
+  // 무조건 'ok'로 등록해 정원 8인 대회에 9명이 들어갔다(R5 발견). add_player는 호출자가
+  // status를 정하는 RPC라 이 판단이 클라이언트 몫이다.
+  let remain=config.capUnlimited?Infinity:Math.max(0,(config.cap||0)-players.length);
+  let added=0,dup=0,ga=0,waited=0;
   for(const r of rows){
-    const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:r.name,p_phone:r.phone,p_sex:r.sex||null,p_age:r.age||null,p_club:r.club||null,p_region:r.region||null,p_nick:r.nick||null,p_status:'ok'});
+    const st=remain>0?'ok':'wait';
+    const{data,error}=await sb.rpc('add_player',{t_id:config.id,p_owner_secret:user.secret,p_name:r.name,p_phone:r.phone,p_sex:r.sex||null,p_age:r.age||null,p_club:r.club||null,p_region:r.region||null,p_nick:r.nick||null,p_status:st});
     if(error){if(error.code==='23505')dup++;else console.error(error);continue}
+    if(st==='wait'){
+      waitlist.push({id:data.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',region:r.region||'',nick:r.nick||''});
+      waited++;added++;continue}
     const ni=players.push({...r,id:data.id,scores:Array(HOLES).fill(null),group:r.group!=null?r.group:-1,best:{}})-1;
     if(withGroup&&r.group!=null&&r.group>=0){while(groups.length<=r.group)groups.push([]);groups[r.group].push(ni);ga++}
-    added++}
+    remain--;added++}
   cnsPastePending=null;
   syncMine();if(ga){groupsSource='manual';await persistGroups()}
-  closeCnsSheet();toast(`${added}명 등록${dup?` · 중복 ${dup}명 제외`:''}${ga?` · 조 배정 ${ga}명`:''}${added<rows.length-dup?' · 일부 실패(콘솔 로그)':''}`);renderConsole()}
+  closeCnsSheet();toast(`${added-waited}명 등록${waited?` · 정원 초과 ${waited}명 대기`:''}${dup?` · 중복 ${dup}명 제외`:''}${ga?` · 조 배정 ${ga}명`:''}${added<rows.length-dup?' · 일부 실패(콘솔 로그)':''}`);renderConsole()}
 // R2②: 점수 붙여넣기 = 그리드에 값을 채우는 방식으로 통합(채운 뒤 같은 [변경 N건 저장] 버튼).
 function cnsOpenScorePaste(stageId){
   openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">점수 붙여넣기 → 그리드 채우기</h3>
