@@ -6314,8 +6314,12 @@ function cnsSubscribeLive(tid){
   if(!tid)return;
   cnsLiveId=tid;
   cnsLivePollTimer=setInterval(cnsRefreshLive,6000);
+  // P28C: players·scores 모두 구독한다 — 심판 폰 입력(scores/plays)도 운영자 화면에
+  // 무조작 반영돼야 한다. 6초 폴링은 realtime이 끊기거나 안 올 때의 안전망.
   cnsLiveChannel=sb.channel('cns-live-'+tid)
     .on('postgres_changes',{event:'*',schema:'public',table:'players',filter:'tournament_id=eq.'+tid},cnsRefreshLive)
+    .on('postgres_changes',{event:'*',schema:'public',table:'scores',filter:'tournament_id=eq.'+tid},cnsRefreshLive)
+    .on('postgres_changes',{event:'*',schema:'public',table:'plays',filter:'tournament_id=eq.'+tid},cnsRefreshLive)
     .subscribe()}
 /* ---- 화면 W: 개설(2패널) — 위저드 필드 세팅 후 createTournament 재사용 ---- */
 /* ---- 화면 W v2: 단계 카드마다 [방식(기간/지정일) × 입력(총타/홀별) × 일정] 독립 선택 ---- */
