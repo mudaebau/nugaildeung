@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — 차수 27 편의 3건 목업</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:10px}
+.flow{background:#fff;border:1px solid var(--line);border-radius:14px;display:inline-block;padding:12px 18px;font-size:13.5px;color:var(--muted);margin-bottom:34px;line-height:1.8}
+.flow b{color:var(--ink);font-weight:700}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* 공통 */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .sub{font-size:12px;opacity:.85;font-weight:400}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 24px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAAB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:58px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+
+/* 홈 요소 (기존 시안 재사용) */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow:first-child{border-top:1px solid rgba(255,255,255,.12)}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:14px;padding:9px 6px;text-align:center;min-width:68px}
+.dday b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:10.5px;font-weight:500}
+.opencard h4{font-size:15.5px;font-weight:700;line-height:1.4}
+.opencard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* 내 대회 목록 */
+.mycard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.open{background:var(--mint);color:#fff}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald';font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mycard .mygo.primary{background:var(--main);color:#fff}
+
+/* 관리공간 상단 탭 */
+.mtabs{display:flex;gap:8px;overflow:hidden;padding:14px 18px 4px;background:var(--bg)}
+.mtab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
+.mtab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:700}
+
+/* 대시보드 (재사용) */
+.stepper{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:27px;font-weight:700;display:block;line-height:1.1}
+.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:12px}
+.trow{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:40px;height:40px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:20px;height:20px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
+.trow .tt span{font-size:12px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* 참가자 탭 */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.ghead{background:var(--main);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.ghead b{font-weight:700}
+.ghead span{font-size:11.5px;opacity:.9}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.grow:last-child{border-bottom:none}
+.gav{width:34px;height:34px;border-radius:50%;background:#E3EEF9;color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.grow b{font-weight:700}
+.grow span{font-size:11.5px;color:var(--muted);margin-left:auto}
+.swaphint{font-size:12.5px;color:var(--muted);text-align:center;padding:4px 0 10px}
+
+/* v2.3 추가 스타일 */
+.tabA{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 6px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.fixbtn{position:absolute;left:18px;right:18px;bottom:100px}
+.dim{position:absolute;inset:0;background:rgba(23,51,80,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;border-radius:26px 26px 0 0;padding:24px 22px 30px;width:100%}
+.sheet h4{font-size:19px;font-weight:700;margin-bottom:12px}
+.sheet ul{list-style:none;margin-bottom:18px}
+.sheet li{font-size:14.5px;color:var(--ink);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;line-height:1.5}
+.sheet li:last-child{border-bottom:none}
+.sheet li i{font-style:normal;color:var(--main);font-weight:700}
+.hero{background:linear-gradient(150deg,#5A9ADA,#2F6BAA);border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:10px;letter-spacing:.02em}
+.hero h2{font-size:21.5px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--deep);font-weight:700;font-size:17px;min-height:54px;border-radius:15px}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald';font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:#D9534F}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald';font-size:22px;font-weight:700;color:var(--deep)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:#C4523A}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid #C9D8E7;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.prow2{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.prow2:last-child{border-bottom:none}
+.prow2 b{font-weight:700}
+.prow2 .meta{font-size:11.5px;color:var(--muted)}
+
+/* 다음 할 일 카드 */
+.todo3{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px}
+.todo3 h6{font-size:14.5px;font-weight:700;margin-bottom:12px}
+.tstep{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.tstep:last-child{border-bottom:none}
+.tstep .no{width:26px;height:26px;border-radius:50%;background:var(--main);color:#fff;font-family:'Oswald';font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tstep .no.done{background:#E7F5EE;color:#2E8B63}
+.tstep .no.wait{background:#EDF1F6;color:#9AAAB9}
+.tstep b{font-size:14.5px;font-weight:700;display:block}
+.tstep span{font-size:11.5px;color:var(--muted)}
+.tstep .go{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--deep)}
+/* 내 대회 카드 */
+.mycard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px 17px;margin-bottom:12px}
+.mycard .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mycard .st{font-size:11px;font-weight:700;padding:3.5px 9px;border-radius:99px}
+.mycard .st.live{background:#FBE9E4;color:#C4523A}
+.mycard .st.rcv{background:#E3EEF9;color:var(--deep)}
+.mycard .st.end{background:#EDF1F6;color:#8CA0B4}
+.mycard h6{font-size:16px;font-weight:700}
+.mycard .meta2{font-size:12px;color:var(--muted);margin-bottom:8px}
+.todobadge{display:flex;align-items:center;gap:7px;background:#FFF7E0;border:1px solid #F3DD9A;border-radius:11px;padding:8px 12px;font-size:12.5px;font-weight:700;color:#8a6410}
+.todobadge.red{background:#FBE9E4;border-color:#F2C4B8;color:#C4523A}
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>차수 27 목업 — 편의 3건</h1>
+  <p class="blead">① 관리홈 개설 직후 다음 할 일 ② 조편성 실행 전 확인 시트 ③ 내 대회 할 일 뱃지</p>
+  <div class="row">
+
+    <!-- 1. 관리홈 다음 할 일 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">솔터공원 8월 월례오픈</span><div class="sub">필드 단판 · 접수중</div></div></div>
+        <div class="scr" style="padding-top:12px;position:relative">
+          <div class="jbar" style="display:flex;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px">
+            <div style="flex:1;text-align:center"><b style="display:block;font-size:14.5px;color:var(--deep)">접수</b><span style="display:inline-block;font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:#E7F5EE;color:#2E8B63;margin-top:3px">접수중</span></div>
+            <span style="color:#D3DEE9;padding:0 2px">›</span>
+            <div style="flex:1;text-align:center"><b style="display:block;font-size:13.5px;color:#9AAAB9">본선 라운드</b><span style="font-size:10.5px;color:#B4C2D0">대기</span></div>
+            <span style="color:#D3DEE9;padding:0 2px">›</span>
+            <div style="flex:.7;text-align:center"><b style="display:block;font-size:13.5px;color:#9AAAB9">종료</b><span style="font-size:10.5px;color:#B4C2D0">—</span></div>
+          </div>
+          <div class="todo3">
+            <h6>🎉 대회가 열렸어요 — 다음 할 일</h6>
+            <div class="tstep"><span class="no done">✓</span><div><b>대회 열기</b><span>완료</span></div></div>
+            <div class="tstep"><span class="no">2</span><div><b>요강 완성하기</b><span>시상·참가비 미입력 (완성도 60%)</span></div><span class="go">채우기 ›</span></div>
+            <div class="tstep"><span class="no wait">3</span><div><b>단톡방에 링크 공유</b><span>신청을 받기 시작하세요</span></div><span class="go">복사 ›</span></div>
+          </div>
+          <div class="regcard" style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><b style="font-size:15.5px">참가 접수</b><span style="margin-left:auto;font-size:12px;color:var(--muted)">마감 8.18 (D-13)</span></div>
+            <div style="display:flex;gap:16px"><div><b class="num" style="font-family:'Oswald';font-size:22px;display:block">0<small style="font-size:13px;color:var(--muted)">명</small></b><span style="font-size:11.5px;color:var(--muted)">신청 · 제한 없음</span></div></div>
+          </div>
+        </div>
+        <div class="nav"><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>홈</div><div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>내 대회</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></i>MY</div></div>
+      </div></div>
+      <div class="cap"><b>장면 1 — 관리홈 개설 직후: 다음 할 일 3스텝</b>
+      <p>첫 참가자가 오기 전의 빈 관리홈이 길잡이가 됩니다. 각 스텝은 해당 화면 직행(채우기→요강 완성도, 복사→링크 문구), 완료되면 ✓로 접히고 접수가 쌓이면 카드 전체가 사라집니다.</p></div>
+    </div>
+
+    <!-- 2. 조편성 확인 시트 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">솔터공원 8월 월례오픈</span><div class="sub">참가자 · 조편성</div></div></div>
+        <div class="scr" style="height:calc(100% - 70px);position:relative;padding:0">
+          <div class="dim"><div class="sheet">
+            <h4>이 기준으로 편성할까요?</h4>
+            <ul>
+              <li><i>✓</i><b>4인 1조 · 총 9개 조</b> (참가 34명)</li>
+              <li><i>✓</i>같은 클럽은 다른 조로 분산</li>
+              <li><i>✓</i>남은 2명은 마지막 조에 배정 (3인 조 1개)</li>
+              <li><i>!</i>이미 입력된 점수가 없어야 재편성할 수 있어요</li>
+            </ul>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:#F0F5FA;border-radius:13px;padding:12px 15px;margin-bottom:12px;font-size:14px;font-weight:700">3인 조 허용<span style="width:44px;height:26px;border-radius:99px;background:var(--main);position:relative"><i style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff"></i></span></div>
+            <div class="btnP" style="margin-bottom:8px">편성 실행</div>
+            <div class="btnP" style="background:#E7EDF4;color:var(--muted)">취소</div>
+          </div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 2 — 조편성 실행 전 확인 시트</b>
+      <p>[조편성하기] 탭 → 실행 전에 기준을 보여주고 승인받기. 몇 개 조가 나오는지·자투리 인원 처리까지 미리 알려줘서 "눌렀더니 이상하게 됐다"가 없어집니다. 3인 조 허용 토글이 유일한 옵션.</p></div>
+    </div>
+
+    <!-- 3. 내 대회 할 일 뱃지 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="wm" style="font-size:17px">내 대회</span></div>
+        <div class="scr" style="padding-top:14px">
+          <div class="mycard">
+            <div class="top"><span class="st live">진행 중</span><span style="font-size:11px;color:var(--muted)">오늘</span></div>
+            <h6>하남시장배 생활체육 파크골프대회</h6>
+            <p class="meta2">참가 64명 · 2코스 · 1라운드</p>
+            <div class="todobadge red">⚠ 조편성이 아직 안 됐어요 — 시작 전 필수</div>
+          </div>
+          <div class="mycard">
+            <div class="top"><span class="st rcv">접수중</span><span style="font-size:11px;color:var(--muted)">D-1</span></div>
+            <h6>솔터공원 8월 월례오픈</h6>
+            <p class="meta2">신청 41명 · 접수 마감 내일</p>
+            <div class="todobadge">📝 시상 내역이 비어 있어요 — 요강 완성도 60%</div>
+          </div>
+          <div class="mycard">
+            <div class="top"><span class="st end">종료</span><span style="font-size:11px;color:var(--muted)">7.03</span></div>
+            <h6>제1회 임팩트파크골프 챌린지컵</h6>
+            <p class="meta2">참가 87명 · 결승 완료 · 시상 확정</p>
+          </div>
+        </div>
+        <div class="nav"><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>홈</div><div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>내 대회</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></i>MY</div></div>
+      </div></div>
+      <div class="cap"><b>장면 3 — 내 대회: 할 일 뱃지</b>
+      <p>대회별 1순위 할 일 딱 한 줄 — 긴급(코랄: 조편성 미완료 등 진행 차단급)과 안내(골드: 시상 미입력 등)로 2단 구분. 할 일 없으면 뱃지 없음. 여러 대회를 굴리는 운영자의 아침 점검 화면이 됩니다.</p></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

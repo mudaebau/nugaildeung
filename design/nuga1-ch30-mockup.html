@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — CH30 와이어프레임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:10px}
+.flow{background:#fff;border:1px solid var(--line);border-radius:14px;display:inline-block;padding:12px 18px;font-size:13.5px;color:var(--muted);margin-bottom:34px;line-height:1.8}
+.flow b{color:var(--ink);font-weight:700}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* 공통 */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .sub{font-size:12px;opacity:.85;font-weight:400}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 24px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAAB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:58px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+
+/* 홈 요소 (기존 시안 재사용) */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow:first-child{border-top:1px solid rgba(255,255,255,.12)}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:14px;padding:9px 6px;text-align:center;min-width:68px}
+.dday b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:10.5px;font-weight:500}
+.opencard h4{font-size:15.5px;font-weight:700;line-height:1.4}
+.opencard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* 내 대회 목록 */
+.mycard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.open{background:var(--mint);color:#fff}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald';font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mycard .mygo.primary{background:var(--main);color:#fff}
+
+/* 관리공간 상단 탭 */
+.mtabs{display:flex;gap:8px;overflow:hidden;padding:14px 18px 4px;background:var(--bg)}
+.mtab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
+.mtab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:700}
+
+/* 대시보드 (재사용) */
+.stepper{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:27px;font-weight:700;display:block;line-height:1.1}
+.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:12px}
+.trow{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:40px;height:40px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:20px;height:20px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
+.trow .tt span{font-size:12px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* 참가자 탭 */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.ghead{background:var(--main);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.ghead b{font-weight:700}
+.ghead span{font-size:11.5px;opacity:.9}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.grow:last-child{border-bottom:none}
+.gav{width:34px;height:34px;border-radius:50%;background:#E3EEF9;color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.grow b{font-weight:700}
+.grow span{font-size:11.5px;color:var(--muted);margin-left:auto}
+.swaphint{font-size:12.5px;color:var(--muted);text-align:center;padding:4px 0 10px}
+
+/* v2.3 추가 스타일 */
+.tabA{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 6px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.fixbtn{position:absolute;left:18px;right:18px;bottom:100px}
+.dim{position:absolute;inset:0;background:rgba(23,51,80,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;border-radius:26px 26px 0 0;padding:24px 22px 30px;width:100%}
+.sheet h4{font-size:19px;font-weight:700;margin-bottom:12px}
+.sheet ul{list-style:none;margin-bottom:18px}
+.sheet li{font-size:14.5px;color:var(--ink);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;line-height:1.5}
+.sheet li:last-child{border-bottom:none}
+.sheet li i{font-style:normal;color:var(--main);font-weight:700}
+.hero{background:linear-gradient(150deg,#5A9ADA,#2F6BAA);border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:10px;letter-spacing:.02em}
+.hero h2{font-size:21.5px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--deep);font-weight:700;font-size:17px;min-height:54px;border-radius:15px}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald';font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:#D9534F}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald';font-size:22px;font-weight:700;color:var(--deep)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:#C4523A}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid #C9D8E7;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.prow2{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.prow2:last-child{border-bottom:none}
+.prow2 b{font-weight:700}
+.prow2 .meta{font-size:11.5px;color:var(--muted)}
+
+.sumcard{background:#fff;border:2px solid var(--line);border-radius:20px;padding:18px 20px;margin-bottom:12px}
+.sumcard.ok{border-color:var(--mint)}
+.sumcard h6{font-size:16.5px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.sumcard h6 .kbadge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:#E3EEF9;color:var(--deep)}
+.sumcard h6 .kbadge.period{background:#E7F5EE;color:#2E8B63}
+.sumline{font-size:13.5px;color:var(--muted);line-height:1.8}
+.sumline b{color:var(--ink);font-weight:700}
+.expand{font-size:13px;font-weight:700;color:var(--deep);margin-top:10px;display:inline-block}
+.opt{margin-top:14px;border-top:1px dashed var(--line);padding-top:14px}
+.optrow{margin-bottom:13px}
+.optrow small{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.segk{display:flex;background:#EDF2F8;border-radius:12px;padding:3.5px}
+.segk div{flex:1;text-align:center;font-size:13.5px;font-weight:700;padding:9px 0;border-radius:9px;color:#8CA0B4}
+.segk div.on{background:#fff;color:var(--deep);box-shadow:0 1px 4px rgba(29,61,92,.12)}
+.pill2{display:flex;gap:7px;flex-wrap:wrap}
+.pill2 span{font-size:13px;font-weight:500;padding:8px 13px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.pill2 span.on{border-color:var(--main);color:var(--deep);font-weight:700;background:#F4F9FE}
+/* 기간형 결과 */
+.podium2{display:flex;align-items:flex-end;gap:8px;margin:6px 0 16px}
+.pod{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px 14px 0 0;text-align:center;padding:10px 6px 12px}
+.pod b{display:block;font-size:14.5px;font-weight:700}
+.pod span{font-size:11px;color:var(--muted)}
+.pod .num{font-family:'Oswald';font-size:19px;font-weight:700;display:block;margin-top:2px}
+.pod.p1{border-color:#E8B33A;background:linear-gradient(180deg,#FEF7E0,#fff);padding-top:18px}
+.pod.p1 .crown{font-size:16px}
+.bestrow2{display:grid;grid-template-columns:30px 1fr 52px 52px 60px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:#fff;font-size:13.5px}
+.bestrow2 .r{font-family:'Oswald';font-weight:600;color:var(--muted)}
+.bestrow2 .v{font-family:'Oswald';font-weight:600;text-align:right}
+.bestrow2.top{background:#FEF7E0}
+
+.specgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.spec{background:#F4F8FC;border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px}
+.spec i{font-style:normal;font-size:19px;flex:0 0 auto}
+.spec b{display:block;font-size:14px;font-weight:700;line-height:1.25}
+.spec small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+
+.colchip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.colchip span{font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.colchip span.req{border-color:var(--deep);background:var(--deep);color:#fff}
+.colchip span.on{border-color:var(--main);background:#F4F9FE;color:var(--deep)}
+.exline{background:#FEF7E0;border:1px dashed #E8B33A;border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:10px}
+.exline b{font-weight:700}
+.pastebox{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.9;color:var(--ink);min-height:110px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>CH30 와이어프레임 — 단계 설정 재설계 + 기간형 결과</h1>
+  <p class="blead">"요약+접기"로 심플하게 · 단계별 방식(kind) 선택으로 🔴① 해결 · 기간형 결과 화면 신설. 확정 전 검토용.</p>
+  <div class="row">
+
+    <!-- W1. 요약 카드 (접힘) -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:24px;position:relative">
+          <div style="display:flex;gap:6px;margin-bottom:26px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:23px;font-weight:700;line-height:1.45;margin-bottom:6px">경기 방식을 확인해주세요</h2>
+          <p style="font-size:13.5px;color:var(--muted);margin-bottom:18px">표준 설정을 미리 채워뒀어요 — 그대로 진행하면 됩니다</p>
+          <div class="sumcard ok">
+            <h6>본선 라운드 <span class="kbadge">지정일 라운드</span></h6>
+            <div class="specgrid">
+              <div class="spec"><i>⛳</i><div><b>18홀 · 1코스</b><small>코스</small></div></div>
+              <div class="spec"><i>👥</i><div><b>4인 1조</b><small>조편성</small></div></div>
+              <div class="spec"><i>✏️</i><div><b>홀별 기록</b><small>기록 방식</small></div></div>
+              <div class="spec"><i>⚖️</i><div><b>카운트백</b><small>동점 처리</small></div></div>
+            </div>
+            <span class="expand">상세 바꾸기 ∨</span>
+          </div>
+          <div class="fixbtn"><div class="btnP">이대로 좋아요 — 다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W1 — 단계 설정: 요약 카드 (기본 상태)</b>
+      <p>프리셋이 채운 결정을 <b>아이콘 스펙 타일(2×2)</b>로 — 문장을 읽는 게 아니라 눈으로 훑는 구조. 화면의 질문이 "설정하세요"에서 "확인해주세요"로 바뀝니다 — 필드 단판 총무는 여기서 [이대로 좋아요] 한 번이면 끝. 옵션은 [상세 바꾸기] 뒤로 강등.</p></div>
+    </div>
+
+    <!-- W2. 상세 펼침 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:20px;position:relative">
+          <div class="sumcard">
+            <h6>본선 라운드 <span class="kbadge">지정일 라운드</span></h6>
+            <div class="opt" style="border-top:none;padding-top:0;margin-top:4px">
+              <div class="optrow"><small>경기 방식 — 단계마다 다르게 선택 가능</small>
+                <div class="segk"><div class="on">지정일 라운드</div><div>대회기간 라운드</div></div></div>
+              <div class="optrow"><small>코스</small>
+                <div class="pill2"><span class="on">1코스</span><span>2코스</span><span>3코스</span><span>4코스</span></div></div>
+              <div class="optrow"><small>조편성</small>
+                <div class="segk"><div class="on">4인 1조</div><div>조 없이 자유 제출</div></div></div>
+              <div class="optrow"><small>기록 방식</small>
+                <div class="segk"><div class="on">홀별 기록</div><div>총점만</div></div></div>
+              <div class="optrow" style="margin-bottom:4px"><small>동점 처리</small>
+                <div class="pill2"><span class="on">카운트백</span><span>연장전</span><span>연장자 우선</span><span>별도 선정</span></div></div>
+            </div>
+            <span class="expand">접기 ∧</span>
+          </div>
+          <div class="fixbtn"><div class="btnP">이대로 좋아요 — 다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W2 — 상세 펼침 (만지는 사람만)</b>
+      <p>펼치면 나오는 옵션 5줄 — 첫 줄이 <b>경기 방식 세그먼트</b>로 승격되면서 🔴①(단계별 kind 혼합 불가)이 여기서 해결됩니다. "대회기간 라운드"를 고르면 아래 옵션이 기간형 문법(조편성 숨김·총점만 기본·동점 선택지 조정)으로 자동 전환.</p></div>
+    </div>
+
+    <!-- W3. 2단계 혼합 스택 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:20px;position:relative">
+          <h2 style="font-size:21px;font-weight:700;line-height:1.45;margin-bottom:14px">두 단계로 진행돼요</h2>
+          <div class="sumcard ok">
+            <h6>① 예선 <span class="kbadge period">대회기간 라운드</span></h6>
+            <div class="specgrid">
+              <div class="spec"><i>🖥️</i><div><b>코스 2개</b><small>기간 중 무제한 도전</small></div></div>
+              <div class="spec"><i>⭐</i><div><b>베스트 인정</b><small>총점만 기록</small></div></div>
+              <div class="spec"><i>🎯</i><div><b>남 8 · 여 8</b><small>결승 진출</small></div></div>
+              <div class="spec"><i>📅</i><div><b>대회기간 라운드</b><small>경기 방식</small></div></div>
+            </div>
+            <span class="expand">상세 바꾸기 ∨</span>
+          </div>
+          <div class="sumcard ok">
+            <h6>② 결승 <span class="kbadge">지정일 라운드</span></h6>
+            <div class="specgrid">
+              <div class="spec"><i>⛳</i><div><b>18홀 · 1코스</b><small>코스</small></div></div>
+              <div class="spec"><i>👥</i><div><b>4인 1조</b><small>조편성</small></div></div>
+              <div class="spec"><i>✏️</i><div><b>홀별 기록</b><small>기록 방식</small></div></div>
+              <div class="spec"><i>⚖️</i><div><b>카운트백</b><small>동점 처리</small></div></div>
+            </div>
+            <span class="expand">상세 바꾸기 ∨</span>
+          </div>
+          <div class="fixbtn"><div class="btnP">이대로 좋아요 — 다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W3 — 스크린 예선+결승: kind 혼합이 한눈에</b>
+      <p>단계마다 요약 카드 하나 — 초록 뱃지(대회기간 라운드)와 파랑 뱃지(지정일 라운드)가 나란히 서면서 T2·T7 구조가 위저드에서 처음으로 성립합니다. 두 카드 다 "이대로 좋아요"면 추가 화면 없이 통과.</p></div>
+    </div>
+
+    <!-- W4. 기간형 결과 화면 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트파크 스크린오픈</span><div class="sub">결과 · 예선 (기간형)</div></div></div>
+        <div class="scr" style="padding-top:14px">
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin:2px 0 8px">최종 순위 — 코스별 베스트 합산</p>
+          <div style="border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px">
+            <div class="bestrow2" style="background:#F0F5FA;font-size:11px;font-weight:700;color:var(--muted)"><span></span><span>선수</span><span class="v">1코스</span><span class="v">2코스</span><span class="v">합계</span></div>
+            <div class="bestrow2 top" style="border-left:4px solid var(--sun)"><span class="r" style="color:#C9930A;font-weight:700">1</span><span><b>표순덕</b> <small style="color:var(--muted)">여 · 미사리파크</small></span><span class="v">66</span><span class="v">67</span><span class="v" style="color:#C9930A;font-weight:700">133</span></div>
+            <div class="bestrow2"><span class="r" style="color:var(--ink);font-weight:700">2</span><span><b>김영수</b> <small style="color:var(--muted)">남 · 솔터공원회</small></span><span class="v">68</span><span class="v">69</span><span class="v" style="font-weight:700">137</span></div>
+            <div class="bestrow2"><span class="r" style="color:var(--ink);font-weight:700">3</span><span><b>엄기석</b> <small style="color:var(--muted)">남 · 청솔클럽</small></span><span class="v">70</span><span class="v">69</span><span class="v" style="font-weight:700">139</span></div>
+            <div class="bestrow2"><span class="r">4</span><span>박순자 <small style="color:var(--muted)">여 · 한강은빛회</small></span><span class="v">71</span><span class="v">70</span><span class="v">141</span></div>
+            <div class="bestrow2"><span class="r">5</span><span>신동철 <small style="color:var(--muted)">남 · 솔터공원회</small></span><span class="v">70</span><span class="v">72</span><span class="v">142</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 16px;font-size:13.5px;line-height:2">
+            <b style="font-size:13px;color:var(--deep)">🏆 부문 수상</b><br>
+            남자부 1위 김영수 · 여자부 1위 표순덕<br>
+            <span style="color:var(--muted)">도전왕 (최다 플레이 41회) 신동철</span>
+          </div>
+          <div class="btnP" style="margin-top:12px;background:#E3EEF9;color:var(--deep)">CSV 내보내기 · 인쇄</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W4 — 기간형·총점만 결과: 단일 리스트형 (판정 반영)</b>
+      <p>포디움 제거 — <b>순위 리스트 하나</b>로 통일(전광판과 같은 문법). 1위=골드 좌측바+골드 숫자, 2·3위=굵은 숫자로만 구분, 4위 이하 일반. 부문 수상 + 도전왕(포함 확정) + CSV·인쇄.</p></div>
+    </div>
+
+
+    <!-- W5. 참가자 여러 명 입력 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">솔터공원 9월 월례오픈</span><div class="sub">참가자 추가</div></div></div>
+        <div class="scr" style="padding-top:14px;position:relative">
+          <div class="seg"><div>한 명씩 입력</div><div class="on">여러 명 입력</div></div>
+          <p style="font-size:12.5px;font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
+          <div class="colchip"><span class="req">이름</span><span class="req">전화번호</span><span class="on">성별</span><span>나이</span><span>소속</span></div>
+          <div class="exline">예시 — 한 줄에 한 명씩:<br><b>홍길동 010-1234-5678 남</b></div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:8px">📋 카톡 명단이나 엑셀 표를 <b style="color:var(--ink)">그대로 복사해 붙여넣어도 괜찮아요</b> — 띄어쓰기·쉼표가 섞여 있어도 알아서 읽어요</p>
+          <div class="pastebox">김영수 010-2000-1000 남<br>박순자 010-2000-1001 여<br>표순덕 01020001002 여<br>엄기석, 010-2000-1003, 남</div>
+          <p class="swaphint" style="text-align:left;margin-bottom:8px">✓ 4줄 중 4명 인식</p>
+          <div class="fixbtn"><div class="btnP">4명 등록하기</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W5 — 참가자 추가: "여러 명 입력" 컬럼 선언형 (CH30 편입)</b>
+      <p>세그먼트 명칭 [한 명씩 | 여러 명]으로 변경. 칩으로 줄 형식을 먼저 선언(이름·전화=필수 고정, 성별·나이·소속=대회 수집 항목만 노출) → 예시 줄이 형식대로 실시간 갱신 → 파서는 선언 순서로 자르기만. 추측이 사라져 🔴③류 오인식이 구조적으로 차단되고, 안 맞는 줄은 CH29 실패 줄 UI가 받습니다.</p></div>
+    </div>
+
+    <!-- W6. 점수 여러 명 입력 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트파크 스크린오픈</span><div class="sub">스코어 입력 · 총점만 · 1코스</div></div></div>
+        <div class="scr" style="padding-top:14px;position:relative">
+          <div class="seg"><div>한 명씩 입력</div><div class="on">여러 명 입력</div></div>
+          <p style="font-size:12.5px;font-weight:700;color:var(--muted);margin:2px 0 8px">한 줄에 어떤 정보가 있나요?</p>
+          <div class="colchip"><span class="req">이름</span><span class="on">전화 뒷자리</span><span class="req">스코어</span></div>
+          <div class="exline">예시 — 한 줄에 한 명씩:<br><b>홍길동 5678 71</b></div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:8px">📋 매장 기록지·카톡을 그대로 복사해 붙여넣어도 괜찮아요</p>
+          <div class="pastebox">김영수 1000 68<br>박순자 1001 74<br>표순덕 1002 66<br>박순자 71</div>
+          <p class="swaphint" style="text-align:left;margin-bottom:8px">✓ 4줄 중 3명 인식 — <b style="color:#C4523A">1줄 확인 필요</b>: "박순자 71" 동명이인 2명, 전화 뒷자리를 포함해주세요</p>
+          <div class="fixbtn"><div class="btnP">3명 기록 저장</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>W6 — 점수 여러 명 입력 (총점 모드 전용, CH30 편입)</b>
+      <p>W5와 같은 컬럼 선언·실패 줄 문법을 점수에 재사용. 매칭=이름+전화 뒷자리(동명이인 무전화=실패 줄), 기간형=줄마다 새 기록(베스트 자동), 라운드 총점만=기존 값 있으면 실패 줄("개별 수정 이용" — 정정 사유 플로우 우회 방지). 저장 시 베스트 경신 건수 요약 토스트.</p></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

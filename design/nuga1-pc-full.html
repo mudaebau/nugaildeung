@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>누가일등 PC 콘솔 — 전체 화면 확장판</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--act:#1B64DA;--act-deep:#1550B4;--act-soft:#EAF2FF;--ink:#1F2937;--sub:#64748B;--dim:#9AAAB9;--line:#DFE8F4;--bg:#F5F8FC;--gold:#F7CF5C;--goldtx:#8A6A10;--mint:#E7F5EE;--minttx:#2E8B63}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Noto Sans KR';background:#E8EDF2;padding:26px 18px;color:var(--ink)}
+.board{max-width:1100px;margin:0 auto}h1{font-size:21px;font-weight:700;margin-bottom:5px}
+.blead{font-size:13px;color:#5B6C7C;margin-bottom:20px;line-height:1.7}
+.frame{background:#fff;border:1.5px solid #CBD6E2;border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(29,61,92,.10);margin-bottom:12px}
+.chrome{display:flex;align-items:center;gap:6px;background:#F0F4F8;border-bottom:1px solid #DCE6F0;padding:9px 14px}
+.chrome i{width:10px;height:10px;border-radius:50%;background:#D5DEE8;display:inline-block}
+.chrome span{font-size:11px;color:#7C8B99;margin-left:8px}
+/* ① 브랜드 밴드 유틸바 — 코발트 */
+.util{background:linear-gradient(95deg,#1B64DA,#2E7BE8);padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,80,180,.25)}
+.lg{display:inline-flex;align-items:center;background:#fff;color:var(--act);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.lg i{font-style:normal;color:#C9930A;margin:0 1px}
+.tname{font-size:17px;font-weight:700;color:#fff}
+.util .tools{margin-left:auto;display:flex;gap:8px;font-size:13.5px;font-weight:700}
+.util .tools span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 13px}
+/* ② 대단계 = 카드 행렬 + 화살표 */
+.rail{display:flex;align-items:center;background:var(--bg);border-bottom:1.5px solid var(--line);padding:13px 16px;gap:4px}
+.rl{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:13px;text-align:center;padding:11px 6px;box-shadow:0 1px 4px rgba(29,61,92,.06)}
+.rl b{font-size:14.5px;display:block}
+.rl small{font-size:11.5px;color:var(--sub);font-weight:700}
+.rl.done{background:#F6FBF8;border-color:#CDE8DA}.rl.done b{color:var(--minttx)}
+.rl.cur{background:linear-gradient(160deg,#1B64DA,#1550B4);border-color:var(--act-deep);box-shadow:0 5px 14px rgba(21,80,180,.35);transform:translateY(-1px)}
+.rl.cur b{color:#fff;font-size:15.5px}.rl.cur small{color:rgba(255,255,255,.85)}
+.rl.todo{background:#F4F6FA;border-color:#E5EAF2}.rl.todo b{color:var(--dim)}.rl.todo small{color:var(--dim)}
+.arw{color:#B9C8DC;font-size:15px;font-weight:700;flex:0 0 auto}
+/* ③ 중단계 = 입체 카드 버튼 */
+.body2{display:flex;min-height:330px}
+.snav{width:244px;flex:0 0 auto;border-right:1.5px solid var(--line);background:#F0F4FA;padding:14px 12px}
+.snav p{font-size:11.5px;font-weight:700;color:var(--sub);padding:0 6px 10px}
+.sn{display:flex;align-items:center;gap:10px;padding:12px 12px;border-radius:13px;font-size:15px;font-weight:700;margin-bottom:7px;background:#fff;border:1.5px solid var(--line);box-shadow:0 1px 4px rgba(29,61,92,.07);color:var(--sub)}
+.sn i{width:26px;height:26px;border-radius:50%;font-style:normal;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;background:#EDF1F6;color:var(--dim);flex:0 0 auto}
+.sn.done{background:#F6FBF8;border-color:#CDE8DA;color:var(--minttx)}
+.sn.done i{background:var(--mint);color:var(--minttx)}
+.sn.cur{background:#fff;border:2px solid var(--act);color:var(--act);box-shadow:0 4px 12px rgba(21,80,180,.22)}
+.sn.cur i{background:var(--act);color:#fff}
+.sn.cur:after{content:'▸';margin-left:auto;color:var(--act);font-size:15px}
+.sn.todo{background:#F7F9FC;border-color:#E5EAF2;box-shadow:none;color:var(--dim);font-weight:500}
+.mainA{flex:1;background:var(--bg);padding:16px 18px}
+.strip{display:flex;gap:22px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 18px;margin-bottom:12px;box-shadow:0 1px 5px rgba(29,61,92,.06)}
+.strip b{font-family:Oswald;font-size:30px}
+.strip p{font-size:12.5px;color:var(--sub);font-weight:700}
+.btn{background:var(--act);color:#fff;font-weight:700;border-radius:12px;padding:11px 18px;font-size:14.5px;display:inline-block;box-shadow:0 2px 7px rgba(21,80,180,.28)}
+.btn.soft{background:var(--act-soft);color:var(--act);box-shadow:none}
+table{border-collapse:collapse;width:100%;font-size:15.5px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 5px rgba(29,61,92,.06)}
+th{background:#F1F5FB;text-align:left;padding:11px 13px;font-size:12.5px;color:var(--sub);border-bottom:2px solid var(--line);font-weight:700}
+td{padding:11px 13px;border-bottom:1px solid #EDF1F6}
+.pill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;display:inline-block}
+.cap{font-size:12.5px;line-height:1.75;color:#41505E;margin:0 4px 24px}
+.cap b{display:block;font-size:14px;color:#2B3A4A;margin-bottom:3px}
+
+.dim2{background:rgba(31,41,55,.45);border-radius:0;padding:34px;display:flex;align-items:center;justify-content:center}
+.sheet2{background:#fff;border-radius:18px;padding:22px 24px;width:430px;box-shadow:0 18px 44px rgba(0,0,0,.3)}
+.chk{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #EDF1F6;font-size:15.5px}
+.grp{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+.grp h5{font-size:13.5px;color:var(--act);margin-bottom:8px}
+.grp p{font-size:14.5px;line-height:1.95}
+
+.land{background:linear-gradient(150deg,#0F3D8F,#1B64DA 55%,#2E7BE8)}
+.feat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:18px;color:#fff}
+.myband{background:linear-gradient(95deg,#334155,#475569)}
+.ycard{background:#fff;border:1.5px solid #E2E8F0;border-radius:16px;padding:18px 20px}
+
+.hbtn{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:8px;font-size:15.5px;font-weight:700;box-shadow:0 1px 4px rgba(29,61,92,.07)}
+.hbtn small{font-weight:500;color:var(--sub);font-size:13.5px;margin-left:auto;text-align:right}
+.hbtn .go{color:var(--act);font-size:15px;font-weight:700}
+.hbtn.lock{background:#F1F3F7;box-shadow:none;opacity:.72}
+.hcol p.h{font-size:13px;font-weight:700;margin-bottom:9px}
+</style></head><body><div class="board">
+<h1>PC 콘솔 전체 화면 확장판 — 인벤토리 검증 반영</h1>
+<p class="blead">누락 보완(시작하기·내 대회 선택·계정·심판진) + 랜딩·마이페이지·문서 타이포까지 — 17개 방 완비판 (시나리오 검증 반영).</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 0 — 시작하기 · 내 대회 선택 (콘솔 진입, 누락 보완)</span></div><div style="display:flex">
+<div style="flex:1;background:linear-gradient(140deg,#1B64DA,#2E7BE8);padding:44px 30px;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:18px;padding:26px 26px;width:330px;box-shadow:0 14px 36px rgba(0,0,0,.25)">
+    <span class="lg" style="box-shadow:none;border:1.5px solid var(--line)">누가<i>1</i>등</span>
+    <h3 style="font-size:20px;margin:14px 0 4px">전화번호로 시작해요</h3>
+    <p style="font-size:13.5px;color:var(--sub);margin-bottom:14px">가입 절차 없음 — 참가자·심판은 이 과정 없이 링크로 참여해요</p>
+    <div style="border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;margin-bottom:9px"><b>010-1234-5678</b></div>
+    <div style="border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--dim);margin-bottom:14px">이름</div>
+    <div class="btn" style="display:block;text-align:center;font-size:16px">시작하기</div>
+  </div>
+</div>
+<div style="flex:1;background:var(--bg);padding:22px">
+  <p style="font-size:14px;font-weight:700;margin-bottom:12px">다시 오셨네요, 리얼스톤님 👋</p>
+  <div class="grp" style="border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18);margin-bottom:10px"><h5>● 제1회 임팩트 챌린지컵</h5><p style="font-size:13.5px;color:var(--sub)">예선 진행 중 · 41명 · D-4</p></div>
+  <div class="grp" style="margin-bottom:10px"><h5 style="color:var(--sub)">솔터공원 9월 월례오픈</h5><p style="font-size:13.5px;color:var(--sub)">접수 중 · 12명</p></div>
+  <div class="btn soft" style="display:block;text-align:center">＋ 새 대회 개설하기</div>
+</div>
+</div></div>
+<p class="cap"><b>화면 0 — 콘솔의 현관 (인벤토리 🔴 2건 보완)</b>좌: 시작하기(모바일 SIGNIN과 같은 정책 — 정규화·자동 로그인·재방문 인사). 우: 내 대회 선택 — 진행 중 대회는 파란 테두리로 최상단, 클릭하면 그 대회의 현재 중단계로 직행(단일 입출입 원칙). 계정 메뉴(보안키 재발급·로그아웃)는 유틸바 우측 이름 클릭.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 1 — 예선 › 스코어 입력</span></div>
+<div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail">
+  <div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span>
+  <div class="rl done"><b>✓ 모집</b><small>41명</small></div><span class="arw">›</span>
+  <div class="rl cur"><b>예선</b><small>3/6 진행 중</small></div><span class="arw">›</span>
+  <div class="rl todo"><b>결승</b><small>9.20</small></div><span class="arw">›</span>
+  <div class="rl todo"><b>시상</b></div><span class="arw">›</span>
+  <div class="rl todo"><b>마감</b></div>
+</div>
+<div class="body2">
+  <div class="snav"><p>예선 — 할 일 순서</p>
+    <div class="sn done"><i>✓</i>예선 시작</div>
+    <div class="sn done"><i>✓</i>조편성</div>
+    <div class="sn cur"><i>3</i>스코어 입력</div>
+    <div class="sn todo"><i>4</i>스코어 확정</div>
+    <div class="sn todo"><i>5</i>진출자 확정</div>
+    <div class="sn todo"><i>6</i>예선 마감</div>
+  </div>
+  <div class="mainA">
+    <div class="strip">
+      <div><b>41</b><p>참가</p></div><div><b style="color:var(--act)">28</b><p>완주</p></div><div><b>D-4</b><p>기간 마감</p></div>
+      <p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 3조 미시작 · 7조 심판 미접속</p>
+      <span class="btn soft">📋 점수 붙여넣기</span>
+    </div>
+    <table>
+      <tr><th>이름</th><th>클럽</th><th style="width:110px">1코스</th><th style="width:110px">2코스</th><th style="width:110px">베스트 합계</th></tr>
+      <tr><td><b>표순덕</b></td><td>미사리파크</td><td><b style="font-family:Oswald;font-size:19px">66</b></td><td><b style="font-family:Oswald;font-size:19px">67</b></td><td><b style="font-family:Oswald;font-size:19px;color:var(--act)">133</b></td></tr>
+      <tr><td><b>김영수</b></td><td>솔터공원회</td><td><b style="font-family:Oswald;font-size:19px">68</b></td><td style="background:var(--act-soft)"><span style="color:var(--act);font-weight:700;font-size:14px">▸ 입력</span></td><td><span style="color:var(--sub);font-size:13.5px">1/2코스</span></td></tr>
+      <tr><td><b>박순자</b></td><td>한강은빛회</td><td style="background:var(--act-soft)"><span style="color:var(--act);font-weight:700;font-size:14px">▸ 입력</span></td><td style="background:var(--act-soft)"><span style="color:var(--act);font-weight:700;font-size:14px">▸ 입력</span></td><td><span style="color:var(--dim);font-size:13.5px">미입력</span></td></tr>
+    </table>
+  </div>
+</div></div>
+<p class="cap"><b>화면 1 — 층위가 색·입체로 구별됨</b>
+코발트 밴드(브랜드) → 연회색 레일(카드 행렬, 현재=코발트 입체) → 옅은 블루그레이 사이드(카드 버튼) → 밝은 본문. 네 층이 각자 다른 밝기라 시선이 위→아래로 자연스럽게 흐릅니다.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 2 — 모집 › 신청 접수</span></div>
+<div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div>
+<div class="rail">
+  <div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span>
+  <div class="rl cur"><b>모집</b><small>2/4 진행 중</small></div><span class="arw">›</span>
+  <div class="rl todo"><b>예선</b></div><span class="arw">›</span>
+  <div class="rl todo"><b>결승</b></div><span class="arw">›</span>
+  <div class="rl todo"><b>시상</b></div><span class="arw">›</span>
+  <div class="rl todo"><b>마감</b></div>
+</div>
+<div class="body2">
+  <div class="snav"><p>모집 — 할 일 순서</p>
+    <div class="sn done"><i>✓</i>모집 시작</div>
+    <div class="sn cur"><i>2</i>신청 접수</div>
+    <div class="sn todo"><i>3</i>입금 확인</div>
+    <div class="sn todo"><i>4</i>모집 마감 · 명단 확정</div>
+  </div>
+  <div class="mainA">
+    <div class="strip">
+      <div><b>34</b><p>신청</p></div><div><b style="color:var(--minttx)">29</b><p>입금</p></div><div><b>6</b><p>남은 자리</p></div><div><b style="color:var(--goldtx)">2</b><p>대기</p></div>
+      <span style="margin-left:auto" class="btn soft">📋 여러 명 붙여넣기</span><span class="btn">＋ 추가</span>
+    </div>
+    <table>
+      <tr><th>이름</th><th style="width:64px">성별</th><th>클럽</th><th style="width:140px">전화</th><th style="width:86px">입금</th></tr>
+      <tr><td><b>김영수</b></td><td>남</td><td>솔터공원회</td><td>010-••••-1000</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">입금</span></td></tr>
+      <tr><td><b>박순자</b></td><td>여</td><td>한강은빛회</td><td>010-••••-1001</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">입금</span></td></tr>
+      <tr><td><b>표순덕</b></td><td>여</td><td>미사리파크</td><td>010-••••-1002</td><td><span class="pill" style="background:var(--gold);color:#1F2937">대기</span></td></tr>
+    </table>
+  </div>
+</div></div>
+<p class="cap"><b>화면 2 — 같은 옷, 다른 방</b>
+레일의 현재 카드가 "모집"으로 이동하고 사이드 목록이 갈아끼워질 뿐, 문법은 동일 — 배우는 건 한 번이면 됩니다.</p>
+
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 3 — 결승 › 조편성</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail"><div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span><div class="rl done"><b>✓ 모집</b></div><span class="arw">›</span><div class="rl done"><b>✓ 예선</b></div><span class="arw">›</span><div class="rl cur"><b>결승</b><small>2/6</small></div><span class="arw">›</span><div class="rl todo"><b>시상</b></div><span class="arw">›</span><div class="rl todo"><b>마감</b></div></div><div class="body2">
+  <div class="snav"><p>결승 — 할 일 순서</p>
+    <div class="sn done"><i>✓</i>명단 확정 <span style="font-size:12px;margin-left:auto">16명</span></div>
+    <div class="sn cur"><i>2</i>조편성</div>
+    <div class="sn todo"><i>3</i>결승 시작</div>
+    <div class="sn todo"><i>4</i>스코어 입력</div>
+    <div class="sn todo"><i>5</i>스코어 확정</div>
+    <div class="sn todo"><i>6</i>결승 마감</div>
+  </div>
+  <div class="mainA">
+    <div class="strip"><div><b>16</b><p>결승 진출</p></div><div><b style="color:var(--act)">4</b><p>조 편성됨</p></div><div><b>0</b><p>미배정</p></div>
+      <span style="margin-left:auto" class="btn soft">📋 조 포함 붙여넣기</span><span class="btn">🔀 자동 편성</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="grp"><h5>1조</h5><p>김영수 · 박순자 · 표순덕 · 엄기석</p></div>
+      <div class="grp"><h5>2조</h5><p>신동철 · 피천옥 · 함준호 · 도연실</p></div>
+      <div class="grp"><h5>3조</h5><p>이순재 · 강막례 · 오복순 · 정판술</p></div>
+      <div class="grp"><h5>4조</h5><p>남궁억 · 채송화 · 백일섭 · 문정숙</p></div>
+    </div>
+    <p style="font-size:13px;color:var(--sub);margin-top:10px">이름 두 명 클릭=맞바꾸기 · 카드로 끌어다 놓기=이동 · 직접 지정 후 [자동 편성]=덮어씀 경고 · 최소 2인 조</p>
+  </div>
+</div></div>
+<p class="cap"><b>화면 3 — 조편성: 조 카드 그리드</b>PC의 넓이로 전 조가 한 화면에. 맞바꾸기·붙여넣기([조] 칩)·2인 조·덮어씀 경고 — 확정 스펙 그대로, 끌어놓기만 PC 보너스.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 4 — 결승 시작 · 사전 점검 시트 (모달)</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail"><div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span><div class="rl done"><b>✓ 모집</b></div><span class="arw">›</span><div class="rl done"><b>✓ 예선</b></div><span class="arw">›</span><div class="rl cur"><b>결승</b><small>3/6</small></div><span class="arw">›</span><div class="rl todo"><b>시상</b></div><span class="arw">›</span><div class="rl todo"><b>마감</b></div></div><div class="dim2" style="min-height:300px">
+  <div class="sheet2">
+    <h3 style="font-size:19px;margin-bottom:4px">결승을 시작할까요?</h3>
+    <p style="font-size:13.5px;color:var(--sub);margin-bottom:10px">시작 전 준비 상태를 확인하세요</p>
+    <div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 결승 명단 <b style="margin-left:auto">16명 확정</b></div>
+    <div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 조편성 <b style="margin-left:auto">4개 조</b></div>
+    <div class="chk"><span style="color:var(--goldtx);font-weight:700">⚠</span> 심판 <b style="margin-left:auto">2명 등록 · 접속 1</b></div>
+    <p style="font-size:12.5px;color:var(--sub);margin:10px 0 14px">심판 접속이 안 됐어도 시작할 수 있어요 — 개설자는 언제든 직접 입력 가능</p>
+    <div style="display:flex;gap:8px"><span class="btn soft" style="flex:1;text-align:center">취소</span><span class="btn" style="flex:1.6;text-align:center">결승 시작</span></div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 4 — 사전 점검: P24 그대로</b>중단계 [결승 시작] 클릭 시 모달 — 명단·조편성·심판 상태를 확인 후 시작. ⚠는 차단이 아니라 안내(개설자 직접 입력 권한이 안전망). 미충족 필수 항목이 있으면 시작 버튼 비활성+이유.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 5 — 예선 › 진출자 확정 (컷 미리보기)</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail"><div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span><div class="rl done"><b>✓ 모집</b></div><span class="arw">›</span><div class="rl cur"><b>예선</b><small>5/6</small></div><span class="arw">›</span><div class="rl todo"><b>결승</b></div><span class="arw">›</span><div class="rl todo"><b>시상</b></div><span class="arw">›</span><div class="rl todo"><b>마감</b></div></div><div class="body2">
+  <div class="snav"><p>예선 — 할 일 순서</p>
+    <div class="sn done"><i>✓</i>예선 시작</div><div class="sn done"><i>✓</i>조편성</div>
+    <div class="sn done"><i>✓</i>스코어 입력</div><div class="sn done"><i>✓</i>스코어 확정</div>
+    <div class="sn cur"><i>5</i>진출자 확정</div><div class="sn todo"><i>6</i>예선 마감</div>
+  </div>
+  <div class="mainA">
+    <div class="strip"><div><b>41</b><p>완주</p></div><div><b style="color:var(--act)">남8·여8</b><p>진출 컷</p></div>
+      <p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 남자부 8위 동점 2명 — 카운트백 적용됨</p><span class="btn">컷 적용 — 결승 명단 만들기</span></div>
+    <table>
+      <tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th></tr>
+      <tr><td><b style="font-family:Oswald;font-size:18px">7</b></td><td><b>신동철</b></td><td>남</td><td>141</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">진출</span></td></tr>
+      <tr style="background:#FFF9E8"><td><b style="font-family:Oswald;font-size:18px">8</b></td><td><b>엄기석</b></td><td>남</td><td>142</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">진출</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 — 카운트백 우세</span></td></tr>
+      <tr style="background:#FFF9E8;border-top:2.5px dashed #C4523A"><td><b style="font-family:Oswald;font-size:18px;color:var(--dim)">9</b></td><td>백일섭</td><td>남</td><td>142</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">탈락</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 — 카운트백 열세</span></td></tr>
+      <tr><td><b style="font-family:Oswald;font-size:18px;color:var(--dim)">10</b></td><td>문정숙</td><td>남</td><td>145</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">탈락</span></td></tr>
+    </table>
+  </div>
+</div></div>
+<p class="cap"><b>화면 5 — 진출자 확정: 컷 라인이 보이는 순위표</b>빨간 점선=컷 라인, 경계 동점은 골드 행+판정 사유 병기(자동 해소 시). 자동 불가 동점이면 이 화면에서 수동 선택. [컷 적용]이 결승 명단을 만들고 → 결승 대단계의 '명단 확정'이 ✓로.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 6 — 시상 › 결과 발표</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail"><div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span><div class="rl done"><b>✓ 모집</b></div><span class="arw">›</span><div class="rl done"><b>✓ 예선</b></div><span class="arw">›</span><div class="rl done"><b>✓ 결승</b></div><span class="arw">›</span><div class="rl cur"><b>시상</b><small>2/3</small></div><span class="arw">›</span><div class="rl todo"><b>마감</b></div></div><div class="body2">
+  <div class="snav"><p>시상 — 할 일 순서</p>
+    <div class="sn done"><i>✓</i>최종 순위 확인</div>
+    <div class="sn cur"><i>2</i>부문 수상 확인</div>
+    <div class="sn todo"><i>3</i>결과 발표</div>
+  </div>
+  <div class="mainA">
+    <table style="margin-bottom:12px">
+      <tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th>클럽</th><th style="width:100px">합계</th></tr>
+      <tr style="background:#FFF9E8;border-left:4px solid var(--gold)"><td><b style="font-family:Oswald;font-size:20px;color:var(--goldtx)">1</b></td><td><b>표순덕</b></td><td>여</td><td>미사리파크</td><td><b style="font-family:Oswald;font-size:20px;color:var(--goldtx)">133</b></td></tr>
+      <tr><td><b style="font-family:Oswald;font-size:18px">2</b></td><td><b>김영수</b></td><td>남</td><td>솔터공원회</td><td><b style="font-family:Oswald;font-size:18px">137</b></td></tr>
+    </table>
+    <div class="grp" style="margin-bottom:12px"><h5 style="color:var(--goldtx)">🏆 부문 수상</h5><p>남자부 1위 김영수 · 여자부 1위 표순덕 · 도전왕 신동철 <span style="color:var(--sub);font-size:12.5px">(중복 수상 제외 적용)</span></p></div>
+    <div style="display:flex;gap:8px"><span class="btn">📺 전광판에 결과 띄우기</span><span class="btn soft">🖨 결과지 인쇄</span><span class="btn soft">📤 CSV</span></div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 6 — 시상: 확인 → 발표의 흐름</b>최종 순위·부문 수상(중복 제외)을 확인하고 발표 도구 3종으로 마무리. 종료 확정은 다음 대단계(마감)의 일 — 시상은 축하, 마감은 행정.</p>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 7 — 대회 정보 수정 허브 (유틸바 ⚙️)</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div style="background:var(--bg);padding:16px 22px 4px"><div class="strip" style="margin-bottom:0"><div><b style="color:var(--goldtx)">80<small style="font-size:15px">%</small></b><p>요강 완성도</p></div><p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100% — 완성된 요강이 신청을 늘려요</p><span style="margin-left:auto" class="btn soft">👁 요강 미리보기</span></div></div>
+<div style="background:var(--bg);padding:12px 22px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+  <div class="hcol"><p class="h" style="color:var(--minttx)">📋 요강 내용 — 언제든 수정</p>
+    <div class="hbtn">🏷 대회명 · 주최<small>임팩트 챌린지컵</small><span class="go">›</span></div>
+    <div class="hbtn">🏆 시상 내역<small style="color:var(--minttx);font-weight:700">완료 ✓</small><span class="go">›</span></div>
+    <div class="hbtn">💰 참가비 · 문의<small style="color:var(--minttx);font-weight:700">완료 ✓</small><span class="go">›</span></div>
+    <div class="hbtn">📖 게임룰<small style="color:var(--goldtx);font-weight:700">채우기</small><span class="go">›</span></div>
+    <div class="hbtn">👁 요강 미리보기 · 공유<small>이미지 저장</small><span class="go">›</span></div>
+  </div>
+  <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인</p>
+    <div class="hbtn">📅 일정 · 대회장소<small>7.25 · ○○스크린골프장</small><span class="go">›</span></div>
+    <div class="hbtn">👥 정원 · 참여 대상<small>40명 · 누구나</small><span class="go">›</span></div>
+    <div class="hbtn">🔒 공개 설정<small>공개</small><span class="go">›</span></div>
+    <div class="hbtn">📝 참가자 정보 항목<small>성별 · 나이 · 소속</small><span class="go">›</span></div>
+  </div>
+  <div class="hcol"><p class="h" style="color:#C4523A">🔴 기록이 있어 잠김</p>
+    <div class="hbtn lock">⛳ 코스 구성 · 파<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small></div>
+    <div class="hbtn lock">🪜 단계 구조 · 컷 · 동점<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small></div>
+    <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">해당 단계 기록이 없을 때만 열려요</p>
+  </div>
+</div></div>
+<p class="cap"><b>화면 7 — 허브: 3등급이 3컬럼으로</b>모바일의 세로 3그룹이 PC에선 3컬럼 — 등급 전체가 한눈에. 진입은 유틸바 ⚙️ 하나(단일 문 원칙), 잠금 조건·완성도·미리보기 전부 확정 정책 그대로.</p>
+
+    <!-- 화면 L. 랜딩 -->
+    
+
+    <!-- 화면 8. 마이페이지 -->
+    
+
+    <!-- 화면 9. 대회요강 (본문형·대형 폰트) -->
+    
+
+<!-- 화면 L 랜딩 -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 L — nuga1.kr 랜딩 (서비스 소개)</span></div>
+<div style="background:#fff">
+  <div style="display:flex;align-items:center;padding:14px 26px;border-bottom:1px solid var(--line)">
+    <span class="lg" style="box-shadow:none;border:1.5px solid var(--line)">누가<i>1</i>등</span>
+    <div style="margin-left:auto;display:flex;gap:16px;align-items:center;font-size:14.5px;font-weight:700;color:var(--sub)"><span>서비스 소개</span><span>이용 안내</span><span class="btn" style="padding:10px 18px;font-size:14.5px">대회 개설하기</span></div>
+  </div>
+  <div style="background:linear-gradient(140deg,#1B64DA,#2E7BE8);color:#fff;padding:46px 26px;text-align:center">
+    <p style="font-size:13.5px;font-weight:700;opacity:.85;margin-bottom:10px">파크골프 대회 관리 플랫폼</p>
+    <h2 style="font-size:32px;line-height:1.45;margin-bottom:8px">대회 개설부터 시상까지,<br>한 번에 끝내세요</h2>
+    <p style="font-size:16px;opacity:.9;margin-bottom:20px">신청 접수 · 조편성 · 스코어 · 실시간 전광판 — 총무 혼자서도 충분합니다</p>
+    <span style="background:#fff;color:var(--act);font-weight:700;border-radius:14px;padding:15px 30px;font-size:17px;display:inline-block">＋ 무료로 대회 개설하기</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:22px 26px">
+    <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📝</p><b style="font-size:16px">단계를 따라가면 끝</b><p style="font-size:14px;color:var(--sub);margin-top:4px">개설→모집→경기→시상, 할 일이 순서대로</p></div>
+    <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📋</p><b style="font-size:16px">카톡 명단 그대로</b><p style="font-size:14px;color:var(--sub);margin-top:4px">복사해 붙여넣으면 등록·조편성까지</p></div>
+    <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📺</p><b style="font-size:16px">실시간 전광판</b><p style="font-size:14px;color:var(--sub);margin-top:4px">TV에 띄우는 순위 — 참가자는 링크로</p></div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 L — 랜딩: 서비스의 얼굴</b>
+진입 동선 확정: 랜딩 → [대회 개설하기] → 시작하기(화면 0) → 대회 선택 → 콘솔. 로그인 상태면 랜딩의 버튼이 [내 대회로]로 바뀌어 바로 콘솔 직행. 참가자는 이 페이지와 무관(단톡방 링크 직행 — 기존 동선 유지).</p>
+
+<!-- 화면 M 마이페이지 -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 M — 마이페이지 (계정 영역 — 색조 구별)</span></div>
+<div style="background:#EEF0F4">
+  <div style="background:linear-gradient(120deg,#1F2937,#374151);color:#fff;padding:22px 26px;display:flex;align-items:center;gap:16px">
+    <span style="width:52px;height:52px;border-radius:50%;background:#4B5563;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">리</span>
+    <div><b style="font-size:20px">리얼스톤</b><p style="font-size:14.5px;opacity:.8">010-••••-5678 · 운영자</p></div>
+    <span style="margin-left:auto;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;font-size:13.5px;font-weight:700">← 콘솔로 돌아가기</span>
+  </div>
+  <div style="padding:18px 26px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="grp"><h5 style="color:#374151">내 대회 이력</h5><p style="font-size:15.5px;line-height:2">● 제1회 임팩트 챌린지컵 — 진행 중<br>솔터공원 9월 월례오픈 — 접수 중<br><span style="color:var(--sub)">지난 대회 3개 ›</span></p></div>
+    <div class="grp"><h5 style="color:#374151">계정·보안</h5><p style="font-size:15.5px;line-height:2.15">🔑 보안키 재발급 <span style="color:var(--sub);font-size:13px">(내 대회 접근 키)</span><br>📱 로그인 기기 관리<br><span style="color:#C4523A;font-weight:700">로그아웃</span></p></div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 M — 마이페이지: 다크 슬레이트 = "여기는 계정 영역"</b>
+콘솔(코발트·밝음)과 확연히 다른 색조로 지금 어디에 있는지 몸으로 알게. 보안키 재발급(60초 쿨다운·재로그인 유도)·이력·로그아웃 — MY 탭 기능 전부 이 방으로. 진입은 유틸바 [리얼스톤 ▾].</p>
+
+<!-- 화면 R 요강 (본문 가독성) -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 R — 대회 요강 (본문 문서 타이포 기준)</span></div>
+<div style="background:#fff;padding:30px 0">
+  <div style="max-width:640px;margin:0 auto;padding:0 26px">
+    <p style="font-size:15px;font-weight:700;color:var(--act);margin-bottom:6px">대회 요강</p>
+    <h2 style="font-size:28px;line-height:1.4;margin-bottom:10px">제1회 임팩트파크골프 챌린지컵</h2>
+    <p style="font-size:17px;color:var(--sub);margin-bottom:18px">2026.7.25(토) · ○○스크린골프장 · 양평 A/B코스 36홀</p>
+    <div style="border-top:2px solid var(--ink);padding:16px 0;border-bottom:1px solid var(--line)">
+      <p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">참가 대상 · 정원</p>
+      <p style="font-size:18px;line-height:1.8">파크골프를 사랑하는 누구나 · 선착순 40명</p>
+    </div>
+    <div style="padding:16px 0;border-bottom:1px solid var(--line)">
+      <p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">시상</p>
+      <p style="font-size:18px;line-height:1.9">종합 우승 50만원 · 남녀부 1~3위 · 도전왕(최다 도전)</p>
+    </div>
+    <div style="padding:16px 0;border-bottom:1px solid var(--line)">
+      <p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">참가비 · 문의</p>
+      <p style="font-size:18px;line-height:1.9">2만원 (입금 계좌 안내) · 총무 010-••••-1000</p>
+    </div>
+    <div style="margin-top:20px"><span class="btn" style="font-size:17px;padding:15px 28px">참가 신청하기</span></div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 R — 본문 문서 타이포: "요강은 벽보처럼"</b>
+문서형 본문 기준 확정 — 제목 28 · 리드 17 · 본문 18(행간 1.8~1.9) · 라벨 14, 최대 폭 640px(긴 줄 금지). 요강·이용 안내·게임룰 등 읽는 페이지 전부 이 스케일. 콘솔 표(15.5)보다 한 단계 큰 "읽기 모드"입니다.</p>
+
+<!-- 화면 W 개설 플로우 -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 W — 새 대회 개설 (v2: 단계별 방식·입력·일정)</span></div>
+<div style="display:flex;background:var(--bg)">
+  <div style="flex:1;padding:20px 22px;border-right:1.5px solid var(--line)">
+    <p style="font-size:14px;font-weight:700;margin-bottom:10px">1. 기본 정보</p>
+    <div style="border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;font-size:16px;margin-bottom:8px"><b>제1회 임팩트 챌린지컵</b></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1.4;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;font-size:15px">대회장소 ○○스크린골프장</div><div style="width:110px;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;font-size:15px">정원 40</div></div>
+    <p style="font-size:14px;font-weight:700;margin:14px 0 10px">2. 대회 구조</p>
+    <div class="hbtn">🏆 단판<span class="go" style="margin-left:auto">›</span></div>
+    <div class="hbtn">🪜 예선 + 결승<span class="go" style="margin-left:auto">›</span></div>
+    <div class="hbtn" style="border:2px solid var(--act)">🏟 예선 + 본선 + 결승<span class="go" style="margin-left:auto">✓</span></div>
+  </div>
+  <div style="flex:1.35;padding:20px 22px">
+    <p style="font-size:14px;font-weight:700;margin-bottom:10px">3. 단계별 방식 · 점수 입력 · 일정</p>
+    <div class="grp" style="margin-bottom:8px"><h5>예선</h5><p style="font-size:13.5px;line-height:2"><span class="pill" style="background:var(--act-soft);color:var(--act)">📅 지정기간 라운드</span> <span class="pill" style="border:1px solid var(--line);color:var(--sub)">⛳ 지정일 라운드</span> · <span class="pill" style="background:var(--act-soft);color:var(--act)">총타수 제출</span> <span class="pill" style="border:1px solid var(--line);color:var(--sub)">홀별 입력</span><br>기간 7.25 ~ 8.10</p></div>
+    <div class="grp" style="margin-bottom:8px"><h5>본선</h5><p style="font-size:13.5px;line-height:2"><span class="pill" style="background:var(--act-soft);color:var(--act)">📅 지정기간 라운드</span> · <span class="pill" style="background:var(--act-soft);color:var(--act)">총타수 제출</span> · 기간 8.11 ~ 8.20 · 컷 남8·여8</p></div>
+    <div class="grp" style="margin-bottom:10px"><h5>결승</h5><p style="font-size:13.5px;line-height:2"><span class="pill" style="background:var(--act-soft);color:var(--act)">⛳ 지정일 라운드</span> · <span class="pill" style="background:var(--act-soft);color:var(--act)">홀별 입력</span> · 대회일 8.29 · 컷 4명</p></div>
+    <div class="btn" style="display:block;text-align:center;font-size:16px">대회 만들기 → 콘솔로</div>
+  </div>
+</div></div>
+<p class="cap"><b>화면 W v2 — 단계 카드마다 [방식(기간/지정일) × 입력(총타/홀별) × 일정] 독립 선택</b>
+기본 정보=대회명·대회장소·정원. 어떤 조합이든 허용(예: 예선 기간·총타 → 본선 기간·총타 → 결승 지정일·홀별). 일정은 단계 카드 안에서 — 기간형=시작~종료, 지정일=대회일. 방식·입력 기본값은 프리셋이 제안하되 카드에서 변경.</p>
+
+<!-- 화면 H 홀별 스코어 (파일럿 후 차수) -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 H — 지정일·홀별 스코어 입력 (CH34 — 파일럿 후)</span></div>
+<div style="display:flex;background:var(--bg);padding:16px 18px;gap:12px">
+  <div style="width:300px;flex:0 0 auto">
+    <div class="hbtn" style="border:2px solid var(--act)">1조<small style="color:var(--act);font-weight:700">18/18홀 ✓</small></div>
+    <div class="hbtn">2조<small>12/18홀 입력 중</small><span class="go">›</span></div>
+    <div class="hbtn">3조<small style="color:var(--goldtx);font-weight:700">미시작</small><span class="go">›</span></div>
+    <div class="hbtn">4조<small>6/18홀</small><span class="go">›</span></div>
+  </div>
+  <div style="flex:1" class="grp">
+    <h5>2조 — 신동철 <span style="font-weight:500;color:var(--sub);font-size:12.5px">전반 34 · 합계 12홀 46 (파 -2)</span></h5>
+    <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin:8px 0 4px">
+      <div style="background:#F1F5FB;border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--sub)">1<br><b style="font-family:Oswald;font-size:17px;color:var(--ink)">4</b></div>
+      <div style="background:#F1F5FB;border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--sub)">2<br><b style="font-family:Oswald;font-size:17px;color:var(--ink)">3</b></div>
+      <div style="background:#F1F5FB;border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--sub)">3<br><b style="font-family:Oswald;font-size:17px;color:var(--ink)">5</b></div>
+      <div style="background:var(--act-soft);border:1.5px solid var(--act);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--act)">4<br><b style="font-size:15px">▸</b></div>
+      <div style="background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--dim)">5<br>·</div>
+      <div style="background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--dim)">6<br>·</div>
+      <div style="background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--dim)">7<br>·</div>
+      <div style="background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--dim)">8<br>·</div>
+      <div style="background:#fff;border:1px dashed var(--line);border-radius:8px;text-align:center;padding:7px 0;font-size:12px;color:var(--dim)">9<br>·</div>
+    </div>
+    <p style="font-size:12.5px;color:var(--sub)">입력하면 다음 칸 자동 이동 · 숫자 키패드 대형(34px) · 소계·파대비 상시 — 모바일 홀별 문법 그대로</p>
+  </div>
+</div></div>
+<p class="cap"><b>화면 H — 홀별: 조 진행 + 18홀 그리드 (S70·S74, 파일럿 (b)엔 미사용 → CH34)</b>
+좌=조별 진행(미시작 골드 경고), 우=선택 선수의 홀 그리드. 지정일 대회(결승 등)용 — 파일럿은 기간형이라 이 방은 파일럿 후 차수로.</p>
+
+<!-- 화면 O 출석 (CH34) -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 O — 당일 준비 · 출석 (지정일 단계 전용 — CH34)</span></div>
+<div style="background:var(--bg);padding:16px 18px">
+  <div class="strip"><div><b style="color:var(--minttx)">12</b><p>출석</p></div><div><b>16</b><p>결승 명단</p></div><div><b style="color:var(--minttx)">15</b><p>입금</p></div><p style="margin-left:auto;font-size:13.5px;color:var(--sub)">뱃지 클릭 = 바로 전환</p></div>
+  <table>
+    <tr><th style="width:52px">조</th><th>이름</th><th>클럽</th><th style="width:96px">출석</th><th style="width:90px">입금</th></tr>
+    <tr><td>1</td><td><b>김영수</b></td><td>솔터공원회</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">출석</span></td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">입금</span></td></tr>
+    <tr><td>1</td><td><b>박순자</b></td><td>한강은빛회</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">미출석</span></td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">입금</span></td></tr>
+  </table>
+</div></div>
+<p class="cap"><b>화면 O — 출석: 지정일 단계의 "당일 준비" 중단계 (S51)</b>
+기간형엔 이 중단계 자체가 생성되지 않음(확정 정책). 출석·입금 뱃지 클릭 토글 — 모바일과 동일 문법.</p>
+
+<!-- 화면 J 심판진 -->
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 J — 심판진 (유틸바 ⚖️)</span></div>
+<div style="background:var(--bg);padding:16px 18px">
+  <div class="strip"><div><b>3</b><p>심판</p></div><div><b style="color:var(--act)">2</b><p>접속 중</p></div><span style="margin-left:auto" class="btn">＋ 심판 추가</span></div>
+  <table>
+    <tr><th>이름</th><th>담당</th><th style="width:110px">상태</th><th style="width:220px">입력 링크</th></tr>
+    <tr><td><b>나 (운영자)</b></td><td>전체</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">상시</span></td><td><span style="font-size:13px;color:var(--sub)">— 콘솔에서 직접 입력</span></td></tr>
+    <tr><td><b>함준호</b></td><td>1~2조</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">접속</span></td><td><span class="btn soft" style="padding:7px 12px;font-size:13px">🔗 링크 복사</span> <span class="btn soft" style="padding:7px 12px;font-size:13px">♻ 재발급</span></td></tr>
+    <tr><td><b>도연실</b></td><td>3~4조</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">미접속</span></td><td><span class="btn soft" style="padding:7px 12px;font-size:13px">🔗 링크 복사</span> <span class="btn soft" style="padding:7px 12px;font-size:13px">♻ 재발급</span></td></tr>
+  </table>
+  <p style="font-size:12.5px;color:var(--sub);margin-top:10px">재발급=구 링크 즉시 무효(P81) · 삭제 시 입력 이력 있으면 비활성 보존 · 심판 링크는 문자·카톡으로 전송</p>
+</div></div>
+<p class="cap"><b>화면 J — 심판진: 유틸바의 방 (S90~S91)</b>
+"나(운영자) 상시" 행이 개설자 권한(P64)을 눈에 보이게 함. 접속 상태는 사전 점검 시트(화면 4)와 같은 데이터.</p>
+</div></body></html>

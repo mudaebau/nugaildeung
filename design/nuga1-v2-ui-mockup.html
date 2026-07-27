@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 v2 — UI 디자인 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+.bhead{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.bhead svg{flex:0 0 auto}
+.bhead h1{font-size:24px;font-weight:700}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px}
+.chips span{background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:13px;font-weight:500;color:var(--muted)}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* ===== 공통 앱 요소 ===== */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 6px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAaB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:52px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+.btnG{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:16px;min-height:50px;border-radius:14px}
+
+/* ===== 화면 1: 홈 피드 ===== */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.mini{border-top:1px solid rgba(255,255,255,.12)}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .club{font-size:11px;color:#7FA5CB}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.live .more{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13.5px;color:#9FBEDC}
+.live .more b{color:#fff;font-weight:700;font-size:14px}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:14px}
+.oc-top{display:flex;align-items:flex-start;gap:14px}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:16px;padding:10px 6px;text-align:center;min-width:74px}
+.dday b{font-family:'Oswald';font-size:24px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:11px;font-weight:500}
+.oc-top h4{font-size:16.5px;font-weight:700;line-height:1.45;margin-bottom:3px}
+.oc-top p{font-size:13px;color:var(--muted)}
+.capbar{margin-top:14px;background:#EDF2F8;height:8px;border-radius:99px;overflow:hidden}
+.capbar i{display:block;height:100%;width:62%;background:var(--main);border-radius:99px}
+.oc-foot{display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.minecard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:18px 20px;display:flex;align-items:center;gap:14px}
+.minecard .mk{background:var(--sun);color:#6b4e07;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;position:absolute;margin-top:-34px}
+.minecard h4{font-size:15.5px;font-weight:700}
+.minecard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+.minecard .go{margin-left:auto;color:var(--deep);font-weight:700;font-size:20px}
+
+/* ===== 화면 2: 운영 허브 ===== */
+.stepper{display:flex;align-items:center;gap:0;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:16px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.st.wait{opacity:.45}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:29px;font-weight:700;display:block;line-height:1.1;color:var(--ink)}
+.stat b small{font-size:14px;font-weight:600;color:var(--muted)}
+.stat span{font-size:12px;color:var(--muted);font-weight:500}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.trow{display:flex;align-items:center;gap:13px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:42px;height:42px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:21px;height:21px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15.5px;font-weight:700}
+.trow .tt span{font-size:12.5px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* ===== 화면 3: 위저드 ===== */
+.wprog{display:flex;gap:6px;margin-bottom:34px}
+.wprog i{flex:1;height:5px;border-radius:99px;background:#DCE6F0}
+.wprog i.d{background:var(--main)}
+.wq{font-size:24px;font-weight:700;line-height:1.45;margin-bottom:6px}
+.wsub{font-size:14px;color:var(--muted);margin-bottom:24px}
+.optbig{background:#fff;border:2px solid var(--line);border-radius:20px;padding:19px 20px;margin-bottom:12px;display:flex;align-items:center;gap:15px}
+.optbig.on{border-color:var(--main);background:#F4F9FE}
+.optbig .on-dot{width:26px;height:26px;border-radius:50%;border:2px solid #C9D8E7;flex:0 0 auto}
+.optbig.on .on-dot{border:8px solid var(--main)}
+.optbig b{display:block;font-size:17px;font-weight:700}
+.optbig span{font-size:13px;color:var(--muted)}
+.wnext{position:absolute;left:18px;right:18px;bottom:100px}
+
+/* ===== 화면 4: 예선 리더보드 ===== */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.lb{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.lbrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.lbrow:last-child{border-bottom:none}
+.lbrow .rk{font-family:'Oswald';font-size:19px;font-weight:700;width:26px;text-align:center;color:var(--muted)}
+.lbrow.first{background:linear-gradient(90deg,#FFF8E1,#fff 70%)}
+.lbrow.first .rk{color:#C9930A}
+.lbrow .who b{display:block;font-size:16px;font-weight:700}
+.lbrow .who span{font-size:12px;color:var(--muted)}
+.lbrow .prog{margin-left:auto;text-align:right}
+.lbrow .prog b{font-family:'Oswald';font-size:19px;font-weight:700;display:block}
+.lbrow .prog span{font-size:11.5px;color:var(--mint);font-weight:700}
+.lbrow .prog span.ing{color:var(--muted);font-weight:500}
+.cut{display:flex;align-items:center;gap:10px;padding:11px 16px;background:#FDF3F0}
+.cut i{flex:1;border-top:2px dashed var(--coral);font-style:normal}
+.cut span{font-size:12.5px;font-weight:700;color:#C4523A}
+.lbrow.out{opacity:.55}
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="bhead">
+    <svg width="44" height="44" viewBox="0 0 120 120"><rect x="18" y="24" width="14" height="14" rx="4" fill="#F7CF5C"/><path d="M25.6 26.9l-3.6 2.4v2.8l2.2-1.5v6.5h2.9V26.9h-1.5z" fill="#fff"/><rect x="40" y="24" width="62" height="14" rx="7" fill="#F7CF5C"/><rect x="18" y="52" width="14" height="14" rx="4" fill="#4E8FD0"/><rect x="40" y="52" width="48" height="14" rx="7" fill="#4E8FD0"/><rect x="18" y="80" width="14" height="14" rx="4" fill="#4E8FD0" opacity=".45"/><rect x="40" y="80" width="36" height="14" rx="7" fill="#4E8FD0" opacity=".45"/></svg>
+    <h1>누가일등 v2 — UI 디자인 시안</h1>
+  </div>
+  <p class="blead">보고서 문법(라벨:값, 표)을 버리고 서비스 문법(콘텐츠가 주인공)으로. 로고 C 기준 디자인 시스템 적용.</p>
+  <div class="chips"><span>옐로우 = 1등/내 것 전용</span><span>굵기 최대 700</span><span>kv행·표 폐지</span><span>피드형 홈</span><span>대화형 위저드</span></div>
+
+  <div class="row">
+
+    <!-- ================ 1. 홈 피드 ================ -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%;background:var(--bg)">
+        <div class="ab">
+          <span class="wm"><svg width="26" height="26" viewBox="0 0 120 120"><rect x="18" y="24" width="14" height="14" rx="4" fill="#F7CF5C"/><rect x="40" y="24" width="62" height="14" rx="7" fill="#F7CF5C"/><rect x="18" y="52" width="14" height="14" rx="4" fill="#fff"/><rect x="40" y="52" width="48" height="14" rx="7" fill="#fff"/><rect x="18" y="80" width="14" height="14" rx="4" fill="#fff" opacity=".5"/><rect x="40" y="80" width="36" height="14" rx="7" fill="#fff" opacity=".5"/></svg>누가일등</span>
+          <span class="avatarS">리</span>
+        </div>
+        <div class="scr">
+          <p class="hello"><b>리얼스톤</b> 님, 지금 순위가 바뀌고 있어요</p>
+
+          <div class="live">
+            <div class="lrow"><span class="lpill"><i></i>LIVE</span><span class="lsub">2코스 진행 중 · 87명</span></div>
+            <h3>하남시장배 생활체육<br>파크골프대회</h3>
+            <div class="mini">
+              <div class="mrow first"><span class="rk">1</span><span class="nm">박순자 <span class="club">한강은빛회</span></span><span class="sc">-7</span></div>
+              <div class="mrow"><span class="rk">2</span><span class="nm">김영수 <span class="club">솔터공원회</span></span><span class="sc">-5</span></div>
+              <div class="mrow"><span class="rk">3</span><span class="nm">오세창 <span class="club">청솔클럽</span></span><span class="sc">-4</span></div>
+            </div>
+            <div class="more"><span>실시간 전광판 보기</span><b>›</b></div>
+          </div>
+
+          <div class="opencard">
+            <div class="oc-top">
+              <div class="dday"><b>D-6</b><span>접수 마감</span></div>
+              <div><h4>솔터공원 7월 월례오픈</h4><p>7.12 (일) · 솔터공원 파크골프장</p></div>
+            </div>
+            <div class="capbar"><i></i></div>
+            <div class="oc-foot"><span>모집 50 / 80명</span><span style="color:var(--deep);font-weight:700">신청하기 ›</span></div>
+          </div>
+
+          <div class="minecard">
+            <span class="mk">내 대회</span>
+            <div><h4>제1회 임팩트파크골프 챌린지컵</h4><p>결승 D-13 · 접수 94명 · 대기 6</p></div>
+            <span class="go">›</span>
+          </div>
+        </div>
+        <div class="nav">
+          <div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>대회</div>
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h7"/><path d="M17 8h3"/><circle cx="14" cy="8" r="2.6"/><path d="M4 16h3"/><path d="M13 16h7"/><circle cx="9" cy="16" r="2.6"/></svg></i>운영</div>
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg></i>참가자</div>
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>결과</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>① 홈 — 필터 리스트에서 '피드'로</b>
+      <p>진행중 대회는 전광판을 닮은 다크 라이브 카드로 승격 — 상위 3명이 홈에서 바로 보입니다. 접수중은 D-day가 주인공, 내 대회는 옐로우 테두리 하나로 구분. "라벨: 값" 행이 화면에서 사라졌습니다.</p></div>
+    </div>
+
+    <!-- ================ 2. 운영 허브 ================ -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%;background:var(--bg)">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 운영</span><span class="avatarS">리</span></div>
+        <div class="scr">
+          <div class="stepper">
+            <div class="st" style="opacity:.9"><b>예선</b><span style="color:var(--muted)">완료 ✓</span></div>
+            <span class="starr">›</span>
+            <div class="st cur"><b>결승</b><span>진행 중</span></div>
+          </div>
+          <div class="stats">
+            <div class="stat hot"><b>24</b><span>결승 진출</span></div>
+            <div class="stat"><b>168</b><span>오늘 입력</span></div>
+            <div class="stat"><b>3<small>/3</small></b><span>심판 접속</span></div>
+          </div>
+          <div class="tools">
+            <div class="trow">
+              <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>
+              <span class="tt"><b>심판 링크</b><span>박민지 · 이도현 · 최유라</span></span>
+              <span class="st2">전원 접속</span><span class="chev">›</span>
+            </div>
+            <div class="trow">
+              <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+              <span class="tt"><b>전광판</b><span>nuga1.kr/b/1024</span></span>
+              <span class="chev">›</span>
+            </div>
+            <div class="trow">
+              <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+              <span class="tt"><b>대회 요강</b><span>보기 · 공유 · PDF 저장</span></span>
+              <span class="chev">›</span>
+            </div>
+            <div class="trow">
+              <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+              <span class="tt"><b>스코어카드 사진 입력</b><span>촬영 → 자동 판독 → 검수</span></span>
+              <span class="st2 warn">검수 2건</span><span class="chev">›</span>
+            </div>
+          </div>
+          <div class="btnP">결과 · 시상 확정하기</div>
+        </div>
+        <div class="nav">
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>대회</div>
+          <div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h7"/><path d="M17 8h3"/><circle cx="14" cy="8" r="2.6"/><path d="M4 16h3"/><path d="M13 16h7"/><circle cx="9" cy="16" r="2.6"/></svg></i>운영</div>
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg></i>참가자</div>
+          <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>결과</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>② 운영 허브 — 숫자가 말하게</b>
+      <p>상단에 단계 스테퍼(예선 완료 → 결승 진행 중). "참가자 | 24명" 같은 kv행 대신 큰 숫자 카드 3개가 오늘의 상태를 한눈에. 도구들은 아이콘+상태가 붙은 리스트 행으로 — 사진 입력의 "검수 2건" 같은 할 일이 여기서 바로 보입니다.</p></div>
+    </div>
+
+    <!-- ================ 3. 대화형 위저드 ================ -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%;background:var(--bg)">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="position:relative;padding-top:26px">
+          <div class="wprog"><i class="d"></i><i class="d"></i><i></i><i></i><i></i></div>
+          <h2 class="wq">몇 단계 대회인가요?</h2>
+          <p class="wsub">단계마다 기간·코스·조편성을 따로 정할 수 있어요</p>
+          <div class="optbig"><span class="on-dot"></span><div><b>1단계 — 단판 대회</b><span>하루에 순위 결정 · 가장 일반적</span></div></div>
+          <div class="optbig on"><span class="on-dot"></span><div><b>2단계 — 예선 → 결승</b><span>기간 예선 후 상위 진출자가 결승</span></div></div>
+          <div class="optbig"><span class="on-dot"></span><div><b>3단계 — 예선 → 본선 → 결승</b><span>대규모 대회 · 협회전</span></div></div>
+          <div class="wnext"><div class="btnP">다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>③ 개설 위저드 — 폼에서 대화로</b>
+      <p>3단계 압축 폼 대신 한 화면 한 질문. 큰 질문, 큰 선택지, 큰 다음 버튼 — 시니어 운영자도 설명서 없이 통과합니다. 진행바가 상단에서 "얼마나 남았는지"를 알려주고, 선택지에는 한 줄 설명이 붙습니다.</p></div>
+    </div>
+
+    <!-- ================ 4. 예선 리더보드 + 컷라인 ================ -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%;background:var(--bg)">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">예선 순위</span><span class="lpill" style="margin-left:auto"><i></i>집계 중</span></div>
+        <div class="scr">
+          <div class="seg"><div class="on">남자부</div><div>여자부</div></div>
+          <div class="lb">
+            <div class="lbrow first"><span class="rk">1</span><div class="who"><b>전상구</b><span>미사리파크 · 65세</span></div><div class="prog"><b class="num">198</b><span>4/4 코스 완료</span></div></div>
+            <div class="lbrow"><span class="rk">2</span><div class="who"><b>김영수</b><span>솔터공원회 · 71세</span></div><div class="prog"><b class="num">201</b><span>4/4 코스 완료</span></div></div>
+            <div class="lbrow"><span class="rk">11</span><div class="who"><b>구자철</b><span>청솔클럽 · 67세</span></div><div class="prog"><b class="num">214</b><span>4/4 코스 완료</span></div></div>
+            <div class="lbrow"><span class="rk">12</span><div class="who"><b>차두현</b><span>미사리파크 · 69세</span></div><div class="prog"><b class="num">215</b><span>4/4 코스 완료</span></div></div>
+            <div class="cut"><i></i><span>결승 진출선 · 남자 12명</span><i></i></div>
+            <div class="lbrow out"><span class="rk">13</span><div class="who"><b>민병호</b><span>솔터공원회 · 71세</span></div><div class="prog"><b class="num">215</b><span>4/4 코스 완료</span></div></div>
+            <div class="lbrow out"><span class="rk">—</span><div class="who"><b>엄기석</b><span>솔터공원회 · 66세</span></div><div class="prog"><b class="num">162</b><span class="ing">3/4 코스</span></div></div>
+          </div>
+          <div class="btnG" style="margin-top:14px">코스별 내 최고 기록 보기</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>④ 예선 리더보드 — 컷라인이 드라마</b>
+      <p>기간형(스크린) 예선의 새 화면. 남/여 세그먼트, 코스 완주 현황(4/4), 그리고 12위와 13위 사이의 점선 — <b>결승 진출선</b>이 이 화면의 주인공입니다. 컷 바로 아래 선수는 "한 코스만 더 줄이면"이라는 동기를 얻고, 그게 매장 재방문이 됩니다.</p></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

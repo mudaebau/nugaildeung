@@ -7231,10 +7231,16 @@ async function cnsCutApply(stageId){
     const logLines=cx.groups.filter(g=>!g.res.autoResolved).map(g=>`${g.label||'전체'} ${g.cutN}위 동점 ${g.res.tied.length}명 중 ${(cnsCutFinal[g.key]||[]).length}명 수동 선택`);
     if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${stage.name}→${nextStage.name} 컷 동점 처리(규칙: ${cx.tieRule}) — ${logLines.join(' / ')}`})}
   cnsCutSel={};cnsCutFinal={};
-  await doAdvanceStage(stage,nextStage,advanced);
-  // ⑦ 확정=진출만(마감 자동 아님). 확정 후 [마감]으로 안내(단계는 아직 open).
+  // ⑦ 콘솔 확정=confirm_advance(진출만, 자동 마감 없음). 모바일 advance_stage는 무수정.
+  const ok=await cnsDoAdvance(stage,nextStage,advanced);if(!ok)return;
   cnsModel=await buildConsoleModel();cnsMajorSel='stage:'+stageId;cnsSubSel='close';
   toast(`진출자 ${advanced.length}명 확정 — 이제 [${stage.name} 마감]으로 단계를 닫으세요`);renderConsole()}
+async function cnsDoAdvance(curStage,nextStage,advanced){
+  if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return false}
+  const{error}=await sb.rpc('confirm_advance',{t_id:config.id,cur_stage_id:curStage.id,next_stage_id:nextStage.id,p_owner_secret:user.secret,p_advanced_player_ids:advanced.map(p=>p.id)});
+  if(error){toast('진출자 반영 실패: '+error.message);console.error(error);return false}
+  await syncActiveStageState(config.id);
+  return true}
 async function cnsCloseStage(stageId){
   const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
   const idx=cnsModel.stages.indexOf(stage),nextStage=cnsModel.stages[idx+1];

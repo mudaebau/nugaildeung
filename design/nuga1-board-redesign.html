@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — 전광판 리디자인</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#DDE5EE;color:var(--ink);padding:36px 18px 90px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.wrap{max-width:1020px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:4px}
+.lead{color:var(--muted);font-size:14.5px;margin-bottom:28px}
+.tv{width:100%;border-radius:18px;border:10px solid #1A222B;overflow:hidden;box-shadow:0 22px 50px rgba(26,34,43,.3);margin-bottom:12px;position:relative}
+.stage{width:960px;height:504px;transform-origin:top left}
+.cap{margin-bottom:34px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* ============ A안: 라이트 ============ */
+.bA{height:100%;background:#F5F8FB;display:flex;flex-direction:column}
+.bA .top{background:#fff;border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;gap:16px}
+.bA .top .lg{display:flex;align-items:center;gap:8px}
+.bA .top h3{font-size:23px;font-weight:700;letter-spacing:-.01em}
+.bA .top .stg{background:#E3EEF9;color:var(--deep);font-size:13px;font-weight:700;padding:6px 13px;border-radius:99px}
+.bA .top .live{margin-left:auto;background:var(--coral);color:#fff;font-size:13px;font-weight:700;padding:6px 14px;border-radius:99px;display:flex;gap:7px;align-items:center}
+.bA .top .live i{width:8px;height:8px;border-radius:50%;background:#fff;font-style:normal;animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.25}}
+.bA .hd{display:grid;grid-template-columns:90px 1fr 150px 150px 140px;padding:10px 28px;color:#8CA0B4;font-size:13px;font-weight:600;letter-spacing:.1em;border-bottom:1px solid var(--line)}
+.bA .rw{display:grid;grid-template-columns:90px 1fr 150px 150px 140px;align-items:center;padding:0 28px;height:52px;background:#fff;border-bottom:1px solid #EDF2F7}
+.bA .rw:nth-child(odd){background:#FBFDFE}
+.bA .rw .rk{font-family:'Oswald';font-size:24px;font-weight:600;color:#9FB2C5}
+.bA .rw .nm{font-size:21px;font-weight:600;color:var(--ink)}
+.bA .rw .nm small{font-size:13px;font-weight:400;color:var(--muted);margin-left:10px}
+.bA .rw .rs{font-family:'Oswald';font-size:19px;font-weight:500;color:#5B7591;text-align:right}
+.bA .rw .th{text-align:center;font-size:15px;color:#7C93AA;font-weight:500}
+.bA .rw .th b{font-family:'Oswald';font-size:20px;font-weight:600;color:#5B7591;margin-right:2px}
+.bA .rw .th.f{color:var(--mint);font-weight:700;font-size:16px}
+.bA .rw .tp{font-family:'Oswald';font-size:22px;font-weight:600;text-align:right;color:var(--ink)}
+.bA .rw .tp.m{color:#D9534F}
+.bA .rw .tt{font-family:'Oswald';font-size:23px;font-weight:700;text-align:right;color:var(--ink)}
+.bA .rw.one{background:linear-gradient(90deg,#FFF6DC,#fff 75%);border-left:5px solid var(--sun)}
+.bA .rw.one .rk{color:#C9930A}
+.bA .rw.one .nm{font-weight:700}
+.bA .ft{margin-top:auto;padding:10px 28px;display:flex;justify-content:space-between;color:#8CA0B4;font-size:12.5px;background:#fff;border-top:1px solid var(--line)}
+
+/* ============ B안: 소프트 블루 ============ */
+.bB{height:100%;background:linear-gradient(170deg,#3D71A9,#2E5C8D);display:flex;flex-direction:column;color:#fff}
+.bB .top{padding:16px 28px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.18)}
+.bB .top h3{font-size:23px;font-weight:700}
+.bB .top .stg{background:rgba(255,255,255,.16);font-size:13px;font-weight:600;padding:6px 13px;border-radius:99px}
+.bB .top .live{margin-left:auto;background:var(--coral);font-size:13px;font-weight:700;padding:6px 14px;border-radius:99px;display:flex;gap:7px;align-items:center}
+.bB .top .live i{width:8px;height:8px;border-radius:50%;background:#fff;font-style:normal;animation:bl 1.4s infinite}
+.bB .hd{display:grid;grid-template-columns:90px 1fr 150px 150px 140px;padding:10px 28px;color:#B9D0E6;font-size:13px;font-weight:600;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,.15)}
+.bB .rw{display:grid;grid-template-columns:90px 1fr 150px 150px 140px;align-items:center;padding:0 28px;height:52px;border-bottom:1px solid rgba(255,255,255,.1)}
+.bB .rw:nth-child(odd){background:rgba(255,255,255,.045)}
+.bB .rw .rk{font-family:'Oswald';font-size:24px;font-weight:600;color:#A9C4DE}
+.bB .rw .nm{font-size:21px;font-weight:600}
+.bB .rw .nm small{font-size:13px;font-weight:400;color:#A9C4DE;margin-left:10px}
+.bB .rw .rs{font-family:'Oswald';font-size:19px;font-weight:500;color:#C6D9EC;text-align:right}
+.bB .rw .th{text-align:center;font-size:15px;color:#B9D0E6;font-weight:500}
+.bB .rw .th b{font-family:'Oswald';font-size:20px;font-weight:600;color:#DCE9F5;margin-right:2px}
+.bB .rw .th.f{color:#8FE0C8;font-weight:700;font-size:16px}
+.bB .rw .tp{font-family:'Oswald';font-size:22px;font-weight:600;text-align:right}
+.bB .rw .tp.m{color:#FFB49E}
+.bB .rw .tt{font-family:'Oswald';font-size:23px;font-weight:700;text-align:right}
+.bB .rw.one{background:linear-gradient(90deg,rgba(247,207,92,.22),transparent 75%);border-left:5px solid var(--sun)}
+.bB .rw.one .rk,.bB .rw.one .tt{color:var(--sun)}
+.bB .rw.one .nm{font-weight:700}
+.bB .ft{margin-top:auto;padding:10px 28px;display:flex;justify-content:space-between;color:#A9C4DE;font-size:12.5px;border-top:1px solid rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>전광판 리디자인 — 굵기·배경 개선 2안</h1>
+<p class="lead">공통: Black Han Sans 폐기 → 이름 Noto Sans 600(1위만 700), 숫자 Oswald. 줄무늬 배경으로 행 추적성 확보, 1위는 옐로우 좌측 바+틴트.</p>
+
+<!-- A안 -->
+<div class="tv"><div class="stage"><div class="bA">
+  <div class="top">
+    <span class="lg"><svg width="30" height="30" viewBox="0 0 120 120"><rect x="18" y="24" width="14" height="14" rx="4" fill="#F7CF5C"/><rect x="40" y="24" width="62" height="14" rx="7" fill="#F7CF5C"/><rect x="18" y="52" width="14" height="14" rx="4" fill="#4E8FD0"/><rect x="40" y="52" width="48" height="14" rx="7" fill="#4E8FD0"/><rect x="18" y="80" width="14" height="14" rx="4" fill="#4E8FD0" opacity=".45"/><rect x="40" y="80" width="36" height="14" rx="7" fill="#4E8FD0" opacity=".45"/></svg></span>
+    <h3>제1회 임팩트파크골프 챌린지컵</h3>
+    <span class="stg">결승 · 18홀</span>
+    <span class="live"><i></i>LIVE</span>
+  </div>
+  <div class="hd"><div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div></div>
+  <div class="rw one"><span class="rk num">1</span><span class="nm">박순자<small>한강은빛회</small></span><span class="tp m">-7</span><span class="th f">완료</span><span class="tt">59</span></div>
+  <div class="rw"><span class="rk num">2</span><span class="nm">김영수<small>솔터공원회</small></span><span class="tp m">-5</span><span class="th f">완료</span><span class="tt">61</span></div>
+  <div class="rw"><span class="rk num">3</span><span class="nm">전상구<small>미사리파크</small></span><span class="tp m">-4</span><span class="th"><b>16</b>홀</span><span class="tt">54</span></div>
+  <div class="rw"><span class="rk num">4</span><span class="nm">오세창<small>청솔클럽</small></span><span class="tp m">-2</span><span class="th"><b>15</b>홀</span><span class="tt">53</span></div>
+  <div class="rw"><span class="rk num">5</span><span class="nm">한옥분<small>솔터공원회</small></span><span class="tp">E</span><span class="th"><b>14</b>홀</span><span class="tt">51</span></div>
+  <div class="rw"><span class="rk num">6</span><span class="nm">임말순<small>미사리파크</small></span><span class="tp">+1</span><span class="th"><b>12</b>홀</span><span class="tt">45</span></div>
+  <div class="ft"><span>누가일등 실시간 집계 · nuga1.kr</span><span>동점: 최종 코스 카운트백</span></div>
+</div></div></div>
+<div class="cap"><b>A안 — 라이트 (추천)</b>
+<p>밝은 회청 배경 + 흰 행 + 잉크 글자 — 종이 순위표의 가독성을 TV에 옮긴 구성입니다. 밝은 실내 대회장에서 반사·번짐 없이 멀리서도 읽히고, 앱·요강과 같은 가족으로 보여요. 1위는 옐로우 좌측 바 + 은은한 틴트로, 색약자도 위치로 인지 가능합니다.</p></div>
+
+<!-- B안 -->
+<div class="tv"><div class="stage"><div class="bB">
+  <div class="top">
+    <span class="lg"><svg width="30" height="30" viewBox="0 0 120 120"><rect x="18" y="24" width="14" height="14" rx="4" fill="#F7CF5C"/><rect x="40" y="24" width="62" height="14" rx="7" fill="#F7CF5C"/><rect x="18" y="52" width="14" height="14" rx="4" fill="#fff"/><rect x="40" y="52" width="48" height="14" rx="7" fill="#fff"/><rect x="18" y="80" width="14" height="14" rx="4" fill="#fff" opacity=".5"/><rect x="40" y="80" width="36" height="14" rx="7" fill="#fff" opacity=".5"/></svg></span>
+    <h3>제1회 임팩트파크골프 챌린지컵</h3>
+    <span class="stg">결승 · 18홀</span>
+    <span class="live"><i></i>LIVE</span>
+  </div>
+  <div class="hd"><div>순위</div><div>선수</div><div style="text-align:right">스코어</div><div style="text-align:center">진행</div><div style="text-align:right">합계</div></div>
+  <div class="rw one"><span class="rk num">1</span><span class="nm">박순자<small>한강은빛회</small></span><span class="tp m">-7</span><span class="th f">완료</span><span class="tt">59</span></div>
+  <div class="rw"><span class="rk num">2</span><span class="nm">김영수<small>솔터공원회</small></span><span class="tp m">-5</span><span class="th f">완료</span><span class="tt">61</span></div>
+  <div class="rw"><span class="rk num">3</span><span class="nm">전상구<small>미사리파크</small></span><span class="tp m">-4</span><span class="th"><b>16</b>홀</span><span class="tt">54</span></div>
+  <div class="rw"><span class="rk num">4</span><span class="nm">오세창<small>청솔클럽</small></span><span class="tp m">-2</span><span class="th"><b>15</b>홀</span><span class="tt">53</span></div>
+  <div class="rw"><span class="rk num">5</span><span class="nm">한옥분<small>솔터공원회</small></span><span class="tp">E</span><span class="th"><b>14</b>홀</span><span class="tt">51</span></div>
+  <div class="rw"><span class="rk num">6</span><span class="nm">임말순<small>미사리파크</small></span><span class="tp">+1</span><span class="th"><b>12</b>홀</span><span class="tt">45</span></div>
+  <div class="ft"><span>누가일등 실시간 집계 · nuga1.kr</span><span>동점: 최종 코스 카운트백</span></div>
+</div></div></div>
+<div class="cap"><b>B안 — 소프트 블루</b>
+<p>기존 딥 네이비(#173350)보다 두 단계 밝은 미드 블루 그라디언트. 전광판다운 무게감을 유지하면서 어두운 답답함을 덜어낸 절충안입니다. 야외 야간 행사나 빔프로젝터 환경에선 이쪽이 유리할 수 있어요.</p></div>
+
+<p style="color:var(--muted);font-size:13px;line-height:1.7">※ 공통 개선: 이름 굵기 900급 → 600(1위만 700), 클럽명은 작고 옅게 분리, 행 높이·자간 확보, 줄무늬로 가로 추적성, 스코어 마이너스는 레드 계열. 전반/후반 소계 대신 <b>진행(몇 홀째, 홀아웃=완료)</b> 컬럼 — 관전자의 실제 질문("몇 홀째야?")에 답하는 구성. 확정 시 선택안을 기준으로 지시서에 수치(폰트·크기·색)까지 명기합니다.</p>
+</div>
+<script>
+function fit(){document.querySelectorAll('.tv').forEach(tv=>{
+  const st=tv.querySelector('.stage');const w=tv.clientWidth;
+  const sc=w/960;st.style.transform='scale('+sc+')';
+  tv.style.height=(504*sc)+'px';})}
+window.addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

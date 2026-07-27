@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — 차수 12·13 목업</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:10px}
+.flow{background:#fff;border:1px solid var(--line);border-radius:14px;display:inline-block;padding:12px 18px;font-size:13.5px;color:var(--muted);margin-bottom:34px;line-height:1.8}
+.flow b{color:var(--ink);font-weight:700}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* 공통 */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .sub{font-size:12px;opacity:.85;font-weight:400}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 24px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAAB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:58px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+
+/* 홈 요소 (기존 시안 재사용) */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow:first-child{border-top:1px solid rgba(255,255,255,.12)}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:14px;padding:9px 6px;text-align:center;min-width:68px}
+.dday b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:10.5px;font-weight:500}
+.opencard h4{font-size:15.5px;font-weight:700;line-height:1.4}
+.opencard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* 내 대회 목록 */
+.mycard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.open{background:var(--mint);color:#fff}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald';font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mycard .mygo.primary{background:var(--main);color:#fff}
+
+/* 관리공간 상단 탭 */
+.mtabs{display:flex;gap:8px;overflow:hidden;padding:14px 18px 4px;background:var(--bg)}
+.mtab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
+.mtab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:700}
+
+/* 대시보드 (재사용) */
+.stepper{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:27px;font-weight:700;display:block;line-height:1.1}
+.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:12px}
+.trow{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:40px;height:40px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:20px;height:20px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
+.trow .tt span{font-size:12px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* 참가자 탭 */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.ghead{background:var(--main);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.ghead b{font-weight:700}
+.ghead span{font-size:11.5px;opacity:.9}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.grow:last-child{border-bottom:none}
+.gav{width:34px;height:34px;border-radius:50%;background:#E3EEF9;color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.grow b{font-weight:700}
+.grow span{font-size:11.5px;color:var(--muted);margin-left:auto}
+.swaphint{font-size:12.5px;color:var(--muted);text-align:center;padding:4px 0 10px}
+
+/* v2.3 추가 스타일 */
+.tabA{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 6px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.fixbtn{position:absolute;left:18px;right:18px;bottom:100px}
+.dim{position:absolute;inset:0;background:rgba(23,51,80,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;border-radius:26px 26px 0 0;padding:24px 22px 30px;width:100%}
+.sheet h4{font-size:19px;font-weight:700;margin-bottom:12px}
+.sheet ul{list-style:none;margin-bottom:18px}
+.sheet li{font-size:14.5px;color:var(--ink);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;line-height:1.5}
+.sheet li:last-child{border-bottom:none}
+.sheet li i{font-style:normal;color:var(--main);font-weight:700}
+.hero{background:linear-gradient(150deg,#5A9ADA,#2F6BAA);border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:10px;letter-spacing:.02em}
+.hero h2{font-size:21.5px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--deep);font-weight:700;font-size:17px;min-height:54px;border-radius:15px}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald';font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:#D9534F}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald';font-size:22px;font-weight:700;color:var(--deep)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:#C4523A}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid #C9D8E7;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.prow2{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.prow2:last-child{border-bottom:none}
+.prow2 b{font-weight:700}
+.prow2 .meta{font-size:11.5px;color:var(--muted)}
+
+/* 여정 바 */
+.jbar{display:flex;align-items:center;gap:0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.js{flex:1;text-align:center;position:relative}
+.js b{display:block;font-size:13.5px;font-weight:700;color:#9AAAB9}
+.js span{font-size:10.5px;color:#B4C2D0;font-weight:500}
+.js.done b{color:var(--muted)}
+.js.done span{color:var(--mint)}
+.js.cur b{color:var(--deep);font-size:14.5px}
+.js.cur span{color:var(--mint);font-weight:700}
+.js .bd{display:inline-block;font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:#E7F5EE;color:#2E8B63;margin-top:3px}
+.js .bd.closed{background:#EDF1F6;color:#8CA0B4}
+.jarr{color:#D3DEE9;font-size:14px;padding:0 2px}
+/* 접수 카드 */
+.regcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px}
+.regcard .r1{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.regcard .r1 b{font-size:15.5px;font-weight:700}
+.regcard .nums{display:flex;gap:16px;margin-bottom:14px}
+.regcard .nums div b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1.1}
+.regcard .nums div span{font-size:11.5px;color:var(--muted)}
+.regbtn{display:flex;align-items:center;justify-content:center;background:#FBE9E4;color:#C4523A;font-weight:700;font-size:15px;min-height:46px;border-radius:13px}
+.regbtn.re{background:#E3EEF9;color:var(--deep)}
+/* 날짜 입력 */
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.dfield{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.dfield small{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:2px}
+.dfield b{font-size:16.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.dhint{font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>차수 12·13 목업</h1>
+  <p class="blead">여정 바(접수~종료) + 접수 수동 제어 + 시작/마감 버튼 체인 · 날짜 입력·하단 내비 정렬 교정</p>
+  <div class="row">
+
+    <!-- 장면1: 접수중 + 단계 시작 전 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">솔터공원 7월 월례오픈</span><div class="sub">필드 단판 · 접수중</div></div></div>
+        <div class="tabA"><div class="ti on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>관리홈</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg><span>요강</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg><span>운영진</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg><span>스코어</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg><span>결과</span></div></div>
+        <div class="scr" style="height:calc(100% - 140px);padding-top:12px;position:relative">
+          <div class="jbar">
+            <div class="js cur"><b>접수</b><span class="bd">접수중</span></div><span class="jarr">›</span>
+            <div class="js"><b>본선 라운드</b><span>대기</span></div><span class="jarr">›</span>
+            <div class="js"><b>종료</b><span>—</span></div>
+          </div>
+          <div class="regcard">
+            <div class="r1"><b>참가 접수</b><span style="margin-left:auto;font-size:12px;color:var(--muted)">마감일 7.10 (D-6)</span></div>
+            <div class="nums"><div><b class="num">41<small style="font-size:13px;color:var(--muted)">/80</small></b><span>신청 / 정원</span></div><div><b class="num">3</b><span>대기</span></div><div><b class="num">38</b><span>입금 완료</span></div></div>
+            <div class="regbtn">접수 마감하기</div>
+          </div>
+          <div class="fixbtn"><div class="btnP" style="background:var(--deep)">본선 라운드 시작하기</div></div>
+        </div>
+        <div class="nav"><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>홈</div><div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>내 대회</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></i>MY</div></div>
+      </div></div>
+      <div class="cap"><b>장면 1 — 접수중 · 시작 전 (차수 12)</b>
+      <p>여정 바 [접수 → 본선 라운드 → 종료]에서 지금은 접수 칸이 주인. 접수 카드에 신청/정원·대기·입금과 [접수 마감하기]. 하단 고정 버튼은 "본선 라운드 시작하기" — 개설부터 종료까지 이 버튼 체인 하나로 이어집니다.</p></div>
+    </div>
+
+    <!-- 장면2: 스크린 — 예선 진행 + 접수 병행 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">부산사하점 오픈대회</span><div class="sub">스크린 2단계 · 예선 진행 중</div></div></div>
+        <div class="tabA"><div class="ti on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>관리홈</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg><span>요강</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/><path d="M17.5 14.3c2.1.7 3.5 2.6 3.5 5"/></svg><span>참가자</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2.5"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><circle cx="12" cy="12" r="2.4"/><path d="M8 17.5c.7-1.6 2.2-2.5 4-2.5s3.3.9 4 2.5"/></svg><span>운영진</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4M7 16h2"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg><span>스코어</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 12l3-3 3 2 4-4"/></svg><span>리더보드</span></div><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg><span>결과</span></div></div>
+        <div class="scr" style="height:calc(100% - 140px);padding-top:12px;position:relative">
+          <div class="jbar">
+            <div class="js done" style="flex:.9"><b>접수</b><span class="bd">접수중</span></div><span class="jarr">›</span>
+            <div class="js cur"><b>예선</b><span>진행 중 · D-9</span></div><span class="jarr">›</span>
+            <div class="js"><b>결승</b><span>대기</span></div><span class="jarr">›</span>
+            <div class="js" style="flex:.7"><b>종료</b><span>—</span></div>
+          </div>
+          <div class="regcard">
+            <div class="r1"><b>참가 접수</b><span style="margin-left:auto;font-size:11.5px;color:#2E8B63;font-weight:700">예선 중에도 접수 유지</span></div>
+            <div class="nums"><div><b class="num">87</b><span>신청</span></div><div><b class="num">64</b><span>예선 참여</span></div></div>
+            <div class="regbtn">접수 마감하기</div>
+          </div>
+          <div class="stats"><div class="stat hot"><b>23</b><span>오늘 입력</span></div><div class="stat"><b>41</b><span>전 코스 완주</span></div><div class="stat"><b>5</b><span>컷 ±2타</span></div></div>
+          <div class="fixbtn"><div class="btnP" style="background:var(--deep)">예선 마감하고 결승 시작</div></div>
+        </div>
+        <div class="nav"><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>홈</div><div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>내 대회</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></i>MY</div></div>
+      </div></div>
+      <div class="cap"><b>장면 2 — 예선 진행 + 접수 병행 (차수 12)</b>
+      <p>스크린 대회의 현실: 예선이 진행 중인데 접수도 열려 있음. 여정 바에서 예선이 현재 칸이면서 접수 칸에 "접수중" 뱃지가 함께 — 접수는 순차 단계가 아니라 병행 상태라서, 원할 때 [접수 마감하기]로 닫습니다.</p></div>
+    </div>
+
+    <!-- 장면3: 접수 마감 확인 시트 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">솔터공원 7월 월례오픈</span><div class="sub">필드 단판 · 접수중</div></div></div>
+        <div class="scr" style="height:calc(100% - 70px);position:relative;padding:0">
+          <div class="dim"><div class="sheet">
+            <h4>접수를 마감할까요?</h4>
+            <ul>
+              <li><i>✓</i>신청 페이지가 "접수 마감"으로 표시됩니다</li>
+              <li><i>✓</i>현재 신청 41명 · 대기 3명이 확정 명단이 됩니다</li>
+              <li><i>✓</i>운영자 직접 추가는 계속 가능합니다 (당일 현장 등록)</li>
+              <li><i>!</i>실수로 마감했다면 [접수 재개]로 되돌릴 수 있어요</li>
+            </ul>
+            <div class="btnP" style="background:#C4523A;margin-bottom:8px">접수 마감</div>
+            <div class="btnP" style="background:#E7EDF4;color:var(--muted)">취소</div>
+          </div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 3 — 접수 마감 확인 시트 (차수 12)</b>
+      <p>단계 마감과 같은 문법의 확인창 — 무엇이 일어나는지 + 직접 추가는 계속 됨 + 재개 가능 안내. 되돌릴 수 있는 행동이라 단계 마감보다 문턱을 낮게(재개 버튼 존재).</p></div>
+    </div>
+
+    <!-- 장면4: 차수 13 정렬 교정 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="position:relative;padding-top:26px">
+          <div class="wprog" style="display:flex;gap:6px;margin-bottom:30px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:24px;font-weight:700;line-height:1.45;margin-bottom:6px">예선 기간을 정해주세요</h2>
+          <p style="font-size:14px;color:var(--muted);margin-bottom:22px">기간 중에는 여러 번 도전할 수 있어요</p>
+          <div class="dgrid">
+            <div class="dfield"><small>시작일</small><b>2026. 05. 15</b></div>
+            <div class="dfield"><small>종료일</small><b>2026. 06. 24</b></div>
+          </div>
+          <p class="dhint">41일간 · 종료일 자정에 자동 마감</p>
+          <div class="fixbtn"><div class="btnP">다음</div></div>
+        </div>
+        <div class="nav"><div class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg></i>홈</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3.2 3"/><path d="M17 6h3a3 3 0 0 1-3.2 3"/></svg></i>내 대회</div><div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5"/></svg></i>MY</div></div>
+      </div></div>
+      <div class="cap"><b>장면 4 — 차수 13: 정렬 교정 기준</b>
+      <p>날짜 입력: 시작일·종료일이 <b>동일 폭(1fr 1fr)·동일 높이(56px)</b>, 라벨은 칸 안에. 하단 내비: 아이콘 23px이 배경 박스(58×32, radius 12) 정중앙 — 3탭 동일 규격. 이 화면이 차수 13의 "맞음" 기준입니다.</p></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

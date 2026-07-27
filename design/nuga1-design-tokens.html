@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>누가일등 디자인 토큰 v1.1 — 전 화면 유일 기준</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Noto Sans KR';background:#F0F3F7;padding:24px 16px;color:#2B3A4A}
+.board{max-width:860px;margin:0 auto}h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.lead{font-size:13px;color:#5B6C7C;margin-bottom:18px;line-height:1.7}
+.sec{background:#fff;border:1px solid #DCE6F0;border-radius:18px;padding:18px 20px;margin-bottom:14px}
+.sec h3{font-size:15px;margin-bottom:4px}.sec p.d{font-size:12px;color:#5B6C7C;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:11px;color:#5B6C7C;padding:6px 8px;border-bottom:1.5px solid #DCE6F0}
+td{padding:8px;border-bottom:1px solid #EDF1F6;vertical-align:middle}
+.sw{display:inline-block;width:38px;height:24px;border-radius:7px;border:1px solid rgba(0,0,0,.08);vertical-align:middle;margin-right:8px}
+code{background:#F2F5F9;padding:2px 6px;border-radius:6px;font-size:11.5px}
+.no{color:#C4523A;font-weight:700}
+.type div{border-bottom:1px solid #EDF1F6;padding:9px 0}
+</style></head><body><div class="board">
+<h1>누가일등 디자인 토큰 v1.1</h1>
+<p class="lead">전 화면 유일 기준 — <b>이 목록에 없는 색·크기는 화면에 존재할 수 없다.</b> 유일 예외: <b>전광판(TV 스코어보드)은 다크 팔레트 예외 구역</b>(내부 정돈은 파일럿 후 board-redesign). 그 외 "역할" 밖 사용은 위반.</p>
+
+<div class="sec"><h3>1. 컬러 — 역할별 전체 목록</h3><p class="d">각 색은 정해진 역할에만. 특히 네이비·코랄의 사용처가 좁아진 것에 주의.</p>
+<table>
+<tr><th>색</th><th>값</th><th>허용 역할 (이것뿐)</th></tr>
+<tr><td><span class="sw" style="background:#7BE438"></span>액션 라임</td><td><code>#7BE438</code> + 글자 <code>#173A05</code></td><td>주 액션 버튼 · 현재 단계 원형 · 활성 필터칩 · CTA. <span class="no">흰 글자 금지</span></td></tr>
+<tr><td><span class="sw" style="background:#E5FAD2"></span>라임 연톤</td><td><code>#E5FAD2</code>·<code>#F4FDEB</code>·그라디언트 <code>#F6FDEC→#E9FAD6</code></td><td>보조 버튼 배경 · 현재 단계 줄 배경 · 히어로/헤더 밴드</td></tr>
+<tr><td><span class="sw" style="background:#1C3A08"></span>라임 표면 글자</td><td>제목 <code>#1C3A08</code> · 부제 <code>#3E5E1E</code></td><td>라임 연톤 표면(히어로·헤더 밴드·포스터) 위 글자 전용 — 2단뿐</td></tr>
+<tr><td><span class="sw" style="background:#067A3A"></span>텍스트 그린</td><td><code>#067A3A</code></td><td>흰·연톤 바탕 위 그린 글자·숫자·활성 표시 (라임의 글자 대역)</td></tr>
+<tr><td><span class="sw" style="background:#2B3A4A"></span>잉크</td><td><code>#2B3A4A</code></td><td>본문·제목·앱바 글자 — <b>구 네이비 텍스트는 전부 이 값으로 통일</b></td></tr>
+<tr><td><span class="sw" style="background:#5B6C7C"></span>보조 잉크</td><td><code>#5B6C7C</code></td><td>부제·설명 (앱바 포함)</td></tr>
+<tr><td><span class="sw" style="background:#9AAAB9"></span>흐림</td><td><code>#9AAAB9</code></td><td>비활성 글자·플레이스홀더</td></tr>
+<tr><td><span class="sw" style="background:#1D3D5C"></span>네이비</td><td><code>#1D3D5C</code></td><td><b>로고 배지 · LIVE/대회 카드 배경 — 이 둘뿐.</b> <span class="no">앱바·헤더·버튼·텍스트 사용 금지</span></td></tr>
+<tr><td><span class="sw" style="background:#F7CF5C"></span>골드</td><td><code>#F7CF5C</code> · 글자 <code>#C9930A</code></td><td>1위 강조 · 요강 완성도 · 대기/주의 상태</td></tr>
+<tr><td><span class="sw" style="background:#E7F5EE"></span>민트</td><td><code>#E7F5EE</code> · 글자 <code>#2E8B63</code></td><td>완료(✓ 마감됨·출석·입금) · 성공 토스트</td></tr>
+<tr><td><span class="sw" style="background:#FBE9E4"></span>코랄</td><td><code>#FBE9E4</code> · 글자 <code>#C4523A</code></td><td><b>위험 전용</b>: 오류·삭제·실격·잠김·실패 줄. <span class="no">일반 강조·포인트 사용 금지 — "주황 잔재"는 전부 여기 위반</span></td></tr>
+<tr><td><span class="sw" style="background:#EF8368"></span>기능색 예외</td><td>여자부 <code>#EF8368</code> · 남자부 현행</td><td>남녀부 구분 pill 전용(성별 기능색, 파일럿 후 재검토). LIVE pill은 <b>라임</b>으로</td></tr>
+<tr><td><span class="sw" style="background:#FFFFFF"></span>표면</td><td>카드 <code>#fff</code> · 배경 <code>#F4F7FA</code> · 선 <code>#DCE6F0</code></td><td>카드·앱바 배경 / 페이지 배경 / 구분선·테두리</td></tr>
+</table></div>
+
+<div class="sec"><h3>2. 타이포 스케일 — 이 6단이 전부</h3><p class="d">패밀리 2종(Noto Sans KR 본문 · Oswald 숫자 전용), 웨이트 400/500/700만.</p>
+<div class="type">
+<div style="font-size:18px;font-weight:700">18 · 700 — 페이지 제목 (대회명·화면 제목)</div>
+<div style="font-size:15px;font-weight:700">15 · 700 — 섹션·카드 제목, 여정 단계명</div>
+<div style="font-size:14px">14 · 400 — 본문, 목록 행</div>
+<div style="font-size:12.5px;color:#5B6C7C">12.5 · 500 — 부제·설명·메뉴 부제</div>
+<div style="font-size:11px;color:#5B6C7C;font-weight:700">11 · 700 — 캡션·뱃지·칩 라벨</div>
+<div style="font-size:22px;font-weight:700">22 · 700 — 디스플레이 (히어로 카피·포스터 제목 전용)</div>
+<div style="font-family:Oswald;font-size:20px;font-weight:600">Oswald 20·600 — 점수·순위·통계 숫자 (숫자 외 사용 금지)</div>
+</div></div>
+
+<div class="sec"><h3>3. 금지 목록 (정리 라운드의 소탕 대상)</h3>
+<table>
+<tr><th>잔재</th><th>처분</th></tr>
+<tr><td>네이비 앱바·헤더·텍스트·아이콘</td><td>앱바=흰+잉크, 텍스트=잉크 <code>#2B3A4A</code></td></tr>
+<tr><td>구 액션 블루(#4E8FD0·#2F6BAA 계열)·#0D8547·#03C75A</td><td>역할에 따라 라임/텍스트 그린으로</td></tr>
+<tr><td>위험 아닌 곳의 주황·코랄 포인트</td><td>골드(주의) 또는 잉크로 — 코랄은 위험 전용</td></tr>
+<tr><td>목록 밖 임의 hex·rgba (반투명 흰 글자 포함)</td><td>가장 가까운 토큰으로 치환, 매핑 불가면 보고</td></tr>
+<tr><td>스케일 밖 폰트 크기·웨이트, 제3 폰트</td><td>6단 스케일로 스냅</td></tr>
+</table></div>
+</div></body></html>
