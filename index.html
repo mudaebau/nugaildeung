@@ -7398,6 +7398,12 @@ async function cnsDoAdvance(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return false}
   const{error}=await sb.rpc('confirm_advance',{t_id:config.id,cur_stage_id:curStage.id,next_stage_id:nextStage.id,p_owner_secret:user.secret,p_advanced_player_ids:advanced.map(p=>p.id)});
   if(error){toast('진출자 반영 실패: '+error.message);console.error(error);return false}
+  // 컷 화면이 "[컷 적용]이 다음 단계 명단을 만들고 '명단 확정'이 ✓로 바뀝니다"라고 약속하는데
+  // confirm_advance는 players.current_stage만 바꿔서 roster_confirmed가 false로 남았다.
+  // 기간형 단계엔 '명단 확정' 중단계 자체가 없어 운영자가 해소할 방법도 없었다(M4 발견) —
+  // 사전 점검이 영구히 "⚠ 명단 미확정"을 띄우던 원인. 컷 적용이 곧 그 단계의 명단 확정이다.
+  const{error:rErr}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:nextStage.id,p_owner_secret:user.secret});
+  if(rErr)console.error(rErr);
   await syncActiveStageState(config.id);
   return true}
 /* ⑥ 공통 마감 시트: 확인 시트 → 마감 → 다음 단계 안내 팝업(모든 단계·모집 동일 문법) */
