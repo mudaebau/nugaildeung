@@ -3325,8 +3325,16 @@ function noticeCompletionItems(){
     {label:'🏆 시상 내역',filled:!!(config.prizeTotal||config.prizes.some(p=>p.label)),key:'awards'},
     {label:'💰 참가비',filled:!!config.noticeExtra.fee,key:'awards'},
     {label:'📞 문의처',filled:!!config.noticeExtra.contact,key:'awards'},
+    // 게임룰은 CH35-C⑪에서 요강의 정식 항목이 됐는데 완성도 계산에는 빠져 있었다 —
+    // 허브가 "게임룰만 채우면 100%"라고 안내하면서 채워도 %가 그대로인 모순(R2 발견).
+    {label:'📖 게임룰',filled:!!(config.noticeExtra.rules||'').trim(),key:'rules'},
     {label:'📅 일정 · 장소',filled:true,key:'schedule'},
     {label:'👥 참가 자격 · 공개',filled:true,key:'eligibility'}]}
+// 남은 항목을 실제로 읽어 안내한다(하드코딩 금지 — 위 모순의 재발 방지)
+function noticeMissingHint(){
+  const miss=noticeCompletionItems().filter(i=>!i.filled).map(i=>i.label.replace(/^\S+\s/,''));
+  if(!miss.length)return'요강이 완성됐어요 — 신청 링크를 공유해 보세요';
+  return`${miss.join(' · ')}${miss.length>1?'를':'만'} 채우면 100% — 완성된 요강이 신청을 늘려요`}
 function noticeCompletionPct(){
   const items=noticeCompletionItems();
   return Math.round(items.filter(i=>i.filled).length/items.length*100)}
@@ -4487,7 +4495,10 @@ async function createTournamentInner(){
   config.cap=Math.max(4,+$('#fCap').value||80);
   // 참여대상·공개설정은 위저드에서 묻지 않음(차수25) — config 기본값(누구나·공개) 그대로 적용, 요강 탭에서 수정
   const deadlineEl=$('#fApplyDeadline');
-  config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:deadlineEl?deadlineEl.value:''};
+  // 대회장소(venue_place)는 코스명과 분리된 값이다(0045) — 개설 위저드 v2가 기본정보에서
+  // 받아 config.noticeExtra에 미리 넣어두므로 여기서 덮어써 잃지 않는다.
+  const wizVenuePlace=(config.noticeExtra&&config.noticeExtra.venue_place)||'';
+  config.noticeExtra={contact:'',fee:'',rules:'',apply_deadline:deadlineEl?deadlineEl.value:'',venue_place:wizVenuePlace};
   jRound=0;
 
   const stage1=readStageFields(1);
@@ -4496,7 +4507,7 @@ async function createTournamentInner(){
   else{ROUNDS=stage1.coursePars.length;HOLES=ROUNDS*18;coursePars=stage1.coursePars;PAR_TOT=stage1.coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0)}
   config.rounds=ROUNDS;config.venues=stage1.venues;
   const uv=[...new Set(stage1.venues)];
-  config.place=uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:'');
+  config.place=wizVenuePlace||(uv[0]+(uv.length>1?` 외 ${uv.length-1}곳`:''));
 
   // type 컬럼(하위호환)은 더 이상 사용자에게 직접 묻지 않고 내부 파생만 한다 —
   // 혼합 구성(어느 단계든 대회기간 라운드 포함)이면 기존 관례대로 'screen'.
@@ -6268,12 +6279,44 @@ async function cnsStartSignIn(){
   await loadTournaments();
   toast(`${row.name} 님, 다시 오셨어요 — 진행 중 ${row.active_count||0}개`);
   renderConsole()}
-function cnsLogout(){user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';cnsGo('signin')}
+function cnsLogout(){cnsStopLive();user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';cnsGo('signin')}
 async function cnsEnterTournament(id){
   const ok=await loadMyTournament(id);
   if(!ok){toast('대회 정보를 불러오지 못했습니다');return}
   cnsMajorSel=null;cnsSubSel=null;
+  cnsSubscribeLive(id);
   cnsGo('main')}
+/* 콘솔 라이브 갱신(R4) — 콘솔은 진입 시점 스냅샷에 고정돼 있어 참가자 폰 셀프 신청·심판
+   폰 입력이 화면에 전혀 반영되지 않았다. players 변경 구독 + 6초 폴링(realtime이 끊기거나
+   비공개 대회에서 조용히 안 오는 경우의 안전망 — 전광판에서 이미 검증된 동일 방식).
+   재진입·로그아웃 때 반드시 정리해 채널이 누적되지 않게 한다. */
+let cnsLiveChannel=null,cnsLivePollTimer=null,cnsLiveId=null;
+function cnsStopLive(){
+  if(cnsLiveChannel){sb.removeChannel(cnsLiveChannel);cnsLiveChannel=null}
+  if(cnsLivePollTimer){clearInterval(cnsLivePollTimer);cnsLivePollTimer=null}
+  cnsLiveId=null}
+// 다시 그려도 안전한 순간에만 그린다 — 미저장 입력(총점·홀별 일괄 저장)·열린 시트·도구
+// 화면을 자동 갱신이 날려버리면 저장 엔진보다 더 나쁜 사고가 된다.
+function cnsLiveSafe(){
+  if(curView!=='Console'||cnsScreen!=='main'||cnsTool)return false;
+  if([...document.querySelectorAll('.overlay')].some(o=>o.classList.contains('on')))return false;
+  if(cnsScoreDirtyCount()>0||cnsHoleDirtyCount()>0)return false;
+  return true}
+async function cnsRefreshLive(){
+  if(!cnsLiveId||cnsLiveId!==config.id||!cnsLiveSafe())return;
+  await loadBoardData(config.id,true);
+  const wRows=(await fetchPlayers(config.id)).filter(p=>p.status==='wait');
+  waitlist=wRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',
+    club:r.club||'',region:r.region||'',nick:r.nick||''}));
+  await renderConsole()}
+function cnsSubscribeLive(tid){
+  cnsStopLive();
+  if(!tid)return;
+  cnsLiveId=tid;
+  cnsLivePollTimer=setInterval(cnsRefreshLive,6000);
+  cnsLiveChannel=sb.channel('cns-live-'+tid)
+    .on('postgres_changes',{event:'*',schema:'public',table:'players',filter:'tournament_id=eq.'+tid},cnsRefreshLive)
+    .subscribe()}
 /* ---- 화면 W: 개설(2패널) — 위저드 필드 세팅 후 createTournament 재사용 ---- */
 /* ---- 화면 W v2: 단계 카드마다 [방식(기간/지정일) × 입력(총타/홀별) × 일정] 독립 선택 ---- */
 let cnsPreset='qualify2',cnsWiz={name:'',place:'',cap:'40'},cnsWizStages={1:{},2:{},3:{}};
@@ -6341,7 +6384,9 @@ async function cnsCreate(){
     set('fDateE'+suf,s.kind==='period'?(s.dE||s.dS||'2026-07-25'):(s.dS||'2026-07-25'))}
   set('fDateS',cnsWizStages[1].dS||'2026-07-25');
   set('fDateE',cnsWizStages[1].kind==='period'?(cnsWizStages[1].dE||cnsWizStages[1].dS):cnsWizStages[1].dS);
-  if(cnsWiz.place)document.querySelectorAll('.screenVenueIn,.screenVenueIn2,.screenVenueIn3,.venueIn,.venueIn2,.venueIn3').forEach(v=>{if(!v.value)v.value=cnsWiz.place});
+  // 대회장소는 코스명 입력칸이 아니라 notice_extra.venue_place로 간다(0045) — 코스명 칸은
+  // '1코스'류 기본값이 이미 채워져 있어 예전의 "빈 칸이면 채우기"는 절대 발동하지 않았다(R1 발견).
+  config.noticeExtra.venue_place=(cnsWiz.place||'').trim();
   await createTournament();
   if(config.id)await cnsEnterTournament(config.id)}
 /* ---- 화면 1: 메인 3층 프레임 ---- */
@@ -6471,7 +6516,7 @@ function cnsScrSetup(subKey,model){
       <button class="btn soft" style="margin-left:8px" onclick="openBoard()">📺 전광판 미리보기</button></div>`;
   }else{
     body=`<div class="grp" style="padding:20px"><h5>${cnsEsc(map[subKey]||'개설 준비')}</h5>
-      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">대회 정보·참가비·시상·요강 상세 편집은 유틸바 <b>⚙️ 대회 정보</b>(정보 수정 허브)에서 한 곳에 모여 있어요. 요강 완성도 ${noticeCompletionPct()}% — 게임룰까지 채우면 100%.</p>
+      <p style="color:var(--sub);font-size:14.5px;line-height:1.9">대회 정보·참가비·시상·요강 상세 편집은 유틸바 <b>⚙️ 대회 정보</b>(정보 수정 허브)에서 한 곳에 모여 있어요. 요강 완성도 ${noticeCompletionPct()}% — ${noticeMissingHint()}.</p>
       <button class="btn soft" style="margin-top:12px" onclick="toast('정보 수정 허브는 CH33-C에서 열려요 — 지금은 모바일 ⚙️로 편집하세요')">⚙️ 대회 정보 열기</button></div>`}
   return strip+body}
 /* ===== 모집(recruit) — 신청 접수·입금·명단 확정 (화면 2) ===== */
@@ -6781,7 +6826,7 @@ async function cnsHubHTML(){
     return lk?row('⛳',`${cnsEsc(s.name)} 코스·구조·컷`,lockPill,'',true):row('⛳',`${cnsEsc(s.name)} 코스·구조·컷`,sum,`cnsEditCourseFor('${s.id}')`)}).join('');
   return `<div style="background:var(--cbg);padding:16px 22px 4px">
     <div class="strip" style="margin-bottom:0"><div class="kpi"><b style="color:var(--goldtx)">${pct}<small style="font-size:15px">%</small></b><p>요강 완성도</p></div>
-      <p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100% — 완성된 요강이 신청을 늘려요</p>
+      <p style="font-size:14px;color:var(--sub);font-weight:500">${noticeMissingHint()}</p>
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn soft" onclick="cnsOpenTool('notice')">👁 요강 미리보기</button><button class="btn soft" onclick="cnsCloseTool()">← 콘솔로</button></span></div></div>
     <div style="background:var(--cbg);padding:12px 22px 22px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
       <div class="hcol"><p class="h" style="color:var(--minttx)">📋 요강 내용 — 언제든 수정</p>
@@ -6848,12 +6893,15 @@ function renderCnsMypage(w){
         <p style="font-size:15.5px;line-height:2.3"><span style="cursor:pointer" onclick="confirmReissueSecret()">🔑 보안키 재발급 <span style="color:var(--sub);font-size:13px">(내 대회 접근 키)</span></span><br>
         <span style="color:#C4523A;font-weight:700;cursor:pointer" onclick="cnsLogoutFull()">로그아웃</span></p></div>
     </div></div>`}
-function cnsLogoutFull(){const ph=user.phone;clearSavedLogin(ph);user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;cnsTool=null;config.id=null;whoRender();cnsGo('landing');toast('로그아웃되었습니다')} // R2⑥ 로그아웃→랜딩(L)
+function cnsLogoutFull(){const ph=user.phone;cnsStopLive();clearSavedLogin(ph);user.loggedIn=false;user.id=null;user.name='';user.phone='';user.secret=null;cnsTool=null;config.id=null;whoRender();cnsGo('landing');toast('로그아웃되었습니다')} // R2⑥ 로그아웃→랜딩(L)
 /* --- 화면 R: 문서 타이포 요강(미리보기·공유) --- */
 function cnsNoticeHTML(){
   const ne=config.noticeExtra||{};
   const period=config.dateS===config.dateE?cnsDateK(config.dateS):`${cnsDateK(config.dateS)} ~ ${cnsDateK((config.dateE||'').slice(5))}`;
-  const elig=config.eligibility||'파크골프를 사랑하는 누구나';
+  // config.eligibility는 {type,text} 객체다 — 문자열로 쓰면 [object Object]가 공개 요강에
+  // 그대로 노출된다(R2 발견). 모바일 신청 화면(4318행)과 같은 규칙으로 문자열화한다.
+  const eo=config.eligibility||{},
+    elig=eo.type==='restricted'?(eo.text||'참가 조건 있음'):'파크골프를 사랑하는 누구나';
   const capTxt=config.capUnlimited?'제한 없음':`선착순 ${config.cap}명`;
   const prizes=(config.prizes||[]).filter(p=>p.label).map(p=>cnsEsc(p.label)+(p.amount?' '+cnsEsc(p.amount):'')).join(' · ');
   const awardTxt=[config.prizeTotal?'종합 '+cnsEsc(config.prizeTotal):'',prizes].filter(Boolean).join(' · ')||'미정';
