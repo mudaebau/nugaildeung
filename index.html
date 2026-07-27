@@ -6152,9 +6152,14 @@ function exportResultCSV(){
   // 잠정 합계가 완주자보다 위로 올라가 CSV 1위가 화면 1위와 달랐다(R13 발견).
   // 미완주자는 순위 공란 + 상태 '미완주'로 뒤에 붙인다(기권·실격과 같은 취급 방식).
   const push=(rank,s,tot,topar,state)=>rows.push([rank,s.p.name,s.p.club||'',s.p.sex||'',s.p.age||'',tot,topar,state]);
-  const st=(boardStageKind==='period'||boardStageRecordMode==='total')?periodStandings():standings();
+  // 완주 판정은 단계 종류마다 다르다 — 기간형은 전 코스 합계 확정(tot!=null), 지정일·홀별은
+  // 전 홀 입력(thru>=HOLES). 홀별에서 tot만 보면 1코스만 친 사람이 합계 0·투파 E로 순위를
+  // 받아 화면(완주자만)과 또 어긋났다(M6 발견 — R13과 같은 계열).
+  const isPeriod=(boardStageKind==='period'||boardStageRecordMode==='total');
+  const st=isPeriod?periodStandings():standings();
+  const finished=s=>isPeriod?s.tot!=null:s.thru>=HOLES;
   const outs=st.filter(s=>s.out),rest=st.filter(s=>!s.out);
-  const done=rest.filter(s=>s.tot!=null),partial=rest.filter(s=>s.tot==null);
+  const done=rest.filter(finished),partial=rest.filter(s=>!finished(s));
   done.forEach((s,i)=>push(i+1,s,s.tot,toparStr(s.topar),''));
   partial.forEach(s=>push('',s,'','','미완주'));
   outs.forEach(s=>push('',s,'','',s.p.st==='wd'?'기권':'실격'));
