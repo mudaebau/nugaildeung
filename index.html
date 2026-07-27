@@ -5830,8 +5830,15 @@ function periodStandings(pool=players,courseIdx=-1){
       return x.courseVal-y.courseVal})
   }else{
     act.sort((x,y)=>{
-      if(x.completed===0&&y.completed===0)return 0;
-      if(x.completed===0)return 1;if(y.completed===0)return -1;
+      // P70: 순위는 완주자만 — 미완주자(코스를 덜 친 사람)는 잠정 합계가 좋아도 완주자 아래로.
+      // 예전엔 completed===0만 뒤로 보내서 1코스만 친 67타가 2코스 완주 138타보다 위에 왔고,
+      // 같은 화면 캡션("미완주자는 완주자 아래로")과 정면으로 어긋났다(R13 교훈).
+      const xd=x.tot!=null,yd=y.tot!=null;
+      if(xd!==yd)return xd?-1:1;
+      if(!xd){
+        if(x.completed!==y.completed)return y.completed-x.completed; // 더 많이 친 사람 먼저
+        if(x.completed===0&&y.completed===0)return 0;
+        return x.sumSoFar-y.sumSoFar}
       if(x.topar!==y.topar)return x.topar-y.topar;
       if(x.sumSoFar!==y.sumSoFar)return x.sumSoFar-y.sumSoFar;
       return y.p.age-x.p.age})}
