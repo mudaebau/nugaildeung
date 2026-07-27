@@ -6382,10 +6382,10 @@ function cnsSubsFor(m,model){
   if(s){
     const idx=model.stages.indexOf(s),hasNext=idx>=0&&idx+1<model.stages.length;
     const period=s.kind==='period'||s.record_mode==='total';
-    if(period){const arr=[{k:'start',n:s.name+' 시작'},{k:'score',n:'스코어 입력'},{k:'lock',n:'스코어 확정'}];if(hasNext)arr.push({k:'cut',n:'진출자 확정'});arr.push({k:'close',n:s.name+' 마감'});return arr}
-    // 지정일 라운드: 명단→조편성→(당일 준비·출석: 지정일만)→시작→홀별→확정→(컷)→마감
-    const arr=[{k:'roster',n:'명단 확정'},{k:'groups',n:'조편성'}];
-    if(s.record_mode==='hole')arr.push({k:'attend',n:'당일 준비·출석'});
+    // ⑧ P45 개정: 당일 준비·출석 중단계를 전 단계(기간형 포함) 상시 생성
+    if(period){const arr=[{k:'attend',n:'당일 준비·출석'},{k:'start',n:s.name+' 시작'},{k:'score',n:'스코어 입력'},{k:'lock',n:'스코어 확정'}];if(hasNext)arr.push({k:'cut',n:'진출자 확정'});arr.push({k:'close',n:s.name+' 마감'});return arr}
+    // 지정일 라운드: 명단→조편성→당일 준비·출석→시작→홀별→확정→(컷)→마감
+    const arr=[{k:'roster',n:'명단 확정'},{k:'groups',n:'조편성'},{k:'attend',n:'당일 준비·출석'}];
     arr.push({k:'start',n:s.name+' 시작'},{k:'score',n:'스코어 입력'},{k:'lock',n:'스코어 확정'});
     if(hasNext)arr.push({k:'cut',n:'진출자 확정'});arr.push({k:'close',n:s.name+' 마감'});return arr}
   return[]}
@@ -6591,8 +6591,10 @@ async function renderCnsTool(w){
 /* --- 화면 7: 정보 수정 허브(3컬럼 버튼형 + 완성도) --- */
 function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
 /* --- CH33-D: 정보 수정 PC 네이티브 — 공통 편집 프레임 1개 + 9개 필드 폼(로직·RPC 재사용) --- */
-let cnsEditKey=null;
-function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
+let cnsEditKey=null,cnsCourseStageId=null;
+function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='course')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
+function cnsEditCourseFor(id){cnsCourseStageId=id;cnsEditKey='course';editFieldsDraft=null;cnsTool='edit';renderConsole()} // ⑬⑯ 단계별 코스·컷
+function cnsEditSchedFor(id){cnsEditField('schedule')} // ⑬ 단계별 일정 표기는 허브에서, 편집은 개설(위저드)·전체 범위 에디터
 function cnsEL(t){return `<label style="display:block;font-size:14px;font-weight:700;color:var(--sub);margin:16px 0 6px">${t}</label>`}
 function cnsEI(id,val,ph,type){return `<input id="${id}" ${type?`type="${type}"`:''} class="cfield" value="${cnsEsc(val==null?'':String(val))}" placeholder="${ph||''}" style="font-size:18px;width:100%">`}
 function cnsEditFrame(title,body,saveable){
@@ -6607,17 +6609,19 @@ function cnsEdOpt(on,label,onclick){return `<button onclick="${onclick}" style="
 async function cnsEditBody(key){
   if(key==='basic')
     return cnsEditFrame('대회명 · 주최',cnsEL('대회명')+cnsEI('eiName',config.name,'제1회 …')+cnsEL('주최 · 주관')+cnsEI('eiHost',config.hostOrg,'주최 단체/총무'));
+  if(key==='rules') // ⑪ 게임룰 = 자유 텍스트 1창
+    return cnsEditFrame('대회 게임 운영 규칙',cnsEL('게임 운영 규칙 (자유 입력)')+`<textarea id="eiRulesOnly" class="cfield" rows="10" style="font-size:18px;width:100%;line-height:1.8;resize:vertical" placeholder="경기 방식·순위 규칙·실격 기준 등 자유롭게 작성하세요">${cnsEsc((config.noticeExtra||{}).rules||'')}</textarea>`);
   if(key==='awards'){
     const a=config.awards||{};
     const opt=(k,l)=>cnsEdOpt(!!a[k],l,`cnsEdAward('${k}')`);
     const prizeRows=(config.prizes||[]).map((p,i)=>`<div style="display:flex;gap:8px;margin-bottom:6px"><input class="cfield cprz" data-i="${i}" data-k="label" value="${cnsEsc(p.label||'')}" placeholder="시상명(예: 종합 우승)" style="flex:2;font-size:16px"><input class="cfield cprz" data-i="${i}" data-k="amount" value="${cnsEsc(p.amount||'')}" placeholder="상금·부상" style="flex:1;font-size:16px"><button class="btn soft" onclick="cnsEdSyncPrize();config.prizes.splice(${i},1);renderConsole()">✕</button></div>`).join('');
-    return cnsEditFrame('시상 · 참가비 · 게임룰',
+    return cnsEditFrame('시상 · 참가비 · 문의',
       cnsEL('시상 부문')+`<div style="margin-bottom:4px"><div style="border:1.5px solid var(--line);background:#F1F5FB;border-radius:12px;padding:13px 15px;margin-bottom:8px;font-size:16px;font-weight:700;color:var(--sub)">종합 1·2·3위 <span style="color:var(--minttx)">기본</span></div>${opt('gender','남녀부')}${opt('age','연령부(60·70·80대)')}${opt('club','클럽 대항전')}</div>`
       +cnsEL('총상금 규모 (선택)')+cnsEI('eiPrizeTotal',config.prizeTotal,'예: 총 500만원 상당')
       +cnsEL('주요 시상')+`<div id="cnsPrizeRows">${prizeRows}</div><button class="btn soft" style="margin-top:6px" onclick="cnsEdSyncPrize();config.prizes=config.prizes||[];config.prizes.push({label:'',amount:''});renderConsole()">＋ 시상 항목 추가</button>`
       +cnsEL('문의처')+cnsEI('eiContact',config.noticeExtra.contact,'총무 연락처')
       +cnsEL('참가비')+cnsEI('eiFee',config.noticeExtra.fee,'예: 2만원')
-      +cnsEL('게임 규칙')+`<textarea id="eiRules" class="cfield" rows="4" style="font-size:18px;width:100%;resize:vertical">${cnsEsc(config.noticeExtra.rules||'')}</textarea>`);
+      +`<p style="font-size:12.5px;color:var(--sub);margin-top:10px">게임룰은 허브의 <b>📖 게임룰</b>에서 따로 작성합니다.</p>`);
   }
   if(key==='schedule')
     return cnsEditFrame('일정 · 대회장소',
@@ -6653,7 +6657,7 @@ async function cnsEditBody(key){
   }
   if(key==='course'){
     const stages=await loadAllStages(config.id);
-    editStage=curActiveStage(stages);
+    editStage=(cnsCourseStageId&&stages.find(s=>s.id===cnsCourseStageId))||curActiveStage(stages); // ⑬⑯ 단계별 스코프
     const sc=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
     const pl=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
     editStageLocked=(sc+pl)>0;
@@ -6703,10 +6707,15 @@ async function cnsEditSave(){
     config.name=name;config.hostOrg=host;renderMgmtHeader();back();toast('대회명·주최를 저장했습니다');return}
   if(key==='awards'){
     cnsEdSyncPrize();config.prizeTotal=$('#eiPrizeTotal').value.trim();
-    config.noticeExtra={...config.noticeExtra,contact:$('#eiContact').value.trim(),fee:$('#eiFee').value.trim(),rules:$('#eiRules').value.trim()};
+    config.noticeExtra={...config.noticeExtra,contact:$('#eiContact').value.trim(),fee:$('#eiFee').value.trim()}; // 게임룰은 별도 편집(⑪)
     const{error}=await sb.rpc('update_tournament_free_info',{t_id:config.id,p_name:config.name,p_host_org:config.hostOrg,p_awards:config.awards,p_prize_total:config.prizeTotal,p_prizes:(config.prizes||[]).filter(p=>p.label),p_contact:config.noticeExtra.contact,p_fee:config.noticeExtra.fee,p_rules:config.noticeExtra.rules,p_owner_secret:user.secret,p_who:user.name});
     if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
-    back();toast('시상·참가비·게임룰을 저장했습니다');return}
+    back();toast('시상·참가비를 저장했습니다');return}
+  if(key==='rules'){ // ⑪ 게임룰 자유텍스트 저장
+    config.noticeExtra={...config.noticeExtra,rules:$('#eiRulesOnly').value.trim()};
+    const{error}=await sb.rpc('update_tournament_free_info',{t_id:config.id,p_name:config.name,p_host_org:config.hostOrg,p_awards:config.awards,p_prize_total:config.prizeTotal,p_prizes:(config.prizes||[]).filter(p=>p.label),p_contact:config.noticeExtra.contact,p_fee:config.noticeExtra.fee,p_rules:config.noticeExtra.rules,p_owner_secret:user.secret,p_who:user.name});
+    if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
+    back();toast('게임 운영 규칙을 저장했습니다');return}
   // 경고형(update_tournament_warned_info) — openWarnEdit 재사용
   const warned=(what,extra,after)=>{
     openWarnEdit(`${what} 참가자에게 별도로 안내해 주세요.`,async()=>{
@@ -6746,15 +6755,25 @@ async function cnsEditSave(){
 async function cnsHubHTML(){
   const stages=await loadAllStages(config.id);
   editStage=curActiveStage(stages);
-  const scoreCount=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
-  const playCount=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
-  editStageLocked=(scoreCount+playCount)>0;
+  const allScores=await fetchScores(config.id),allPlays=await fetchPlays(config.id);
+  const stLocked=s=>(allScores.filter(r=>r.stage_id===s.id).length+allPlays.filter(r=>r.stage_id===s.id).length)>0;
+  editStageLocked=stLocked(editStage);
   const pct=noticeCompletionPct(),ne=config.noticeExtra||{};
   const awardsFilled=!!(config.prizeTotal||(config.prizes||[]).some(p=>p.label));
   const feeFilled=!!(ne.fee||ne.contact),rulesFilled=!!ne.rules;
   const chk=ok=>ok?'<small style="color:var(--minttx);font-weight:700">완료 ✓</small>':'<small style="color:var(--goldtx);font-weight:700">채우기</small>';
   const row=(icon,title,right,onclick,lock)=>`<button class="hbtn${lock?' lock':''}" ${lock?'':`onclick="${onclick}"`}>${icon} ${title}${right}${lock?'':'<span class="go">›</span>'}</button>`;
   const lockPill='<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small>';
+  // ⑬⑭⑯ P33-1: 일정·장소 / 코스·구조·컷을 단계별 서브행으로. (정원·대상·공개·항목은 대회 단위)
+  const dateLabel=s=>s.kind==='period'
+    ?`${cnsDateK((s.date_start||'').slice(5))}~${cnsDateK((s.date_end||'').slice(5))}`
+    :`${cnsDateK((s.date_start||'').slice(5))}(대회일)`;
+  const venueLabel=s=>{const v=(s.venues&&s.venues.length?s.venues:config.venues)||[];return v[0]?cnsEsc(v[0].replace(' 파크골프장','')):'미정'};
+  const cutLabel=s=>s.advance_cut?(s.advance_cut.total?`컷 ${s.advance_cut.total}명`:`컷 남${s.advance_cut.m||0}·여${s.advance_cut.f||0}`):'컷 없음';
+  const schedRows=stages.map(s=>row('📅',`${cnsEsc(s.name)} 일정·장소`,`<small>${dateLabel(s)} · ${venueLabel(s)}</small>`,`cnsEditSchedFor('${s.id}')`)).join('');
+  const courseRows=stages.map(s=>{const lk=stLocked(s),period=s.kind==='period';
+    const sum=`<small>${period?'기간·총타':(s.record_mode==='total'?'지정일·총타':'지정일·홀별')}${(stages.indexOf(s)<stages.length-1)?' · '+cutLabel(s):''}</small>`;
+    return lk?row('⛳',`${cnsEsc(s.name)} 코스·구조·컷`,lockPill,'',true):row('⛳',`${cnsEsc(s.name)} 코스·구조·컷`,sum,`cnsEditCourseFor('${s.id}')`)}).join('');
   return `<div style="background:var(--cbg);padding:16px 22px 4px">
     <div class="strip" style="margin-bottom:0"><div class="kpi"><b style="color:var(--goldtx)">${pct}<small style="font-size:15px">%</small></b><p>요강 완성도</p></div>
       <p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100% — 완성된 요강이 신청을 늘려요</p>
@@ -6764,19 +6783,17 @@ async function cnsHubHTML(){
         ${row('🏷','대회명 · 주최',`<small>${cnsEsc(config.name)}</small>`,"cnsEditField('basic')")}
         ${row('🏆','시상 내역',chk(awardsFilled),"cnsEditField('awards')")}
         ${row('💰','참가비 · 문의',chk(feeFilled),"cnsEditField('awards')")}
-        ${row('📖','게임룰',chk(rulesFilled),"cnsEditField('awards')")}
+        ${row('📖','게임룰',chk(rulesFilled),"cnsEditField('rules')")}
         ${row('👁','요강 미리보기 · 공유','<small>이미지 저장</small>',"cnsOpenTool('notice')")}
       </div>
-      <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인</p>
-        ${row('📅','일정 · 대회장소',`<small>${cnsDateK((config.dateS||'').slice(5))} · ${cnsEsc(config.place||'미정')}</small>`,"cnsEditField('schedule')")}
+      <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인 <span style="color:var(--sub);font-weight:500">(단계별)</span></p>
+        ${schedRows}
         ${row('👥','정원 · 참여 대상',`<small>${config.capUnlimited?'무제한':config.cap+'명'}</small>`,"cnsEditField('cap')")}
         ${row('🔒','공개 설정',`<small>${config.visibility==='private'?'비공개':'공개'}</small>`,"cnsEditField('visibility')")}
         ${row('📝','참가자 정보 항목',`<small>${cnsFieldsSummary()}</small>`,"cnsEditField('fields')")}
       </div>
-      <div class="hcol"><p class="h" style="color:#C4523A">🔴 ${editStageLocked?'기록이 있어 잠김':'기록이 생기면 잠김'}</p>
-        ${editStageLocked
-          ?row('⛳','코스 구성 · 파',lockPill,'',true)+row('🪜','단계 구조 · 컷 · 동점',lockPill,'',true)
-          :row('⛳','코스 · 단계 · 컷 · 동점','<small>열림</small>',"cnsEditField('course')")}
+      <div class="hcol"><p class="h" style="color:#C4523A">🔴 코스 · 구조 · 컷 <span style="color:var(--sub);font-weight:500">(단계별 · 기록 있으면 잠김)</span></p>
+        ${courseRows}
         <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">해당 단계 기록이 없을 때만 열려요</p>
       </div>
     </div>`}
@@ -6839,7 +6856,7 @@ function cnsNoticeHTML(){
   const sec=(label,body)=>`<div style="padding:16px 0;border-bottom:1px solid var(--line)"><p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">${label}</p><p style="font-size:18px;line-height:1.9">${body}</p></div>`;
   return `<div style="background:#fff;padding:30px 0;min-height:calc(100vh - 56px)">
     <div style="max-width:640px;margin:0 auto;padding:0 26px">
-      <div style="display:flex;align-items:center;margin-bottom:12px"><p style="font-size:15px;font-weight:700;color:var(--act)">대회 요강</p><button class="btn soft" style="margin-left:auto" onclick="cnsCloseTool()">← 콘솔로</button></div>
+      <div style="display:flex;align-items:center;margin-bottom:12px"><p style="font-size:15px;font-weight:700;color:var(--act)">대회 요강</p><button class="btn soft" style="margin-left:auto" onclick="cnsOpenTool('hub')">← 정보 허브</button></div>
       <h2 style="font-size:28px;line-height:1.4;margin-bottom:10px">${cnsEsc(config.name)}</h2>
       <p style="font-size:17px;color:var(--sub);margin-bottom:18px">${period} · ${cnsEsc(config.place||'장소 미정')}</p>
       <div style="border-top:2px solid var(--ink)">
@@ -7078,12 +7095,13 @@ function cnsHoleScreen(stage){
   const members=grp.map(pi=>`<button class="pill" style="cursor:pointer;padding:8px 14px;margin:0 6px 6px 0;${pi===cnsHolePlayerPi?'background:var(--act);color:#fff':'background:#fff;border:1.5px solid var(--line);color:var(--ink)'}" onclick="cnsHolePlayerPi=${pi};renderConsole()">${cnsEsc(players[pi].name)}</button>`).join('');
   const grid=cnsHolePlayerPi!=null?cnsHoleGrid(cnsHolePlayerPi,locked):'<p style="color:var(--sub)">선수를 선택하세요</p>';
   const A=players.filter(p=>!isOut(p)).length,doneP=players.filter(p=>!isOut(p)).filter(p=>cnsHoleProgress(players.indexOf(p))>=HOLES).length;
-  const strip=cnsStrip([{v:A,l:'참가'},{v:doneP,l:'완주',c:'var(--act)'},{v:groups.filter(g=>g.length).length,l:'조'}]);
+  const saveBtn=locked?'':`<button class="btn" id="cnsHoleSaveBtn" style="margin-left:auto;opacity:.5;pointer-events:none" onclick="cnsHoleBatchSave()">변경 없음</button>`;
+  const strip=cnsStripAppend(cnsStrip([{v:A,l:'참가'},{v:doneP,l:'완주',c:'var(--act)'},{v:groups.filter(g=>g.length).length,l:'조'}]),saveBtn);
   const banner=locked?`<div class="grp" style="padding:12px 16px;background:#FFF9E8;border-color:#EFD9A0;margin-bottom:12px"><p style="font-size:14px;color:var(--goldtx);font-weight:700">🔒 스코어 확정(잠금) — 입력·정정이 모든 경로에서 차단됩니다.</p></div>`:'';
   return strip+banner+`<div style="display:flex;gap:14px;align-items:flex-start">
     <div style="width:270px;flex:0 0 auto">${left}</div>
     <div class="grp" style="flex:1;padding:16px 18px;min-width:0"><div style="margin-bottom:10px">${members}</div>${grid}
-      <p class="cap" style="margin:12px 4px 0">숫자 입력 시 다음 칸 자동 이동 · 코스별 소계·파대비 상시. 심판 폰 입력과 실시간 공존(같은 홀 저장 시 서버가 최신값 유지).</p></div></div>`}
+      <p class="cap" style="margin:12px 4px 0">숫자 입력 시 다음 칸 자동 이동 · 변경 셀 표시 → 상단 <b>[변경 N건 저장]</b>으로 일괄 저장(정정 사유 1회·행별 성공/실패). 심판 폰 입력과 실시간 공존.</p></div></div>`}
 function cnsHoleGrid(pi,locked){
   const p=players[pi],sc=p.scores||[];
   let html=`<h5 style="font-size:15px;margin-bottom:4px">${cnsEsc(p.name)} <span style="font-weight:500;color:var(--sub);font-size:12.5px">${cnsEsc(p.club||'')}</span></h5>`;
@@ -7094,41 +7112,71 @@ function cnsHoleGrid(pi,locked){
     const cells=Array.from({length:18},(_,h)=>{
       const gi=base+h,v=sc[gi];
       if(locked)return `<div style="text-align:center;padding:6px 0;background:#F1F5FB;border-radius:8px;font-size:11px;color:var(--sub)">${h+1}<br><b class="num" style="font-size:16px;color:var(--ink)">${v!=null?v:'·'}</b></div>`;
-      return `<div style="text-align:center;padding:4px 0;border-radius:8px;border:1.5px solid ${v!=null?'#CFE0F5':'#E5EAF2'};background:${v!=null?'#fff':'#FAFCFF'}"><div style="font-size:10.5px;color:var(--sub)">${h+1}</div><input class="cholecell" data-pi="${pi}" data-gi="${gi}" inputmode="numeric" maxlength="2" value="${v!=null?v:''}" oninput="cnsHoleInput(this)" onkeydown="if(event.key==='Enter')cnsHoleFocusNext(this)" style="width:32px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;border:none;background:transparent;outline:none;padding:2px 0"></div>`}).join('');
+      return `<div style="text-align:center;padding:4px 0;border-radius:8px;border:1.5px solid ${v!=null?'#CFE0F5':'#E5EAF2'};background:${v!=null?'#fff':'#FAFCFF'}"><div style="font-size:10.5px;color:var(--sub)">${h+1}</div><input class="cholecell" data-pi="${pi}" data-gi="${gi}" data-orig="${v!=null?v:''}" inputmode="numeric" maxlength="2" value="${v!=null?v:''}" oninput="cnsHoleInput(this)" onkeydown="if(event.key==='Enter')cnsHoleFocusNext(this)" style="width:32px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;border:none;background:transparent;outline:none;padding:2px 0"></div>`}).join('');
     html+=`<p style="font-size:12.5px;font-weight:700;color:var(--sub);margin:10px 0 5px">${c+1}코스 <span style="color:var(--ink)">소계 ${cnt?sub:'—'}</span>${cnt?` <span style="color:${diff>0?'#C4523A':diff<0?'var(--minttx)':'var(--sub)'}">(${diff>0?'+'+diff:diff<0?diff:'E'})</span>`:''}</p>
       <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:5px">${cells}</div>`}
   return html}
 function cnsHoleFocusNext(el){const cells=[...document.querySelectorAll('#viewConsole input.cholecell')];const i=cells.indexOf(el);if(i>=0&&i+1<cells.length){cells[i+1].focus();cells[i+1].select&&cells[i+1].select()}}
+// ⑨ 홀별 일괄 저장(총점 그리드와 동일 문법): 입력=마크만, 자동 이동, 상단 [변경 N건 저장]
 function cnsHoleInput(el){
-  const pi=+el.dataset.pi,gi=+el.dataset.gi,raw=el.value.trim();
-  if(raw===''){return}
-  const v=+raw;
-  if(!/^\d{1,2}$/.test(raw)||v<1||v>19){el.style.color='#C4523A';return}
-  el.style.color='';
-  const old=((players[pi]||{}).scores||[])[gi];
-  if(old!=null&&v!==old){cnsHolePendCorr={pi,gi,old,v,el};cnsOpenHoleReason();return}
-  cnsHoleSave(pi,gi,v,null);
-  cnsHoleFocusNext(el)}
+  const raw=el.value.trim(),v=+raw,orig=el.dataset.orig||'';
+  const valid=raw===''||(/^\d{1,2}$/.test(raw)&&v>=1&&v<=19);
+  el.style.color=valid?'':'#C4523A';
+  cnsHoleDirty();
+  if(valid&&raw!==''&&raw!==orig)cnsHoleFocusNext(el)}
+function cnsHoleDirty(){
+  const inputs=[...document.querySelectorAll('#viewConsole input.cholecell')];let n=0;
+  inputs.forEach(inp=>{const val=inp.value.trim(),orig=inp.dataset.orig||'',changed=val!==orig;
+    inp.parentElement.style.background=changed&&val!==''?'var(--act-soft)':changed&&val===''?'#FBE9E4':(orig!==''?'#fff':'#FAFCFF');
+    if(changed&&val!=='')n++});
+  const btn=document.querySelector('#cnsHoleSaveBtn');
+  if(btn){btn.textContent=n?`변경 ${n}건 저장`:'변경 없음';btn.style.opacity=n?'1':'.5';btn.style.pointerEvents=n?'auto':'none'}
+  return n}
+function cnsHoleDirtyCount(){return [...document.querySelectorAll('#viewConsole input.cholecell')].filter(inp=>{const v=inp.value.trim();return v!==''&&v!==(inp.dataset.orig||'')}).length}
+let cnsHolePend=null;
+async function cnsHoleBatchSave(){
+  const inputs=[...document.querySelectorAll('#viewConsole input.cholecell')],changes=[];
+  inputs.forEach(inp=>{const val=inp.value.trim(),orig=inp.dataset.orig||'';if(val===''||val===orig)return;
+    const v=+val;changes.push({pi:+inp.dataset.pi,gi:+inp.dataset.gi,strokes:v,orig,valid:/^\d{1,2}$/.test(val)&&v>=1&&v<=19})});
+  if(!changes.length){toast('변경된 값이 없습니다');return}
+  if(changes.some(x=>x.orig!==''&&x.valid)){cnsHolePend=changes;cnsOpenHoleReason();return}
+  await cnsHoleCommit(changes,null)}
 function cnsOpenHoleReason(){
-  const{pi,gi,old,v}=cnsHolePendCorr;
+  const corr=(cnsHolePend||[]).filter(x=>x.orig!==''&&x.valid).length;
   openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">정정 사유</h3>
-    <p style="font-size:13px;color:var(--sub);margin-bottom:10px"><b>${cnsEsc(players[pi].name)}</b> ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 · <b>${old}</b>→<b>${v}</b>타</p>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px">기존값이 있는 <b>${corr}건</b>을 수정합니다 — 공통 정정 사유를 한 번 입력하면 각 홀 로그에 개별 기록됩니다(P68).</p>
     <input class="cfield" id="cnsHoleReason" placeholder="예: 오기재 정정 · 재확인" style="margin-bottom:14px">
-    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="cnsHoleCancelCorr()">취소</button><button class="btn" style="flex:1.6" onclick="cnsHoleConfirmCorr()">정정 저장</button></div>`)}
-function cnsHoleCancelCorr(){const c=cnsHolePendCorr;cnsHolePendCorr=null;closeCnsSheet();if(c&&c.el)c.el.value=c.old!=null?c.old:''}
-async function cnsHoleConfirmCorr(){const reason=($('#cnsHoleReason').value||'').trim()||'사유 미기재';const{pi,gi,v}=cnsHolePendCorr;cnsHolePendCorr=null;closeCnsSheet();await cnsHoleSave(pi,gi,v,reason);renderConsole()}
-async function cnsHoleSave(pi,gi,v,reason){
-  const p=players[pi];if(!p||!p.id){toast('서버에 등록되지 않은 참가자입니다');return}
-  p.scores=p.scores||Array(HOLES).fill(null);
-  // owner 분기 재사용 — submit_score_owner(0047 트리거가 잠금 시 scores 쓰기도 차단)
-  const{error}=await sb.rpc('submit_score_owner',{t_id:config.id,p_owner_secret:user.secret,p_player_id:p.id,p_hole_index:gi,p_strokes:v,p_reason:reason||null});
-  if(error){toast('저장 실패: '+error.message);console.error(error);return}
-  p.scores[gi]=v;
-  addLog(`${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 <b>${p.name}</b> ${v}타(콘솔)${reason?' · 정정: '+reason:''}`);
-  if(reason)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${p.name} ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 정정 →${v}타 — 사유: ${reason}`});}
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet();cnsHolePend=null">취소</button><button class="btn" style="flex:1.6" onclick="cnsHoleReasonConfirm()">저장</button></div>`)}
+function cnsHoleReasonConfirm(){const reason=($('#cnsHoleReason').value||'').trim()||'사유 미기재';const c=cnsHolePend;cnsHolePend=null;closeCnsSheet();cnsHoleCommit(c,reason)}
+async function cnsHoleCommit(changes,reason){
+  const results=[];
+  for(const ch of changes){
+    const p=players.find((x,idx)=>idx===ch.pi)||players[ch.pi];
+    if(!ch.valid){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:'타수(1~19) 아님'});continue}
+    // submit_score_owner는 (player,hole) upsert=멱등. 0047 트리거가 잠금 시 차단.
+    const{error}=await sb.rpc('submit_score_owner',{t_id:config.id,p_owner_secret:user.secret,p_player_id:p.id,p_hole_index:ch.gi,p_strokes:ch.strokes,p_reason:reason||null});
+    if(error){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:error.message});continue}
+    if(p){p.scores=p.scores||Array(HOLES).fill(null);p.scores[ch.gi]=ch.strokes}
+    addLog(`${Math.floor(ch.gi/18)+1}코스 ${ch.gi%18+1}홀 <b>${p?p.name:''}</b> ${ch.strokes}타(콘솔 일괄)${reason&&ch.orig!==''?' · 정정: '+reason:''}`);
+    if(reason&&ch.orig!=='')await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${p?p.name:''} ${Math.floor(ch.gi/18)+1}코스 ${ch.gi%18+1}홀 정정 ${ch.orig}→${ch.strokes}타 — 사유: ${reason}`});
+    results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:true,strokes:ch.strokes})}
+  const ok=results.filter(r=>r.ok).length,fail=results.filter(r=>!r.ok);
+  if(!fail.length){toast(`${ok}건 저장 완료`);renderConsole();return}
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:8px">저장 결과 — 성공 ${ok} · 실패 ${fail.length}</h3>
+    <div style="background:#FBE9E4;border-radius:10px;padding:8px 12px"><b style="font-size:13px;color:#C4523A">실패 ${fail.length}건</b><p style="font-size:12.5px;line-height:1.7;color:#7A3326">${fail.map(r=>cnsEsc(r.name)+' '+(Math.floor(r.gi/18)+1)+'-'+(r.gi%18+1)+'홀 — '+cnsEsc(r.reason)).join('<br>')}</p></div>
+    <button class="btn" style="width:100%;margin-top:12px" onclick="closeCnsSheet();renderConsole()">확인</button>`)}
 /* ===== 콘솔 액션 핸들러(모두 기존 RPC·로직 재사용) ===== */
 async function cnsTogglePaid(i){await togglePaidRow(i);renderConsole()}
-async function cnsConfirmRoster(){await confirmRegClose();renderConsole()}
+function cnsConfirmRoster(){ // ⑥ 모집 마감도 공통 문법: 확인 시트 → 마감 → 첫 단계 안내
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">모집을 마감할까요?</h3>
+    <p style="font-size:13.5px;color:var(--sub);line-height:1.8;margin-bottom:14px">현재 신청 <b>${players.length}명</b>${waitlist.length?` · 대기 ${waitlist.length}명`:''}이 확정 명단이 됩니다. 마감 후 첫 단계를 시작할 수 있어요.</p>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsConfirmRosterGo()">모집 마감 · 명단 확정</button></div>`)}
+async function cnsConfirmRosterGo(){
+  closeCnsSheet();await confirmRegClose();
+  cnsModel=await buildConsoleModel();
+  const first=cnsModel.stages[0];
+  if(first)cnsNextStagePopup(first.id,first.name);
+  else renderConsole()}
 async function cnsReopenReg(){await reopenRegistration();renderConsole()}
 async function cnsStageRoster(stageId){
   const{error}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
@@ -7178,9 +7226,9 @@ function cnsScoreDirty(){
 function cnsScoreDirtyCount(){
   return [...document.querySelectorAll('#viewConsole input.cscore')]
     .filter(inp=>{const v=inp.value.trim();return v!==''&&v!==(inp.dataset.orig||'')}).length}
-// 미저장 변경이 있으면 이동 전 확인(순위 토글·중단계·대단계·도구 이동에서 호출).
+// 미저장 변경이 있으면 이동 전 확인(순위 토글·중단계·대단계·도구 이동에서 호출). 총점·홀별 그리드 모두.
 function cnsScoreLeaveThen(fn){
-  const n=cnsScoreDirtyCount();
+  const n=cnsScoreDirtyCount()+(typeof cnsHoleDirtyCount==='function'?cnsHoleDirtyCount():0);
   if(n>0&&!confirm(`저장하지 않은 스코어 변경 ${n}건이 있습니다. 저장하지 않고 이동할까요?`))return;
   fn()}
 let cnsScorePendingChanges=null;
@@ -7267,6 +7315,7 @@ async function cnsDoAdvance(curStage,nextStage,advanced){
   if(error){toast('진출자 반영 실패: '+error.message);console.error(error);return false}
   await syncActiveStageState(config.id);
   return true}
+/* ⑥ 공통 마감 시트: 확인 시트 → 마감 → 다음 단계 안내 팝업(모든 단계·모집 동일 문법) */
 async function cnsCloseStage(stageId){
   const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
   const idx=cnsModel.stages.indexOf(stage),nextStage=cnsModel.stages[idx+1];
@@ -7275,7 +7324,22 @@ async function cnsCloseStage(stageId){
     const{count}=await sb.from('players').select('id',{count:'exact',head:true}).eq('tournament_id',config.id).gte('current_stage',nextStage.seq);
     if(!count){toast(`먼저 [진출자 확정]으로 ${nextStage.name} 진출자를 확정하세요 — 확정 전 마감하면 명단이 비어요`);cnsSubSel='cut';renderConsole();return}
   }
-  await doCloseStage(stage);renderConsole()}
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">${cnsEsc(stage.name)}을 마감할까요?</h3>
+    <p style="font-size:13.5px;color:var(--sub);line-height:1.8;margin-bottom:14px">${cnsEsc(stage.name)} 순위가 마감됩니다. 마감 후에는 기록을 입력·수정할 수 없어요.</p>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsCloseStageGo('${stageId}')">${cnsEsc(stage.name)} 마감</button></div>`)}
+async function cnsCloseStageGo(stageId){
+  const stage=(cnsModel?cnsModel.stages:[]).find(s=>s.id===stageId);if(!stage)return;
+  const idx=cnsModel.stages.indexOf(stage),nextStage=cnsModel.stages[idx+1];
+  closeCnsSheet();
+  await doCloseStage(stage);
+  cnsModel=await buildConsoleModel();
+  if(nextStage)cnsNextStagePopup(nextStage.id,nextStage.name);
+  else{cnsMajorSel='award';cnsSubSel='finalRank';renderConsole();toast(`${stage.name} 마감 — 시상으로 진행하세요`)}}
+function cnsNextStagePopup(nextId,nextName){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:6px">이제 ${cnsEsc(nextName)}을 시작하겠습니다</h3>
+    <p style="font-size:13.5px;color:var(--sub);line-height:1.8;margin-bottom:14px">진출 명단으로 ${cnsEsc(nextName)}을 진행하세요. 명단 확정·조편성·시작 순서로 이어집니다.</p>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">나중에</button><button class="btn" style="flex:1.6" onclick="closeCnsSheet();cnsGoStage('${nextId}')">${cnsEsc(nextName)}으로 이동</button></div>`)}
+function cnsGoStage(id){cnsMajorSel='stage:'+id;cnsSubSel=null;renderConsole()}
 async function cnsFinalize(){await finalizeTournament();renderConsole()}
 /* 콘솔 빠른 등록/붙여넣기 — 파싱·검증·add_player 로직 재사용 */
 function cnsOpenAddPlayer(){
@@ -7391,7 +7455,7 @@ function cnsScorePasteApply(){
 window.addEventListener('resize',()=>{if(curView==='Console'&&!isConsoleViewport())location.reload()});
 // R2②(e): 미저장 스코어 변경이 있는 채로 탭/새로고침 시 경고
 window.addEventListener('beforeunload',e=>{
-  if(curView==='Console'&&document.querySelector('#viewConsole input.cscore')&&cnsScoreDirtyCount()>0){e.preventDefault();e.returnValue=''}});
+  if(curView==='Console'&&(cnsScoreDirtyCount()>0||(typeof cnsHoleDirtyCount==='function'&&cnsHoleDirtyCount()>0))){e.preventDefault();e.returnValue=''}});
 (async()=>{
   const qs=new URLSearchParams(location.search);
   const jToken=qs.get('j'),boardId=qs.get('board'),applyId=qs.get('apply'),noticeId=qs.get('notice'),privacyFlag=qs.get('privacy');
