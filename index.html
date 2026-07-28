@@ -6933,7 +6933,16 @@ function cnsEdElg(t){cnsEdSyncText();config.eligibility=config.eligibility||{};c
 function cnsEdVis(v){cnsEdSyncText();config.visibility=v;renderConsole()}
 function cnsEdField(f){if(f==='name')return;if(editFieldsDraft[f]){const b=Object.entries(AWARD_FIELD_DEP).find(([a,dep])=>dep.f===f&&config.awards[a]);if(b){toast(`${b[1].aLabel} 시상이 켜져 있어 '${b[1].fLabel}'을 끌 수 없어요 — 시상에서 먼저 꺼주세요`);return}}editFieldsDraft[f]=!editFieldsDraft[f];renderConsole()}
 function cnsEdCapUnlim(){const el=$('#eiCap');if(el)config._capDraft=el.value;editCapUnlimitedDraft=!editCapUnlimitedDraft;renderConsole();const e2=$('#eiCap');if(e2&&config._capDraft)e2.value=config._capDraft}
-function cnsEdSyncPrize(){document.querySelectorAll('.cprz').forEach(el=>{const i=+el.dataset.i,k=el.dataset.k;if(config.prizes&&config.prizes[i])config.prizes[i][k]=el.value})}
+// 시상 화면의 입력을 전부 config로 옮긴다 — 시상 행(.cprz)만 챙기고 총상금·문의처·참가비를
+// 빼먹으면, [＋ 시상 항목 추가]가 renderConsole()을 부르는 순간 그 세 칸이 통째로 날아간다
+// (5-3c draft 보존 — 선주행 R2에서 실제로 값이 사라지는 걸 확인하고 잡았다).
+function cnsEdSyncPrize(){
+  document.querySelectorAll('.cprz').forEach(el=>{const i=+el.dataset.i,k=el.dataset.k;if(config.prizes&&config.prizes[i])config.prizes[i][k]=el.value});
+  const pt=$('#eiPrizeTotal'),ct=$('#eiContact'),fe=$('#eiFee');
+  if(pt)config.prizeTotal=pt.value.trim();
+  if(ct||fe)config.noticeExtra={...config.noticeExtra,
+    contact:ct?ct.value.trim():(config.noticeExtra.contact||''),
+    fee:fe?fe.value.trim():(config.noticeExtra.fee||'')}}
 function cnsEdSyncText(){const et=$('#eiEligText');if(et&&config.eligibility)config.eligibility.text=et.value;const ac=$('#eiAccessCode');if(ac)config.accessCode=ac.value}
 function cnsEdRecMode(m){editRecordMode=m;const h=$('#eiRmHole'),t=$('#eiRmTotal');if(h&&t){const on='var(--act)',onbg='var(--act-soft)',off='var(--line)';h.style.borderColor=m==='hole'?on:off;h.style.background=m==='hole'?onbg:'#fff';t.style.borderColor=m==='total'?on:off;t.style.background=m==='total'?onbg:'#fff'}}
 function cnsEdCutMode(){const g=$('#eiCutMode').value==='gender';$('#eiCutTotalBox').style.display=g?'none':'block';$('#eiCutGenderBox').style.display=g?'flex':'none'}
