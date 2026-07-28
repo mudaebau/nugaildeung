@@ -5071,7 +5071,9 @@ async function enterViaJudgeToken(token){
     .sort((a,b)=>(a.group_no??1e9)-(b.group_no??1e9)||(a.group_order??1e9)-(b.group_order??1e9));
   if(judgeStageKind==='period'||stageRecordMode==='total'){
     const{data:plRowsAll}=await sb.rpc('get_plays_for_staff',{p_token:token});
-    const plRows=judgeStageKind==='round'?(plRowsAll||[]).filter(r=>r.stage_id===stage.id):(plRowsAll||[]);
+    // 기록은 언제나 그 단계 것만 본다 — 예전엔 kind==='round'일 때만 걸러서, 기간형 단계에서
+    // 이전 단계(예선) plays가 그대로 합산돼 본선 화면에 예선 점수가 나왔다(CH37 ⑩).
+    const plRows=(plRowsAll||[]).filter(r=>!stage||r.stage_id===stage.id);
     const bestMap={};
     (plRows||[]).forEach(r=>{bestMap[r.player_id]=bestMap[r.player_id]||{};const cur=bestMap[r.player_id][r.course_no];if(cur==null||r.strokes_total<cur)bestMap[r.player_id][r.course_no]=r.strokes_total});
     players=pRows.map(r=>({id:r.id,name:r.name,phone:r.phone,sex:r.sex||'',age:r.age||'',club:r.club||'',
@@ -5660,7 +5662,7 @@ async function loadBoardData(tournamentId,trusted){
       ?`대회기간 라운드 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`
       :`총점만 · ${ROUNDS}개 코스 · 총파 ${PAR_TOT} · ${t.host_org||''}`;
     const plAll=await fetchPlays(tournamentId);
-    const plRows=boardStageKind==='round'?plAll.filter(r=>r.stage_id===stage.id):plAll;
+    const plRows=stage?plAll.filter(r=>r.stage_id===stage.id):plAll; // ⑩ 전광판도 동일 — 단계 밖 기록 합산 금지
     const bestMap={};
     // CH30-B①: 도전왕(최다 플레이) 집계용 — 베스트값과 별개로 제출 횟수 전체를 센다.
     const playCountMap={};
