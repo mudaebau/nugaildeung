@@ -653,6 +653,15 @@ tr:last-child td{border-bottom:none}
 #viewConsole .util .tools{margin-left:auto;display:flex;gap:6px;font-size:13px;font-weight:700;flex-shrink:1;flex-wrap:wrap;justify-content:flex-end}
 #viewConsole .util .tools button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
 #viewConsole .util .tools button.acct{background:#F7CF5C;border-color:#F7CF5C;color:#1F2937}
+/* CH37 ①: 라벨은 어떤 폭에서도 숨기지 않는다 — 아이콘 온리 금지(!important는 이후 어떤
+   규칙도 라벨을 못 지우게 하려는 의도적 잠금). 좁으면 버튼을 접어 [⋯ 메뉴] 시트로
+   라벨째 옮긴다(콘솔 최소폭 1024 미만 = 비표준 구간에서만 발동). */
+#viewConsole .util .tools button .lb{display:inline!important;visibility:visible!important}
+#viewConsole .util .tools .umore{display:none}
+@media (max-width:1023px){
+  #viewConsole .util .tools .utool{display:none}
+  #viewConsole .util .tools .umore{display:inline-flex;align-items:center;gap:4px}
+}
 /* 대단계 레일 */
 #viewConsole .rail{display:flex;align-items:center;background:var(--cbg);border-bottom:1.5px solid var(--line);padding:13px 16px;gap:4px}
 #viewConsole .rl{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:13px;text-align:center;padding:11px 6px;box-shadow:0 1px 4px rgba(29,61,92,.06);cursor:pointer}
@@ -6468,14 +6477,26 @@ function cnsCurrentSub(m,subs,model){
   if(m.key==='close')return 'finalize';
   if(m.stage){if(m.stage.status==='open')return 'score';return subs[0]?subs[0].k:null}
   return subs[0]?subs[0].k:null}
+// 유틸바 도구는 한 배열에서만 정의한다 — 아이콘과 한글 라벨이 항상 같이 다니게 묶어두면
+// "아이콘만 남는" 상태를 만들 자리가 없다(CH37 ①: 세 번째 재발, 조건 재현 실패 → 구조로 차단).
+const CNS_TOOLS=[
+  {ic:'📺',lb:'전광판',fn:"openBoard()"},
+  {ic:'🔗',lb:'신청 링크',fn:"copyApplyShareLink()"},
+  {ic:'⚖️',lb:'심판진',fn:"cnsOpenTool('staff')"},
+  {ic:'⚙️',lb:'대회 정보',fn:"cnsOpenTool('hub')"},
+  {ic:'📤',lb:'내보내기',fn:"openExportSheet()"}];
+// 좁은 폭에서는 아이콘만 남기는 대신 [⋯ 메뉴] 한 칸으로 접고, 라벨은 시트로 통째 옮긴다.
+function cnsToolMenuSheet(){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:10px">대회 도구</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+    ${CNS_TOOLS.map(t=>`<button class="btn soft" style="justify-content:flex-start;text-align:left" onclick="closeCnsSheet();${t.fn}">${t.ic} ${t.lb}</button>`).join('')}
+    </div>
+    <button class="btn soft" style="width:100%;margin-top:12px" onclick="closeCnsSheet()">닫기</button>`)}
 function cnsUtilBarHTML(){
   return `<div class="util"><span class="lg" onclick="cnsCloseTool();cnsGo('signin')">누가<i>1</i>등</span><span class="tname" onclick="cnsCloseTool()" style="cursor:pointer">${cnsEsc(config.name)}</span>
     <div class="tools">
-      <button onclick="openBoard()">📺 전광판</button>
-      <button onclick="copyApplyShareLink()">🔗 신청 링크</button>
-      <button onclick="cnsOpenTool('staff')">⚖️ 심판진</button>
-      <button onclick="cnsOpenTool('hub')">⚙️ 대회 정보</button>
-      <button onclick="openExportSheet()">📤 내보내기</button>
+      ${CNS_TOOLS.map(t=>`<button class="utool" onclick="${t.fn}">${t.ic} <span class="lb">${t.lb}</span></button>`).join('')}
+      <button class="umore" onclick="cnsToolMenuSheet()">⋯ <span class="lb">메뉴</span></button>
       <button class="acct" onclick="cnsOpenTool('mypage')">${cnsEsc(user.name)} ▾</button>
     </div></div>`}
 async function renderCnsMain(w){
