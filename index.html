@@ -6772,7 +6772,7 @@ async function renderCnsTool(w){
 function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
 /* --- CH33-D: 정보 수정 PC 네이티브 — 공통 편집 프레임 1개 + 9개 필드 폼(로직·RPC 재사용) --- */
 let cnsEditKey=null,cnsCourseStageId=null;
-function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='course'&&key!=='stagerow')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
+function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='stagerow')editStageVenues=null;if(key!=='course'&&key!=='stagerow')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
 function cnsEditCourseFor(id){cnsCourseStageId=id;cnsEditKey='course';editFieldsDraft=null;cnsTool='edit';renderConsole()} // ⑬⑯ 단계별 코스·컷
 function cnsEditSchedFor(id){cnsEditField('schedule')} // ⑬ 단계별 일정 표기는 허브에서, 편집은 개설(위저드)·전체 범위 에디터
 function cnsEL(t){return `<label style="display:block;font-size:14px;font-weight:700;color:var(--sub);margin:16px 0 6px">${t}</label>`}
@@ -6871,10 +6871,13 @@ async function cnsEditBody(key){
     const hasNext=stages.some(s=>s.seq===editStage.seq+1);
     const cut=editStage.advance_cut||{total:24};
     // 코스 목록 = venues(이름) × course_pars(파). 길이를 항상 맞춰 둔다.
-    editStageVenues=(editStage.venues&&editStage.venues.length?editStage.venues.slice():[]).slice(0,6);
-    editCoursePars=JSON.parse(JSON.stringify(editStage.course_pars&&editStage.course_pars.length?editStage.course_pars:coursePars));
-    while(editStageVenues.length<editCoursePars.length)editStageVenues.push(`${editStageVenues.length+1}코스`);
-    while(editCoursePars.length<editStageVenues.length)editCoursePars.push(PRESET66.slice());
+    // 진입할 때만 DB 값으로 채운다 — 매 렌더 초기화하면 [＋ 코스 추가]가 누른 즉시
+    // 되감겨 아무 일도 안 일어난다(CH35-A⑮와 같은 계열, 재렌더가 편집 상태를 덮어씀).
+    if(!editStageVenues){
+      editStageVenues=(editStage.venues&&editStage.venues.length?editStage.venues.slice():[]).slice(0,6);
+      editCoursePars=JSON.parse(JSON.stringify(editStage.course_pars&&editStage.course_pars.length?editStage.course_pars:coursePars));
+      while(editStageVenues.length<editCoursePars.length)editStageVenues.push(`${editStageVenues.length+1}코스`);
+      while(editCoursePars.length<editStageVenues.length)editCoursePars.push(PRESET66.slice())}
     const dS=cnsDateK(editStage.date_start||''),dE=cnsDateK(editStage.date_end||'');
     const courseRows=editStageVenues.map((v,i)=>`<div class="grp" style="padding:12px 14px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -6899,7 +6902,7 @@ async function cnsEditBody(key){
       !editStageLocked);
   }
   return cnsEditFrame('편집',`<p style="color:var(--sub)">지원하지 않는 항목입니다.</p>`,false)}
-let editStageVenues=[];
+let editStageVenues=null;
 function cnsStageSyncNames(){document.querySelectorAll('.eiCvName').forEach(el=>{editStageVenues[+el.dataset.i]=el.value})}
 function cnsStageCourseAdd(){
   cnsStageSyncNames();
@@ -7121,7 +7124,7 @@ async function cnsDeleteStageGo(stageId){
   toast('단계를 삭제했습니다');
   renderConsole()}
 // 단계 행 › — 그 단계의 일정·장소·코스·컷을 한 화면에서. 기존 편집기를 그대로 재사용한다.
-function cnsEditStageRow(stageId){cnsCourseStageId=stageId;cnsEditField('stagerow')}
+function cnsEditStageRow(stageId){cnsCourseStageId=stageId;editStageVenues=null;cnsEditField('stagerow')} // 진입 시 draft 비움 → body가 DB 값으로 채운다
 /* --- 화면 J: 심판진 --- */
 function cnsStaffHTML(){
   const js=judges(),connected=js.filter(s=>s.link_opened_at).length;
