@@ -4268,12 +4268,18 @@ function sendLinks(){
   js.forEach(s=>{if(!s.sentLocally&&!s.link_opened_at)s.sentLocally=true});
   renderTools();
   toast('발송 표시 완료 — ⋯ 메뉴의 "링크 복사"로 실제 링크를 복사해 카톡으로 전달하세요')}
+// 심판 링크는 URL만 보내면 받는 사람이 뭔지 모른다 — 대회명·담당·사용법을 붙여
+// 그대로 카톡에 붙여넣을 수 있는 문구로 복사한다(CH37-C ⑨).
+function judgeShareText(s){
+  const duty=(s.duty||'').trim();
+  return `[${config.name}] 심판 입력 링크입니다.\n`
+    +(duty?`담당: ${duty}\n`:'')
+    +`누르면 바로 입력 화면이 열립니다.\n${judgeLink(s)}`}
 async function copyJudgeLinkById(id){
   const s=staff.find(x=>x.id===id);if(!s||!s.token)return;
-  const link=judgeLink(s);
-  try{await navigator.clipboard.writeText(link)}catch(e){}
+  try{await navigator.clipboard.writeText(judgeShareText(s))}catch(e){}
   s.sentLocally=true;renderTools();
-  toast(`${s.name} 님 링크가 복사되었습니다 — 카톡으로 전달하세요`)}
+  toast(`${s.name} 님 안내 문구가 복사되었습니다 — 카톡에 그대로 붙여넣으세요`)}
 
 /* ===== 심판 추가/삭제/재발급(차수28-B2) — create_staff_batch 재사용, 삭제·재발급만 신규 ===== */
 let staffPending=[];
@@ -7443,18 +7449,33 @@ function cnsHoleGrid(pi,locked){
     const cells=Array.from({length:18},(_,h)=>{
       const gi=base+h,v=sc[gi];
       if(locked)return `<div style="text-align:center;padding:6px 0;background:#F1F5FB;border-radius:8px;font-size:11px;color:var(--sub)">${h+1}<br><b class="num" style="font-size:16px;color:var(--ink)">${v!=null?v:'·'}</b></div>`;
-      return `<div style="text-align:center;padding:4px 0;border-radius:8px;border:1.5px solid ${v!=null?'#CFE0F5':'#E5EAF2'};background:${v!=null?'#fff':'#FAFCFF'}"><div style="font-size:10.5px;color:var(--sub)">${h+1}</div><input class="cholecell" data-pi="${pi}" data-gi="${gi}" data-orig="${v!=null?v:''}" inputmode="numeric" maxlength="2" value="${v!=null?v:''}" oninput="cnsHoleInput(this)" onkeydown="if(event.key==='Enter')cnsHoleFocusNext(this)" style="width:32px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;border:none;background:transparent;outline:none;padding:2px 0"></div>`}).join('');
+      return `<div style="text-align:center;padding:4px 0;border-radius:8px;border:1.5px solid ${v!=null?'#CFE0F5':'#E5EAF2'};background:${v!=null?'#fff':'#FAFCFF'}"><div style="font-size:10.5px;color:var(--sub)">${h+1}</div><input class="cholecell" data-pi="${pi}" data-gi="${gi}" data-orig="${v!=null?v:''}" inputmode="numeric" maxlength="2" value="${v!=null?v:''}" oninput="cnsHoleInput(this)" onkeydown="if(event.key==='Enter'){cnsHoleCancelWait();cnsHoleFocusNext(this)}else if(event.key==='Tab')cnsHoleCancelWait()" onfocus="cnsHoleCancelWait()" style="width:32px;text-align:center;font-family:'Oswald',sans-serif;font-size:18px;border:none;background:transparent;outline:none;padding:2px 0"></div>`}).join('');
     html+=`<p style="font-size:12.5px;font-weight:700;color:var(--sub);margin:10px 0 5px">${c+1}코스 <span style="color:var(--ink)">소계 ${cnt?sub:'—'}</span>${cnt?` <span style="color:${diff>0?'#C4523A':diff<0?'var(--minttx)':'var(--sub)'}">(${diff>0?'+'+diff:diff<0?diff:'E'})</span>`:''}</p>
       <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:5px">${cells}</div>`}
   return html}
 function cnsHoleFocusNext(el){const cells=[...document.querySelectorAll('#viewConsole input.cholecell')];const i=cells.indexOf(el);if(i>=0&&i+1<cells.length){cells[i+1].focus();cells[i+1].select&&cells[i+1].select()}}
 // ⑨ 홀별 일괄 저장(총점 그리드와 동일 문법): 입력=마크만, 자동 이동, 상단 [변경 N건 저장]
+// P61 2자리 입력 — 자동 이동이 첫 자리에서 일어나면 10~19(양파 등)를 칠 수가 없다.
+// 유실 없는 규칙: 타수 범위가 1~19이므로 두 자리가 될 수 있는 첫 자리는 '1' 하나뿐이다.
+//   · 2~9  → 두 자리가 될 수 없으므로 즉시 이동(대기 없음, 체감 그대로)
+//   · 1    → 잠깐 기다린다. 그 사이 둘째 자리를 치면 즉시 2자리로 완성해 이동,
+//            안 치면 대기가 끝나고 1타로 확정해 이동 — 어느 쪽이든 입력이 사라지지 않는다.
+//   · 10~19 → 완성됐으므로 즉시 이동
+// 사용자가 직접 이동(Tab·Enter·클릭)하면 대기를 취소해 이동이 두 번 일어나지 않게 한다.
+let cnsHoleWaitTimer=null;
+function cnsHoleCancelWait(){if(cnsHoleWaitTimer){clearTimeout(cnsHoleWaitTimer);cnsHoleWaitTimer=null}}
 function cnsHoleInput(el){
   const raw=el.value.trim(),v=+raw,orig=el.dataset.orig||'';
   const valid=raw===''||(/^\d{1,2}$/.test(raw)&&v>=1&&v<=19);
   el.style.color=valid?'':'#C4523A';
   cnsHoleDirty();
-  if(valid&&raw!==''&&raw!==orig)cnsHoleFocusNext(el)}
+  cnsHoleCancelWait();
+  if(!valid||raw===''||raw===orig)return;
+  if(raw.length===2){cnsHoleFocusNext(el);return}      // 10~19 완성
+  if(raw!=='1'){cnsHoleFocusNext(el);return}            // 2~9는 두 자리가 될 수 없다
+  cnsHoleWaitTimer=setTimeout(()=>{                     // '1' — 둘째 자리를 기다린다
+    cnsHoleWaitTimer=null;
+    if(document.activeElement===el&&el.value.trim()==='1')cnsHoleFocusNext(el)},900)}
 function cnsHoleDirty(){
   const inputs=[...document.querySelectorAll('#viewConsole input.cholecell')];let n=0;
   inputs.forEach(inp=>{const val=inp.value.trim(),orig=inp.dataset.orig||'',changed=val!==orig;
