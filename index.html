@@ -1944,6 +1944,13 @@ function navTo(view,page){
   history.pushState({d:navStack.length},'');
   renderLoc()}
 window.addEventListener('popstate',()=>{
+  // 콘솔은 자체 스택을 쓴다 — 예전엔 콘솔이 history에 아무것도 넣지 않아, 허브에서 브라우저
+  // 뒤로가기를 누르면 모바일 스택(navStack)이 튀어나와 콘솔이 통째로 사라지고 엉뚱한 화면이
+  // 떴다(CH37 ②). 콘솔 안에서는 콘솔 화면끼리만 되돌아간다.
+  if(curView==='Console'&&cnsNavStack.length){
+    const c=cnsNavStack.pop();
+    cnsTool=c.tool;cnsMajorSel=c.major;cnsSubSel=c.sub;
+    renderConsole();return}
   const l=navStack.pop();
   if(l){curView=l.v;curPage=l.p;renderLoc();
     // CH32-A 보완2 R8: 입력 화면(Judge)에서 뒤로가기로 스코어 탭에 돌아오면 본문을 최신
@@ -6724,8 +6731,14 @@ function selectCnsMajor(key){
 function selectCnsSub(key){cnsScoreLeaveThen(()=>{cnsSubSel=key;renderConsole()})}
 function closeCnsSheet(){$('#cnsSheetOv').classList.remove('on')}
 /* ===== 유틸바 도구 화면 (화면 7·J·M·R) — 모두 기존 함수·RPC 재사용 ===== */
-function cnsOpenTool(t){cnsScoreLeaveThen(()=>{cnsTool=t;renderConsole()})}
-function cnsCloseTool(){cnsTool=null;renderConsole()}
+// 콘솔 전용 뒤로가기 스택 — 도구 화면(허브·심판진·요강 등)에 들어갈 때 직전 상태를 쌓아,
+// 브라우저 뒤로가기가 콘솔 밖으로 나가지 않게 한다(CH37 ②).
+let cnsNavStack=[];
+function cnsPushNav(){
+  cnsNavStack.push({tool:cnsTool,major:cnsMajorSel,sub:cnsSubSel});
+  history.pushState({cns:cnsNavStack.length},'')}
+function cnsOpenTool(t){cnsScoreLeaveThen(()=>{if(cnsTool!==t)cnsPushNav();cnsTool=t;renderConsole()})}
+function cnsCloseTool(){if(cnsNavStack.length)cnsNavStack.pop();cnsTool=null;renderConsole()}
 function cnsDateK(d){return(d||'').replaceAll('-','.')}
 async function renderCnsTool(w){
   if(cnsTool==='mypage')return renderCnsMypage(w);
