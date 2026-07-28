@@ -5137,7 +5137,10 @@ async function enterViaJudgeToken(token){
 
   const{data:pRowsAll,error:pErr}=await sb.rpc('get_players_for_staff',{p_token:token});
   if(pErr){toast('참가자 정보를 불러오지 못했습니다');return false}
-  const pRows=(pRowsAll||[]).filter(r=>r.current_stage===(stage?stage.seq:1)&&r.status!=='wait')
+  // 그 단계의 명단 = "지금 그 단계에 있는 사람"이 아니라 "그 단계를 치렀거나 통과한 사람".
+  // ===로 두면 진출자 확정으로 전원이 다음 단계로 올라간 순간, 아직 열려 있는 현재 단계
+  // 화면이 참가자도 스코어도 없이 텅 비어 "전부 사라졌다"로 보인다(P0 신고 — 데이터는 무손실).
+  const pRows=(pRowsAll||[]).filter(r=>r.current_stage>=(stage?stage.seq:1)&&r.status!=='wait')
     .sort((a,b)=>(a.group_no??1e9)-(b.group_no??1e9)||(a.group_order??1e9)-(b.group_order??1e9));
   if(judgeStageKind==='period'||stageRecordMode==='total'){
     const{data:plRowsAll}=await sb.rpc('get_plays_for_staff',{p_token:token});
@@ -5722,7 +5725,8 @@ async function loadBoardData(tournamentId,trusted){
   $('#boardTitle').textContent=t.name;
   const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
 
-  const pRows=(await fetchPlayers(tournamentId)).filter(p=>p.current_stage===(stage?stage.seq:1)&&p.status!=='wait')
+  // 전광판도 같은 규칙 — 진출 후에도 그 단계를 치른 사람이 계속 보여야 한다(위와 동일 사유).
+  const pRows=(await fetchPlayers(tournamentId)).filter(p=>p.current_stage>=(stage?stage.seq:1)&&p.status!=='wait')
     .sort((a,b)=>(a.group_no??1e9)-(b.group_no??1e9)||(a.group_order??1e9)-(b.group_order??1e9));
 
   if(boardStageKind==='period'||boardStageRecordMode==='total'){
