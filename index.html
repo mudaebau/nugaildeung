@@ -658,7 +658,10 @@ tr:last-child td{border-bottom:none}
    읽을 수 없는 조합이 만들어진다(CH37 ① 재현된 실패 형태). .acct도 같은 원칙으로 쌍 지정. */
 /* 통은 흰색을 얹지 않고 어둡게 깐다 — 흰 글자와의 대비가 4.02(AA 미달)에서 7.03으로 오르고,
    바 배경이 밝아지는 사고가 나도 글자가 먼저 사라지지 않는다(실측값, CH37 ①). */
-#viewConsole .util .tools button{background-color:rgba(0,0,0,.16)!important;color:#fff!important;border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
+/* CH38 ②: 도구 칩 = 솔리드 흰 배경 + 잉크 글자(목업 교체분이 사양). 파란 바 위에서
+   가장 읽기 쉬운 조합이고, 색 쌍 잠금 원칙(5-3a)은 그대로 — 배경과 글자를 함께 !important로
+   묶어 한쪽만 덮여 읽을 수 없는 조합이 생기지 않게 한다. */
+#viewConsole .util .tools button{background-color:#fff!important;color:#1F2937!important;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:7px 12px;font-weight:700;font-size:13px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 #viewConsole .util .tools button.acct{background-color:#F7CF5C!important;color:#1F2937!important;border-color:#F7CF5C}
 /* 고대비(forced-colors)에서는 시스템 색 쌍으로 넘긴다 — 저자 색을 억지로 유지하려 하면
    대비가 깨진다. forced-color-adjust:none은 절대 쓰지 않는다. */
