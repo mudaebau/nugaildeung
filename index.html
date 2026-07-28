@@ -646,13 +646,28 @@ tr:last-child td{border-bottom:none}
 #viewConsole .cwrap{max-width:1180px;margin:0 auto;min-height:100vh;background:var(--cbg);box-shadow:0 0 40px rgba(29,61,92,.10)}
 #viewConsole button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* 유틸바 */
-#viewConsole .util{background:linear-gradient(95deg,#1B64DA,#2E7BE8);padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,80,180,.25);position:sticky;top:0;z-index:40}
+/* CH37 ①: 색을 그라디언트(background-image) 하나에만 의존하면, 그게 지워지는 환경
+   (forced-colors=Windows 고대비 등)에서 바가 흰색이 되고 흰 글자·흰 통만 남아 라벨이
+   완전히 안 보인다(대비 1:1로 재현 확인). solid background-color를 반드시 함께 둔다. */
+#viewConsole .util{background-color:#1B64DA;background-image:linear-gradient(95deg,#1B64DA,#2E7BE8);padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,80,180,.25);position:sticky;top:0;z-index:40}
 #viewConsole .lg{display:inline-flex;align-items:center;background:#fff;color:var(--act);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer}
 #viewConsole .lg i{font-style:normal;color:#C9930A;margin:0 1px}
 #viewConsole .tname{font-size:16px;font-weight:700;color:#fff;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
 #viewConsole .util .tools{margin-left:auto;display:flex;gap:6px;font-size:13px;font-weight:700;flex-shrink:1;flex-wrap:wrap;justify-content:flex-end}
-#viewConsole .util .tools button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
-#viewConsole .util .tools button.acct{background:#F7CF5C;border-color:#F7CF5C;color:#1F2937}
+/* 배경과 글자색은 반드시 "쌍"으로 잠근다 — 한쪽만 다른 규칙에 덮이면 흰 통 위 흰 글자처럼
+   읽을 수 없는 조합이 만들어진다(CH37 ① 재현된 실패 형태). .acct도 같은 원칙으로 쌍 지정. */
+/* 통은 흰색을 얹지 않고 어둡게 깐다 — 흰 글자와의 대비가 4.02(AA 미달)에서 7.03으로 오르고,
+   바 배경이 밝아지는 사고가 나도 글자가 먼저 사라지지 않는다(실측값, CH37 ①). */
+#viewConsole .util .tools button{background-color:rgba(0,0,0,.16)!important;color:#fff!important;border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:7px 10px;font-weight:700;font-size:13px;white-space:nowrap}
+#viewConsole .util .tools button.acct{background-color:#F7CF5C!important;color:#1F2937!important;border-color:#F7CF5C}
+/* 고대비(forced-colors)에서는 시스템 색 쌍으로 넘긴다 — 저자 색을 억지로 유지하려 하면
+   대비가 깨진다. forced-color-adjust:none은 절대 쓰지 않는다. */
+@media (forced-colors: active){
+  #viewConsole .util{background-color:Canvas}
+  #viewConsole .util .tools button,
+  #viewConsole .util .tools button.acct{background-color:ButtonFace!important;color:ButtonText!important;border-color:ButtonText}
+  #viewConsole .util .tname{color:CanvasText}
+}
 /* CH37 ①: 라벨은 어떤 폭에서도 숨기지 않는다 — 아이콘 온리 금지(!important는 이후 어떤
    규칙도 라벨을 못 지우게 하려는 의도적 잠금). 좁으면 버튼을 접어 [⋯ 메뉴] 시트로
    라벨째 옮긴다(콘솔 최소폭 1024 미만 = 비표준 구간에서만 발동). */
