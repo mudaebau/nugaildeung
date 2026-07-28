@@ -6763,6 +6763,7 @@ async function renderCnsTool(w){
     if(cnsTool==='hub')body=await cnsHubHTML();
     else if(cnsTool==='staff')body=cnsStaffHTML();
     else if(cnsTool==='notice')body=cnsNoticeHTML();
+    else if(cnsTool==='structure')body=await cnsStructureHTML();
     else if(cnsTool==='edit')body=await cnsEditBody(cnsEditKey);
   }catch(e){console.error(e);body='<div class="mainA" style="padding:24px"><p style="color:var(--sub)">화면을 여는 중 오류가 발생했습니다 — 다시 시도해 주세요.</p><button class="btn soft" style="margin-top:10px" onclick="cnsCloseTool()">← 콘솔로</button></div>'}
   w.innerHTML=util+body;
@@ -6771,7 +6772,7 @@ async function renderCnsTool(w){
 function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
 /* --- CH33-D: 정보 수정 PC 네이티브 — 공통 편집 프레임 1개 + 9개 필드 폼(로직·RPC 재사용) --- */
 let cnsEditKey=null,cnsCourseStageId=null;
-function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='course')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
+function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='course'&&key!=='stagerow')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
 function cnsEditCourseFor(id){cnsCourseStageId=id;cnsEditKey='course';editFieldsDraft=null;cnsTool='edit';renderConsole()} // ⑬⑯ 단계별 코스·컷
 function cnsEditSchedFor(id){cnsEditField('schedule')} // ⑬ 단계별 일정 표기는 허브에서, 편집은 개설(위저드)·전체 범위 에디터
 function cnsEL(t){return `<label style="display:block;font-size:14px;font-weight:700;color:var(--sub);margin:16px 0 6px">${t}</label>`}
@@ -6860,9 +6861,59 @@ async function cnsEditBody(key){
         <div id="eiCutTotalBox" style="display:${cut.m?'none':'block'}">${cnsEL('진출 인원')}<input id="eiCutTotal" class="cfield" type="tel" value="${cut.total||24}" style="font-size:18px;width:100%"></div>
         <div id="eiCutGenderBox" style="display:${cut.m?'flex':'none'};gap:10px"><div style="flex:1">${cnsEL('남자 진출')}<input id="eiCutM" class="cfield" type="tel" value="${cut.m||12}" style="font-size:18px;width:100%"></div><div style="flex:1">${cnsEL('여자 진출')}<input id="eiCutF" class="cfield" type="tel" value="${cut.f||12}" style="font-size:18px;width:100%"></div></div>`:''));
   }
+  if(key==='stagerow'){
+    // 화면 7 v2: 단계 행 › — 그 단계의 일정·장소·코스(최대 6개 추가·삭제)·컷을 한 화면에서.
+    const stages=await loadAllStages(config.id);
+    editStage=(cnsCourseStageId&&stages.find(s=>s.id===cnsCourseStageId))||curActiveStage(stages);
+    const sc=(await fetchScores(config.id)).filter(r=>r.stage_id===editStage.id).length;
+    const pl=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
+    editStageLocked=(sc+pl)>0;
+    const hasNext=stages.some(s=>s.seq===editStage.seq+1);
+    const cut=editStage.advance_cut||{total:24};
+    // 코스 목록 = venues(이름) × course_pars(파). 길이를 항상 맞춰 둔다.
+    editStageVenues=(editStage.venues&&editStage.venues.length?editStage.venues.slice():[]).slice(0,6);
+    editCoursePars=JSON.parse(JSON.stringify(editStage.course_pars&&editStage.course_pars.length?editStage.course_pars:coursePars));
+    while(editStageVenues.length<editCoursePars.length)editStageVenues.push(`${editStageVenues.length+1}코스`);
+    while(editCoursePars.length<editStageVenues.length)editCoursePars.push(PRESET66.slice());
+    const dS=cnsDateK(editStage.date_start||''),dE=cnsDateK(editStage.date_end||'');
+    const courseRows=editStageVenues.map((v,i)=>`<div class="grp" style="padding:12px 14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input class="cfield eiCvName" data-i="${i}" value="${cnsEsc(v)}" placeholder="${i+1}코스 이름" style="flex:1;font-size:16px"${editStageLocked?' disabled':''}>
+        ${(!editStageLocked&&editStageVenues.length>1)?`<button class="btn soft" style="color:#C4523A" onclick="cnsStageCourseDel(${i})">삭제</button>`:''}
+      </div>
+      ${Array.isArray(editCoursePars[i])
+        ?cnsEL(`파 (합계 <span id="eiParSum${i}">${editCoursePars[i].reduce((a,b)=>a+b,0)}</span>)`)+`<div id="eiParGrid${i}" style="display:grid;grid-template-columns:repeat(9,1fr);gap:5px"></div>`
+        :cnsEL('총파')+`<input class="cfield eiTotalParIn" data-i="${i}" type="tel" value="${+editCoursePars[i]||0}" style="font-size:18px;width:100%"${editStageLocked?' disabled':''}>`}
+    </div>`).join('');
+    return cnsEditFrame(`${editStage.name} — 일정 · 장소 · 코스 · 컷`,
+      (editStageLocked?`<div class="grp" style="padding:14px;background:#FBE9E4"><p style="color:#7A3326;font-size:14px">이 단계에 기록 ${sc+pl}건이 있어 코스·파·컷은 잠겼습니다(P31). 이름만 확인할 수 있어요.</p></div>`:'')
+      +cnsEL('일정')+`<div style="display:flex;gap:10px">
+        <input class="cfield" value="${dS}" disabled style="flex:1;font-size:16px">
+        <input class="cfield" value="${editStage.kind==='period'?dE:'(지정일 단일)'}" disabled style="flex:1;font-size:16px"></div>
+        <p style="font-size:12.5px;color:#C4523A;margin:6px 0 4px">단계별 일정 편집은 아직 저장 경로(RPC)가 없어 읽기 전용입니다 — 0051 실행 후 열립니다.</p>`
+      +cnsEL(`코스 (${editStageVenues.length}/6)`)+courseRows
+      +(!editStageLocked&&editStageVenues.length<6?`<button class="btn soft" onclick="cnsStageCourseAdd()">＋ 코스 추가</button>`:'')
+      +(hasNext&&!editStageLocked?cnsEL('참가 인원 (컷)')+`<select id="eiCutMode" class="cfield" style="font-size:16px;width:100%" onchange="cnsEdCutMode()"><option value="total" ${!cut.m?'selected':''}>전체 인원</option><option value="gender" ${cut.m?'selected':''}>남녀 구분</option></select>
+        <div id="eiCutTotalBox" style="display:${cut.m?'none':'block'}">${cnsEL('진출 인원')}<input id="eiCutTotal" class="cfield" type="tel" value="${cut.total||24}" style="font-size:18px;width:100%"></div>
+        <div id="eiCutGenderBox" style="display:${cut.m?'flex':'none'};gap:10px"><div style="flex:1">${cnsEL('남자 진출')}<input id="eiCutM" class="cfield" type="tel" value="${cut.m||12}" style="font-size:18px;width:100%"></div><div style="flex:1">${cnsEL('여자 진출')}<input id="eiCutF" class="cfield" type="tel" value="${cut.f||12}" style="font-size:18px;width:100%"></div></div>`:''),
+      !editStageLocked);
+  }
   return cnsEditFrame('편집',`<p style="color:var(--sub)">지원하지 않는 항목입니다.</p>`,false)}
+let editStageVenues=[];
+function cnsStageSyncNames(){document.querySelectorAll('.eiCvName').forEach(el=>{editStageVenues[+el.dataset.i]=el.value})}
+function cnsStageCourseAdd(){
+  cnsStageSyncNames();
+  if(editStageVenues.length>=6){toast('코스는 최대 6개까지예요');return}
+  editStageVenues.push(`${editStageVenues.length+1}코스`);
+  editCoursePars.push(PRESET66.slice());
+  renderConsole()}
+function cnsStageCourseDel(i){
+  cnsStageSyncNames();
+  if(editStageVenues.length<=1){toast('코스는 최소 1개가 필요해요');return}
+  editStageVenues.splice(i,1);editCoursePars.splice(i,1);
+  renderConsole()}
 function cnsEditAfterRender(key){
-  if(key==='course'&&Array.isArray(editCoursePars[0]))editCoursePars.forEach((c,i)=>cnsEdDrawParGrid(i));}
+  if((key==='course'||key==='stagerow')&&Array.isArray(editCoursePars[0]))editCoursePars.forEach((c,i)=>cnsEdDrawParGrid(i));}
 // 토글·상호작용(콘솔 재렌더)
 function cnsEdAward(a){config.awards[a]=!config.awards[a];const dep=AWARD_FIELD_DEP[a];if(config.awards[a]&&dep&&!config.fields[dep.f])toast(`${dep.aLabel} 집계를 위해 '참가자 정보 항목'에서 '${dep.fLabel}'도 켜주세요`);cnsEdSyncPrize();cnsEdSyncText();renderConsole()}
 function cnsEdElg(t){cnsEdSyncText();config.eligibility=config.eligibility||{};config.eligibility.type=t;renderConsole()}
@@ -6930,7 +6981,25 @@ async function cnsEditSave(){
       if(error){toast('저장 중 오류가 발생했습니다');console.error(error);return}
       editStage.course_pars=editCoursePars;editStage.advance_cut=cut;editStage.record_mode=newRM;
       const active=curActiveStage(stages);if(active&&editStage.id===active.id){coursePars=editCoursePars;}
-      back();toast('코스·단계 설정을 저장했습니다')});return}}
+      back();toast('코스·단계 설정을 저장했습니다')});return}
+  if(key==='stagerow'){
+    // 코스 이름(venues)과 파·컷을 함께 저장한다 — 코스 추가·삭제는 두 배열의 길이를 같이 바꾼다.
+    cnsStageSyncNames();
+    document.querySelectorAll('.eiTotalParIn').forEach(el=>{const i=+el.dataset.i,v=+el.value;if(Number.isFinite(v)&&v>0)editCoursePars[i]=v});
+    const venues=editStageVenues.map((v,i)=>(v||'').trim()||`${i+1}코스`);
+    const stages=await loadAllStages(config.id),hasNext=stages.some(s=>s.seq===editStage.seq+1);
+    let cut=editStage.advance_cut;
+    if(hasNext&&$('#eiCutMode')){const mode=$('#eiCutMode').value;
+      cut=mode==='gender'?{m:Math.max(1,+$('#eiCutM').value||12),f:Math.max(1,+$('#eiCutF').value||12)}:{total:Math.max(2,+$('#eiCutTotal').value||24)}}
+    openWarnEdit(`'${editStage.name}' 단계의 코스 구성${hasNext?'·참가 인원(컷)':''}이(가) 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
+      const r1=await sb.rpc('update_stage_venues',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,p_venues:venues});
+      if(r1.error){toast('장소·코스 저장 중 오류가 발생했습니다');console.error(r1.error);return}
+      const r2=await sb.rpc('update_stage_course',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,
+        p_course_pars:editCoursePars,p_advance_cut:cut,p_record_mode:editStage.record_mode});
+      if(r2.error){toast('코스 파·컷 저장 중 오류가 발생했습니다');console.error(r2.error);return}
+      editStage.venues=venues;editStage.course_pars=editCoursePars;editStage.advance_cut=cut;
+      const active=curActiveStage(stages);if(active&&editStage.id===active.id){coursePars=editCoursePars;config.venues=venues}
+      back();toast(`${editStage.name} 단계를 저장했습니다 — 코스 ${venues.length}개`)});return}}
 async function cnsHubHTML(){
   const stages=await loadAllStages(config.id);
   editStage=curActiveStage(stages);
@@ -6957,25 +7026,102 @@ async function cnsHubHTML(){
     <div class="strip" style="margin-bottom:0"><div class="kpi"><b style="color:var(--goldtx)">${pct}<small style="font-size:15px">%</small></b><p>요강 완성도</p></div>
       <p style="font-size:14px;color:var(--sub);font-weight:500">${noticeMissingHint()}</p>
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn soft" onclick="cnsOpenTool('notice')">👁 요강 미리보기</button><button class="btn soft" onclick="cnsCloseTool()">← 콘솔로</button></span></div></div>
-    <div style="background:var(--cbg);padding:12px 22px 22px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
-      <div class="hcol"><p class="h" style="color:var(--minttx)">📋 요강 내용 — 언제든 수정</p>
+    <div style="background:var(--cbg);padding:12px 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="hcol"><p class="h" style="color:var(--minttx)">📋 대회 요강 <span style="color:var(--sub);font-weight:500">— 참가자에게 보이는 것</span></p>
         ${row('🏷','대회명 · 주최',`<small>${cnsEsc(config.name)}</small>`,"cnsEditField('basic')")}
         ${row('🏆','시상 내역',chk(awardsFilled),"cnsEditField('awards')")}
         ${row('💰','참가비 · 문의',chk(feeFilled),"cnsEditField('awards')")}
         ${row('📖','게임룰',chk(rulesFilled),"cnsEditField('rules')")}
-        ${row('👁','요강 미리보기 · 공유','<small>이미지 저장</small>',"cnsOpenTool('notice')")}
-      </div>
-      <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인 <span style="color:var(--sub);font-weight:500">(단계별)</span></p>
-        ${schedRows}
-        ${row('👥','정원 · 참여 대상',`<small>${config.capUnlimited?'무제한':config.cap+'명'}</small>`,"cnsEditField('cap')")}
         ${row('🔒','공개 설정',`<small>${config.visibility==='private'?'비공개':'공개'}</small>`,"cnsEditField('visibility')")}
         ${row('📝','참가자 정보 항목',`<small>${cnsFieldsSummary()}</small>`,"cnsEditField('fields')")}
+        ${row('👁','요강 미리보기 · 공유','<small>이미지 저장</small>',"cnsOpenTool('notice')")}
       </div>
-      <div class="hcol"><p class="h" style="color:#C4523A">🔴 코스 · 구조 · 컷 <span style="color:var(--sub);font-weight:500">(단계별 · 기록 있으면 잠김)</span></p>
-        ${courseRows}
-        <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">해당 단계 기록이 없을 때만 열려요</p>
+      <div class="hcol"><p class="h" style="color:var(--act)">⚙️ 대회 운영 <span style="color:var(--sub);font-weight:500">— 일정 · 장소 · 코스 · 구조 · 컷</span></p>
+        ${row('🪜','대회 구조',`<small>${cnsEsc(cnsStructureLabel(stages))} · 단계 추가·삭제</small>`,"cnsOpenTool('structure')")}
+        ${stages.map(s=>{const lk=stLocked(s);
+          const sum=`<small>${dateLabel(s)} · ${venueLabel(s)} · 코스 ${((s.course_pars||[]).length||1)}개${(stages.indexOf(s)<stages.length-1)?' · '+cutLabel(s):''}</small>`;
+          return lk?row('　',`${cnsEsc(s.name)}`,`${sum} ${lockPill}`,'',true)
+                  :row('　',`${cnsEsc(s.name)}`,sum,`cnsEditStageRow('${s.id}')`)}).join('')}
+        ${row('👥','정원 · 참여 대상',`<small>${config.capUnlimited?'무제한':config.cap+'명'}</small>`,"cnsEditField('cap')")}
+        <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">단계 행 › = 그 단계의 일정·장소·코스(최대 6개)·참가 인원(컷) 편집 · 잠금은 항목별(P31)</p>
       </div>
     </div>`}
+// 구조 요약 라벨 — "예선+본선+결승"처럼 단계 이름을 이어 붙인다.
+function cnsStructureLabel(stages){return (stages||[]).map(s=>s.name).join('+')||'단판'}
+/* --- 화면 7 v2 › 🪜 대회 구조 — 단계 추가·삭제(0050 add_stage/delete_last_stage) ---
+   추가는 항상 맨 뒤, 삭제는 마지막 단계만(A안). 재정렬이 없어 players.current_stage가
+   안전하다. 거부 사유는 RPC가 문장으로 돌려주므로 그대로 토스트에 띄운다. */
+async function cnsStructureHTML(){
+  const stages=await loadAllStages(config.id);
+  const allScores=await fetchScores(config.id),allPlays=await fetchPlays(config.id);
+  const recCount=s=>allScores.filter(r=>r.stage_id===s.id).length+allPlays.filter(r=>r.stage_id===s.id).length;
+  const last=stages[stages.length-1];
+  const rosterAt=seq=>players.filter(p=>(p.current_stage||1)>=seq).length;
+  const rows=stages.map((s,i)=>{
+    const rec=recCount(s),isLast=i===stages.length-1;
+    const why=[];
+    if(!isLast)why.push('마지막 단계만 삭제할 수 있어요');
+    if(stages.length<=1)why.push('단계가 하나뿐이에요');
+    if(s.status!=='waiting')why.push('이미 시작·마감된 단계예요');
+    if(rec>0)why.push(`기록 ${rec}건이 있어요`);
+    if(isLast&&rosterAt(s.seq)>0)why.push(`명단에 ${rosterAt(s.seq)}명이 있어요`);
+    const canDel=why.length===0;
+    return `<div class="grp" style="display:flex;align-items:center;gap:12px">
+      <b style="font-size:17px;min-width:92px">${s.seq}. ${cnsEsc(s.name)}</b>
+      <span style="font-size:14px;color:var(--sub)">${s.kind==='period'?'기간형':'지정일'} · ${s.record_mode==='total'?'총타':'홀별'} · 코스 ${((s.course_pars||[]).length||1)}개 · ${cnsStageStatusK(s.status)}</span>
+      <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="btn soft" onclick="cnsEditStageRow('${s.id}')">편집 ›</button>
+        ${canDel
+          ?`<button class="btn soft" style="color:#C4523A" onclick="cnsDeleteStage('${s.id}','${cnsEsc(s.name)}')">삭제</button>`
+          :`<button class="btn soft" style="opacity:.5" onclick="toast('삭제할 수 없어요 — ${cnsEsc(why[0])}')">삭제</button>`}
+      </span></div>`}).join('');
+  return `<div class="mainA" style="padding:20px 22px">
+    <div style="display:flex;align-items:center;margin-bottom:10px">
+      <p style="font-size:13px;font-weight:700;color:var(--act)">대회 운영 › 대회 구조</p>
+      <button class="btn soft" style="margin-left:auto" onclick="cnsOpenTool('hub')">← 정보 허브</button></div>
+    <h3 style="font-size:22px;margin-bottom:4px">🪜 ${cnsEsc(cnsStructureLabel(stages))}</h3>
+    <p style="font-size:14px;color:var(--sub);margin-bottom:14px">단계는 <b>맨 뒤에 추가</b>하고 <b>마지막 단계부터 삭제</b>합니다 — 중간에 끼워 넣으면 이미 올라간 참가자의 소속 단계가 어긋나기 때문이에요.</p>
+    ${rows}
+    ${stages.length<6
+      ?`<button class="btn" style="margin-top:12px" onclick="cnsAddStageSheet()">＋ 단계 추가</button>`
+      :`<p style="font-size:13px;color:var(--sub);margin-top:12px">단계는 최대 6개까지 만들 수 있어요.</p>`}</div>`}
+function cnsStageStatusK(s){return s==='done'?'마감됨':s==='open'?'진행 중':'대기'}
+function cnsAddStageSheet(){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:8px">단계 추가</h3>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px">맨 뒤에 새 단계가 추가됩니다.</p>
+    <input class="cfield" id="cnsAsName" placeholder="단계 이름 (예: 준결승)" style="margin-bottom:10px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <select class="cfield" id="cnsAsKind" style="flex:1"><option value="round">⛳ 지정일 라운드</option><option value="period">📅 지정기간 라운드</option></select>
+      <select class="cfield" id="cnsAsRec" style="flex:1"><option value="hole">홀별 입력</option><option value="total">총타수 제출</option></select>
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsAddStageGo()">추가</button></div>`)}
+async function cnsAddStageGo(){
+  const name=($('#cnsAsName').value||'').trim();
+  const kind=$('#cnsAsKind').value;
+  let rec=$('#cnsAsRec').value;
+  if(!name){toast('단계 이름을 입력해 주세요');return}
+  if(kind==='period')rec='total'; // 기간형=총타 고정(CH35-B) — RPC도 같은 조건으로 거부한다
+  const{error}=await sb.rpc('add_stage',{t_id:config.id,p_owner_secret:user.secret,
+    p_stage:{name,kind,record_mode:rec,who:user.name}});
+  if(error){toast(error.message||'단계를 추가하지 못했습니다');console.error(error);return}
+  closeCnsSheet();
+  await syncActiveStageState(config.id);
+  toast(`${name} 단계를 추가했습니다`);
+  renderConsole()}
+function cnsDeleteStage(stageId,name){
+  openCnsSheet(`<h3 style="font-size:19px;margin-bottom:8px">${cnsEsc(name)} 단계를 삭제할까요?</h3>
+    <p style="font-size:14px;color:var(--sub);margin-bottom:14px">이 단계의 설정(일정·장소·코스·컷)이 사라집니다. 기록이나 명단이 있으면 삭제되지 않아요.</p>
+    <div style="display:flex;gap:8px"><button class="btn soft" style="flex:1" onclick="closeCnsSheet()">취소</button><button class="btn" style="flex:1.6" onclick="cnsDeleteStageGo('${stageId}')">삭제</button></div>`)}
+async function cnsDeleteStageGo(stageId){
+  const{error}=await sb.rpc('delete_last_stage',{t_id:config.id,p_owner_secret:user.secret,
+    p_stage_id:stageId,p_who:user.name});
+  if(error){closeCnsSheet();toast(error.message||'단계를 삭제하지 못했습니다');console.error(error);return}
+  closeCnsSheet();
+  await syncActiveStageState(config.id);
+  toast('단계를 삭제했습니다');
+  renderConsole()}
+// 단계 행 › — 그 단계의 일정·장소·코스·컷을 한 화면에서. 기존 편집기를 그대로 재사용한다.
+function cnsEditStageRow(stageId){cnsCourseStageId=stageId;cnsEditField('stagerow')}
 /* --- 화면 J: 심판진 --- */
 function cnsStaffHTML(){
   const js=judges(),connected=js.filter(s=>s.link_opened_at).length;
