@@ -3182,15 +3182,21 @@ function renderNotice(t,stages,playerCount){
     :t.status==='live'?'진행 중'
     :closed?'접수 마감'
     :`🔥 접수중${deadline?' · 마감 '+(dday(deadline)||'D-DAY'):''}`;
-  const oneLine=stages.length>1?`${period}${last!==first?` 예선 · ${(last.date_start||'').replaceAll('-','.')} 결승`:''}`:period;
+  // 단계 요약은 전 단계를 순회한다 — 예전엔 first/last만 써서 3단계 대회에서 본선이
+  // 통째로 빠지고 "예선 · 결승"만 보였다(CH37 ④). 단계명도 하드코딩하지 않고 실제 이름을 쓴다.
+  const stageSpan=s=>{const a=(s.date_start||'').replaceAll('-','.'),b=(s.date_end||'').replaceAll('-','.');
+    return a&&b&&a!==b?`${a} ~ ${b}`:(a||'')};
+  const oneLine=stages.length>1
+    ?stages.map(s=>`${s.name} ${stageSpan(s)}`).join(' · ')
+    :period;
 
   // 핵심카드①: 일정
   // CH32-A⑧: 대회장소(요강 표시용)를 지정해뒀으면 코스명 대신 그걸 보여준다
   const venuePlace=ne.venue_place||'';
   const isPeriod=first.kind==='period';
   const kSchedule=isPeriod
-    ?{label:stages.length>1?'📅 예선 기간':'📅 접수 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
-    :{label:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuePlace||venuesArr[0]||''};
+    ?{label:stages.length>1?`📅 ${first.name} 기간`:'📅 접수 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
+    :{label:stages.length>1?`📅 ${first.name}`:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuePlace||venuesArr[0]||''};
 
   // 핵심카드②: 결승 or 장소
   let kSecond;
@@ -3198,7 +3204,8 @@ function renderNotice(t,stages,playerCount){
     const cutStage=stages[stages.length-2];
     const cut=cutStage&&cutStage.advance_cut;
     const cutText=cut?(cut.total?`상위 ${cut.total}명 진출`:cut.m||cut.f?`남 ${cut.m||0}·여 ${cut.f||0}명 진출`:''):'';
-    kSecond={label:'🏁 결승',val:(last.date_start||'').replaceAll('-','.'),sub:cutText}
+    kSecond={label:`🏁 ${last.name}`,val:(last.date_start||'').replaceAll('-','.'),
+      sub:cutText?`${cutStage.name} → ${cutText}`:''}
   }else if(venuePlace){
     kSecond={label:'📍 장소',val:venuePlace,sub:''}
   }else{
@@ -3219,7 +3226,7 @@ function renderNotice(t,stages,playerCount){
     <div class="ynprize">
       <small>총상금</small>
       <div class="total">${ne.prize_total||'상금 안내'}</div>
-      ${prizes.length?`<div class="plist">${prizes.map(p=>`<div class="p1"><small>${p.label}</small><b>${p.item||'—'}</b></div>`).join('')}</div>`:''}
+      ${prizes.length?`<div class="plist">${prizes.map(p=>`<div class="p1"><small>${p.label}</small><b>${p.item||p.amount||'—'}</b></div>`).join('')}</div>`:''}
     </div>`:'';
 
   // 시상 내역 (문답형, 항목 없으면 섹션 자체 숨김)
@@ -3229,7 +3236,9 @@ function renderNotice(t,stages,playerCount){
     if(t.awards.age)awardRows.push(['연령부 시상','60·70·80대 부문 1위']);
     if(t.awards.club)awardRows.push(['클럽 대항전','상위 4인 합산']);
   }
-  prizes.forEach(p=>awardRows.push([p.label,p.item||'—']));
+  // 콘솔 편집기는 amount, 모바일 편집기는 item 키로 저장해왔다 — 둘 다 읽어야 등위별
+  // 시상이 공개 요강에 뜬다(CH37 ③: 콘솔에서 입력한 시상이 '—'로만 보이던 원인).
+  prizes.forEach(p=>awardRows.push([p.label,p.item||p.amount||'—']));
   const awardsSecHTML=awardRows.length?`
     <div class="ynsec">
       <h5>🏆 시상 내역</h5>
@@ -6707,7 +6716,7 @@ async function cnsEditBody(key){
   if(key==='awards'){
     const a=config.awards||{};
     const opt=(k,l)=>cnsEdOpt(!!a[k],l,`cnsEdAward('${k}')`);
-    const prizeRows=(config.prizes||[]).map((p,i)=>`<div style="display:flex;gap:8px;margin-bottom:6px"><input class="cfield cprz" data-i="${i}" data-k="label" value="${cnsEsc(p.label||'')}" placeholder="시상명(예: 종합 우승)" style="flex:2;font-size:16px"><input class="cfield cprz" data-i="${i}" data-k="amount" value="${cnsEsc(p.amount||'')}" placeholder="상금·부상" style="flex:1;font-size:16px"><button class="btn soft" onclick="cnsEdSyncPrize();config.prizes.splice(${i},1);renderConsole()">✕</button></div>`).join('');
+    const prizeRows=(config.prizes||[]).map((p,i)=>`<div style="display:flex;gap:8px;margin-bottom:6px"><input class="cfield cprz" data-i="${i}" data-k="label" value="${cnsEsc(p.label||'')}" placeholder="시상명(예: 종합 우승)" style="flex:2;font-size:16px"><input class="cfield cprz" data-i="${i}" data-k="item" value="${cnsEsc(p.item||p.amount||'')}" placeholder="상금·부상" style="flex:1;font-size:16px"><button class="btn soft" onclick="cnsEdSyncPrize();config.prizes.splice(${i},1);renderConsole()">✕</button></div>`).join('');
     return cnsEditFrame('시상 · 참가비 · 문의',
       cnsEL('시상 부문')+`<div style="margin-bottom:4px"><div style="border:1.5px solid var(--line);background:#F1F5FB;border-radius:12px;padding:13px 15px;margin-bottom:8px;font-size:16px;font-weight:700;color:var(--sub)">종합 1·2·3위 <span style="color:var(--minttx)">기본</span></div>${opt('gender','남녀부')}${opt('age','연령부(60·70·80대)')}${opt('club','클럽 대항전')}</div>`
       +cnsEL('총상금 규모 (선택)')+cnsEI('eiPrizeTotal',config.prizeTotal,'예: 총 500만원 상당')
@@ -6946,7 +6955,7 @@ function cnsNoticeHTML(){
   const eo=config.eligibility||{},
     elig=eo.type==='restricted'?(eo.text||'참가 조건 있음'):'파크골프를 사랑하는 누구나';
   const capTxt=config.capUnlimited?'제한 없음':`선착순 ${config.cap}명`;
-  const prizes=(config.prizes||[]).filter(p=>p.label).map(p=>cnsEsc(p.label)+(p.amount?' '+cnsEsc(p.amount):'')).join(' · ');
+  const prizes=(config.prizes||[]).filter(p=>p.label).map(p=>{const v=p.item||p.amount;return cnsEsc(p.label)+(v?' '+cnsEsc(v):'')}).join(' · ');
   const awardTxt=[config.prizeTotal?'종합 '+cnsEsc(config.prizeTotal):'',prizes].filter(Boolean).join(' · ')||'미정';
   const fee=ne.fee?cnsEsc(ne.fee):'미정',contact=ne.contact?cnsEsc(ne.contact):'';
   const sec=(label,body)=>`<div style="padding:16px 0;border-bottom:1px solid var(--line)"><p style="font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px">${label}</p><p style="font-size:18px;line-height:1.9">${body}</p></div>`;
