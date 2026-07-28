@@ -722,6 +722,12 @@ tr:last-child td{border-bottom:none}
 #viewConsole .strip{display:flex;gap:22px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 18px;margin-bottom:12px;box-shadow:0 1px 5px rgba(29,61,92,.06);flex-wrap:wrap}
 #viewConsole .strip .kpi b{font-family:'Oswald',sans-serif;font-size:30px}
 #viewConsole .strip .kpi p{font-size:12.5px;color:var(--sub);font-weight:700}
+/* CH38 ④ 진출자 확정 — 액션 영역을 스트립에 통합하고 상단 고정(긴 명단에서도 늘 보이게) */
+/* 1024(콘솔 최소 폭)에서도 KPI·−/＋·[컷 적용]이 한 줄에 들어가도록 여백을 좁힌다 */
+#viewConsole .cutstrip{position:sticky;top:0;z-index:6;gap:10px;padding:12px 14px}
+#viewConsole .cutstrip .cutnum{display:flex;align-items:center;gap:8px;margin-left:auto}
+#viewConsole .cutstrip .cutnum small{font-size:12.5px;color:var(--sub);font-weight:700}
+#viewConsole .cutstrip .cutiv{flex:1 0 100%;background:#FFF9E8;border:1.5px solid #EFD9A0;border-radius:11px;padding:8px 12px;font-size:13.5px;color:var(--goldtx);line-height:1.8;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 /* 버튼·카드·표 */
 #viewConsole .btn{background:var(--act);color:#fff;font-weight:700;border-radius:12px;padding:11px 18px;font-size:14.5px;display:inline-block;box-shadow:0 2px 7px rgba(21,80,180,.28)}
 #viewConsole .btn.soft{background:var(--act-soft);color:var(--act);box-shadow:none}
@@ -7537,9 +7543,22 @@ function cnsScrCut(stage,model){
   });
   const anyTie=tiedIds.size||Object.keys(btMap).length;
   const cutLabel=cx.cut.total?`상위 ${cx.cut.total}명`:`남 ${cx.cut.m||0}·여 ${cx.cut.f||0}`;
-  const warn=anyTie?`<p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 경계 동점 — ${unresolved.length?'수동 선택 필요':cnsEsc(shortRule)+' 자동 적용됨'}</p>`:'';
+  const warn=anyTie?`<p style="font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 경계 동점 — ${unresolved.length?'수동 선택 필요':cnsEsc(shortRule)+' 자동 적용됨'}</p>`:'';
   const applyBtn=`<button class="btn"${unresolved.length?' style="opacity:.5;pointer-events:none"':''} onclick="cnsCutApply('${stage.id}')">컷 적용 — ${cnsEsc(nextStage.name)} 명단 만들기</button>`;
-  const strip=cnsStripAppend(cnsStrip([{v:cx.done.length,l:'완주'},{v:cutLabel,l:'진출 컷',c:'var(--act)'}]),warn+applyBtn);
+  /* CH38 ④: 개입 배너 · 컷 인원 −/＋ · [컷 적용]을 상단 스트립 하나로 합치고 sticky.
+     예전엔 −/＋와 개입 배너가 표 위 별도 카드라 30명급 명단을 스크롤하면 둘 다 화면 밖으로
+     사라졌고, 아래로 내려간 뒤에는 컷을 조정할 문이 없었다. 문은 이 스트립 하나뿐이다. */
+  const iv=cnsCutInterventions(cx);
+  const cutCtl=`<span class="cutnum"><b style="font-size:14px">진출 인원</b>
+    <button class="btn soft" onclick="cnsCutBump(-1)"${adv.length<=0?' style="opacity:.5;pointer-events:none"':''}>−</button>
+    <b class="num" style="font-size:20px;min-width:34px;text-align:center">${adv.length}</b>
+    <button class="btn soft" onclick="cnsCutBump(1)"${adv.length>=cx.done.length?' style="opacity:.5;pointer-events:none"':''}>＋</button>
+    <small>초과·미달 허용</small></span>`;   // 설정값은 왼쪽 '진출 컷' KPI가 이미 보여준다(중복 제거 — 1024폭에서 한 줄 유지)
+  const ivBanner=iv.length?`<div class="cutiv"><b>✍ 수동 개입 ${iv.length}건 — 적용 시 기록에 남습니다</b>
+    <span>${iv.slice(0,3).map(cnsEsc).join(' · ')}${iv.length>3?` 외 ${iv.length-3}건`:''}</span>
+    <button class="btn soft" style="padding:4px 10px;font-size:12.5px;margin-left:auto" onclick="cnsCutReset();renderConsole()">개입 되돌리기</button></div>`:'';
+  const strip=cnsStripAppend(cnsStrip([{v:cx.done.length,l:'완주'},{v:cutLabel,l:'진출 컷',c:'var(--act)'}]),
+    cutCtl+warn+applyBtn+ivBanner).replace('class="strip"','class="strip cutstrip"');
   let firstOut=true;
   const rows=cx.done.map((s,i)=>{
     const adv=advIds.has(s.p.id),tie=tiedIds.has(s.p.id),bt=btMap[s.p.id];
@@ -7562,19 +7581,8 @@ function cnsScrCut(stage,model){
       <p style="font-size:13px;color:var(--sub);margin-bottom:8px">잔여 진출 ${needed}자리 — 필요한 인원만 고르거나 전원 진출(컷 확대)</p>
       <button class="btn soft" onclick="cnsTieExpand('${g.key}')">동점자 전원 진출(컷 확대)</button>
       <button class="btn" style="margin-left:8px;${sel.size===needed?'':'opacity:.5;pointer-events:none'}" onclick="cnsTieConfirm('${g.key}',${needed})">선택 완료(${sel.size}/${needed})</button></div>`}).join('');
-  // ⑪ 컷 인원 가감 + 개입 내역(P74: 수동 개입은 화면에서도 보이고 로그로도 남는다)
-  const iv=cnsCutInterventions(cx);
-  const cutBar=`<div class="grp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <b style="font-size:15px">진출 인원</b>
-    <button class="btn soft" onclick="cnsCutBump(-1)"${adv.length<=0?' style="opacity:.5;pointer-events:none"':''}>−</button>
-    <b class="num" style="font-size:20px;min-width:34px;text-align:center">${adv.length}</b>
-    <button class="btn soft" onclick="cnsCutBump(1)"${adv.length>=cx.done.length?' style="opacity:.5;pointer-events:none"':''}>＋</button>
-    <span style="font-size:13px;color:var(--sub)">설정값 ${cnsEsc(cutLabel)} · 초과·미달 허용</span>
-    ${iv.length?`<button class="btn soft" style="margin-left:auto" onclick="cnsCutReset();renderConsole()">개입 되돌리기</button>`:''}
-  </div>
-  ${iv.length?`<div class="grp" style="background:#FFF9E8;border-color:#EFD9A0"><h5 style="color:var(--goldtx)">✍ 수동 개입 ${iv.length}건 — 적용 시 기록에 남습니다</h5>
-    <p style="font-size:14px;line-height:1.9">${iv.map(cnsEsc).join('<br>')}</p></div>`:''}`;
-  return strip+cutBar+`<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th><th style="width:96px"></th></tr>${rows}</table>${tieUI}
+  // ⑪ 컷 인원 가감·개입 내역은 CH38 ④에서 위 sticky 스트립으로 올렸다 — 여기 중복 카드는 없앴다.
+  return strip+`<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th><th style="width:96px"></th></tr>${rows}</table>${tieUI}
     <p class="cap">빨간 점선=컷 라인 · 골드 행=경계 동점(판정 사유 병기) · [컷 적용]이 ${cnsEsc(nextStage.name)} 명단을 만듭니다${
       nextStage.kind==='round'?` — 그 단계의 '명단 확정'이 ✓로 바뀝니다`:` — 기간형 단계라 '명단 확정' 단계는 따로 없고, 바로 <b>출석</b>부터 이어집니다`}. 확정 후 이 단계를 <b>마감</b>하세요(확정과 마감은 분리).</p>`}
 /* 단계 마감 */
