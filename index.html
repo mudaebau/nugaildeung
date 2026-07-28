@@ -1922,6 +1922,20 @@ function bulkSampleText(cols){return BULK_SAMPLE_ROWS.map(r=>cols.map(c=>r[c.k])
 /* ================= helpers ================= */
 const $=s=>document.querySelector(s);
 function toast(m){const t=$('#toastEl');t.style.pointerEvents='none';t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
+/* CH38 ⑥(P43 보강): 저장 실패 안내 = 무엇이 안 됐나 + 왜 + 다음 행동.
+   서버 원문(영어 Postgres/PostgREST 메시지)은 절대 화면에 내보내지 않는다 — 콘솔 로그로만.
+   우리가 한글로 쓴 RPC 예외(assert_owner·잠금·종료 등)는 이미 사용자 문장이므로 그대로 살린다. */
+function saveErrorText(err,fallback){
+  const raw=(err&&(err.message||err.error_description||err.msg))||'';
+  console.error('[저장 실패 원문]',err);
+  if(/[가-힣]/.test(raw))return raw;                       // 우리가 쓴 한글 사유는 그대로
+  if(err&&err.code==='23505')return '이미 등록된 전화번호예요 — 다른 번호로 등록해 주세요';
+  if(/violates check constraint|out of range|invalid input/i.test(raw))return '타수는 1~19 사이여야 해요';
+  if(/locked|scores_locked/i.test(raw))return '스코어가 확정된 단계예요 — [확정 취소] 후 수정할 수 있어요';
+  if(/JWT|token|permission denied|not authorized|401|403/i.test(raw))return '다시 로그인해 주세요';
+  if(/fetch|network|timeout|Failed to fetch|NetworkError|ECONN|502|503|504/i.test(raw))
+    return '연결이 잠시 끊겼어요 — 입력한 값은 남아 있으니 다시 [저장]을 눌러 주세요';
+  return fallback||'저장하지 못했어요 — 잠시 후 다시 시도해 주세요'}
 let toastUndoFn=null;
 function toastUndo(m,fn){
   toastUndoFn=fn;
@@ -2646,7 +2660,7 @@ async function confirmStageStart(){
   // CH32-B 보완②: 단계를 실제로 연다(waiting→open). seq 1은 개설 시 이미 open이라 호출해도 무해(멱등).
   if(stage&&config.id){
     const{error}=await sb.rpc('open_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
-    if(error){toast('단계 시작 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+    if(error){toast(saveErrorText(error,'단계를 시작하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
     await syncActiveStageState(config.id)}
   enterMgmt('mgScore');
   renderJourneyChecklist();
@@ -2874,7 +2888,7 @@ async function confirmStageSheet(){
 // CH32-B 보완②: 마지막 단계 마감 — 대회는 확정하지 않고 단계만 done으로. 이후 [종료 확정]이 활성화.
 async function doCloseStage(stage){
   const{error}=await sb.rpc('close_stage',{t_id:config.id,stage_id:stage.id,p_owner_secret:user.secret});
-  if(error){toast('마감 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'마감하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   // 다음 단계가 남아 있으면 대회 [종료 확정]을 권하면 안 된다 — 중간 단계를 닫았을 뿐이다(M3 발견).
   const allStages=await loadAllStages(config.id);
   const hasNext=allStages.some(s=>s.seq>stage.seq&&s.status!=='done');
@@ -4304,7 +4318,7 @@ async function submitAddStaff(){
   const canScore=$('#asdCanScore').checked;
   const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,
     p_staff:[{name,phone,duty,can_score:canScore}]});
-  if(error){toast('추가 중 오류가 발생했습니다: '+(error.code==='23505'?'이미 등록된 전화번호입니다':error.message));console.error(error);return}
+  if(error){toast(saveErrorText(error,'참가자를 추가하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   const row=data[0];
   staff.push({id:row.id,name,phone:row.phone,duty,canScore,token:row.token,link_opened_at:null});
   closeAddStaff();renderTools();
@@ -4322,7 +4336,7 @@ async function confirmStaffPaste(){
   if(!staffPending.length)return;
   const staffRows=staffPending.map(p=>({name:p.name,phone:p.phone,duty:'',can_score:true}));
   const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,p_staff:staffRows});
-  if(error){toast('등록 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'등록하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   let added=0;
   data.forEach(row=>{const p=staffPending.find(x=>x.phone===row.phone);
     if(p){staff.push({id:row.id,name:p.name,phone:row.phone,duty:'',canScore:true,token:row.token,link_opened_at:null});added++}});
@@ -4468,7 +4482,7 @@ async function submitSingle(){
     p_sex:p.sex||null,p_age:p.age||null,p_club:p.club||null,p_region:p.region||null,p_nick:p.nick||null});
   if(error){
     if(error.code==='23505'){toast('이미 접수된 전화번호입니다');return}
-    toast('접수 처리 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+    toast(saveErrorText(error,'접수를 처리하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   const row=data[0];const willWait=row.status==='wait';
 
   if(applyT.mine){
@@ -4894,7 +4908,7 @@ async function delPlayer(){if(editIdx<0)return;const p=players[editIdx];
     const{error}=await sb.rpc('delete_player',{t_id:config.id,p_player_id:p.id,p_owner_secret:user.secret});
     if(error){
       closePEdit();
-      toast(error.message);console.error(error);return}}
+      toast(saveErrorText(error));console.error(error);return}}
   const gi=groups.findIndex(g=>g.includes(editIdx));
   if(gi>=0)groups[gi].splice(groups[gi].indexOf(editIdx),1);
   groups.forEach(g=>g.forEach((pi,i)=>{if(pi>editIdx)g[i]=pi-1}));
@@ -4919,7 +4933,7 @@ async function promoteWait(i){
   const p=waitlist[i];
   if(p.id){
     const{error}=await sb.rpc('promote_waitlist_player',{t_id:config.id,player_id:p.id,p_owner_secret:user.secret});
-    if(error){toast(error.message);console.error(error);return}}
+    if(error){toast(saveErrorText(error));console.error(error);return}}
   waitlist.splice(i,1);p.group=-1;if(!p.scores)p.scores=Array(HOLES).fill(null);players.push(p);
   syncMine();renderPlayers();refreshAll();
   toast(`${p.name} 님을 참가자로 승격했습니다 — 확정 문자 발송(실서비스)`)}
@@ -5402,7 +5416,7 @@ async function submitPlayEntryFor(pid,correctionReason){
         :await sb.rpc('get_plays_for_staff',{p_token:token});
       const found=(plRows||[]).find(r=>r.client_request_id===playParams.p_client_request_id);
       if(found){finishSaved(found.id,true);await refreshMyTournamentStatus();return}
-      toast('저장 실패: '+error.message);console.error(error);return}
+      toast(saveErrorText(error));console.error(error);return}
     finishSaved(data,false);
     await refreshMyTournamentStatus()
   }catch(e){
@@ -5559,7 +5573,7 @@ async function refreshMyTournamentStatus(){
 async function finalizeTournament(){
   if(!config.id){mgShow('mgResult');return}
   const{error}=await sb.rpc('finalize_tournament',{t_id:config.id,p_owner_secret:user.secret});
-  if(error){toast(error.message);console.error(error);mgShow('mgResult');return}
+  if(error){toast(saveErrorText(error));console.error(error);mgShow('mgResult');return}
   toast('대회 결과 · 시상이 확정되었습니다');
   await refreshMyTournamentStatus();
   mgShow('mgResult')}
@@ -5606,7 +5620,7 @@ async function flushQueue(){
       const{error}=await sb.rpc(rpcName,q[i].params);
       if(error){
         console.error(error);
-        failed.push({label:q[i].label,reason:error.message||'서버 거부',at:Date.now()});
+        failed.push({label:q[i].label,reason:saveErrorText(error),at:Date.now()});
         newlyFailed++
       }else sent++
     }catch(e){remaining.push(...q.slice(i));break}}
@@ -5635,7 +5649,7 @@ async function submitScoreToServer(pi,gi,v,reason){
     :{p_token:token,p_player_id:playerId,p_hole_index:gi,p_strokes:v,p_reason:reason||null};
   try{
     const{error}=await sb.rpc(isOwner?'submit_score_owner':'submit_score',params);
-    if(error){toast('서버 저장 실패: '+error.message);console.error(error);return}
+    if(error){toast(saveErrorText(error));console.error(error);return}
     await refreshMyTournamentStatus()
   }catch(e){
     queuePush({type:'score',params,label:`${players[pi].name} ${Math.floor(gi/18)+1}코스 ${gi%18+1}홀 ${v}타`});
@@ -7063,7 +7077,7 @@ async function cnsEditSave(){
       if(dateChanged){
         const r0=await sb.rpc('update_stage_dates',{t_id:config.id,p_owner_secret:user.secret,stage_id:editStage.id,
           p_date_start:dS0,p_date_end:editStage.kind==='period'?dE0:dS0,p_who:user.name});
-        if(r0.error){toast(r0.error.message||'일정 저장 중 오류가 발생했습니다');console.error(r0.error);return}
+        if(r0.error){toast(saveErrorText(r0.error,'일정을 저장하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(r0.error);return}
         editStage.date_start=dS0;editStage.date_end=editStage.kind==='period'?(dE0||dS0):dS0}
       const r1=await sb.rpc('update_stage_venues',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,p_venues:venues});
       if(r1.error){toast('장소·코스 저장 중 오류가 발생했습니다');console.error(r1.error);return}
@@ -7178,7 +7192,7 @@ async function cnsAddStageGo(){
   if(kind==='period')rec='total'; // 기간형=총타 고정(CH35-B) — RPC도 같은 조건으로 거부한다
   const{error}=await sb.rpc('add_stage',{t_id:config.id,p_owner_secret:user.secret,
     p_stage:{name,kind,record_mode:rec,who:user.name}});
-  if(error){toast(error.message||'단계를 추가하지 못했습니다');console.error(error);return}
+  if(error){toast(saveErrorText(error,'단계를 추가하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   closeCnsSheet();
   await syncActiveStageState(config.id);
   toast(`${name} 단계를 추가했습니다`);
@@ -7190,7 +7204,7 @@ function cnsDeleteStage(stageId,name){
 async function cnsDeleteStageGo(stageId){
   const{error}=await sb.rpc('delete_last_stage',{t_id:config.id,p_owner_secret:user.secret,
     p_stage_id:stageId,p_who:user.name});
-  if(error){closeCnsSheet();toast(error.message||'단계를 삭제하지 못했습니다');console.error(error);return}
+  if(error){closeCnsSheet();toast(saveErrorText(error,'단계를 삭제하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   closeCnsSheet();
   await syncActiveStageState(config.id);
   toast('단계를 삭제했습니다');
@@ -7221,7 +7235,7 @@ async function cnsAddStaff(){
   const name=$('#cnsStName').value.trim(),phone=normalizePhone($('#cnsStPhone').value||''),duty=$('#cnsStDuty').value.trim();
   if(!name||!/01[016789]/.test(phone.replace(/\D/g,''))){toast('이름과 전화번호를 확인해 주세요');return}
   const{data,error}=await sb.rpc('create_staff_batch',{t_id:config.id,p_owner_secret:user.secret,p_staff:[{name,phone,duty,can_score:true}]});
-  if(error){toast('추가 중 오류: '+(error.code==='23505'?'이미 등록된 전화번호':error.message));console.error(error);return}
+  if(error){toast(saveErrorText(error,'참가자를 추가하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   const r=data[0];staff.push({id:r.id,name,phone:r.phone,duty,canScore:true,token:r.token,link_opened_at:null});
   closeCnsSheet();toast(`${name} 님 등록`);renderConsole()}
 /* --- 화면 M: 마이페이지(다크 슬레이트) --- */
@@ -7647,10 +7661,10 @@ async function cnsHoleCommit(changes,reason){
   const results=[];
   for(const ch of changes){
     const p=players.find((x,idx)=>idx===ch.pi)||players[ch.pi];
-    if(!ch.valid){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:'타수(1~19) 아님'});continue}
+    if(!ch.valid){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:'타수는 1~19 사이여야 해요'});continue}
     // submit_score_owner는 (player,hole) upsert=멱등. 0047 트리거가 잠금 시 차단.
     const{error}=await sb.rpc('submit_score_owner',{t_id:config.id,p_owner_secret:user.secret,p_player_id:p.id,p_hole_index:ch.gi,p_strokes:ch.strokes,p_reason:reason||null});
-    if(error){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:error.message});continue}
+    if(error){results.push({name:p?p.name:ch.pi,gi:ch.gi,ok:false,reason:saveErrorText(error)});continue}
     if(p){p.scores=p.scores||Array(HOLES).fill(null);p.scores[ch.gi]=ch.strokes}
     addLog(`${Math.floor(ch.gi/18)+1}코스 ${ch.gi%18+1}홀 <b>${p?p.name:''}</b> ${ch.strokes}타(콘솔 일괄)${reason&&ch.orig!==''?' · 정정: '+reason:''}`);
     if(reason&&ch.orig!=='')await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${p?p.name:''} ${Math.floor(ch.gi/18)+1}코스 ${ch.gi%18+1}홀 정정 ${ch.orig}→${ch.strokes}타 — 사유: ${reason}`});
@@ -7675,7 +7689,7 @@ async function cnsConfirmRosterGo(){
 async function cnsReopenReg(){await reopenRegistration();renderConsole()}
 async function cnsStageRoster(stageId){
   const{error}=await sb.rpc('confirm_stage_roster',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
-  if(error){toast('확정 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'확정하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   await syncActiveStageState(config.id);toast('명단이 확정되었습니다 — 이제 조편성을 할 수 있어요');renderConsole()}
 async function cnsAutoGroups(){
   if(groups.some(g=>g.length)&&!confirm('이미 편성된 조가 있어요 — 자동 편성으로 덮어쓸까요?'))return;
@@ -7699,7 +7713,7 @@ function cnsOpenStartSheet(stageId){
 async function cnsConfirmStart(stageId){
   closeCnsSheet();
   const{error}=await sb.rpc('open_stage',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
-  if(error){toast('단계 시작 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'단계를 시작하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   await syncActiveStageState(config.id);
   cnsSubSel='score';toast('단계를 시작했습니다 — 스코어를 입력하세요');renderConsole()}
 /* ===== R2② 화면 일괄 저장 엔진 ===== */
@@ -7760,7 +7774,7 @@ async function cnsScoreCommit(changes,reason){
     const{data}=await sb.rpc('get_plays_owner',{t_id:config.id,p_owner_secret:user.secret});
     playRows=data||[]}
   for(const ch of changes){
-    if(!ch.valid){results.push({name:cnsPlayerName(ch.pid),c:ch.c,ok:false,reason:'총타수 범위(18~200) 아님'});continue}
+    if(!ch.valid){results.push({name:cnsPlayerName(ch.pid),c:ch.c,ok:false,reason:'총타수는 18~200 사이여야 해요'});continue}
     const p=players.find(x=>x.id===ch.pid);
     // 정정 대상: 같은 참가자·코스에서 화면에 보이던 값(orig)과 일치하는 기록
     const target=(ch.orig!==''&&playRows)
@@ -7774,7 +7788,7 @@ async function cnsScoreCommit(changes,reason){
       // (c) 항목별 client_request_id 멱등
       const params={t_id:config.id,p_owner_secret:user.secret,p_player_id:ch.pid,p_course_no:ch.c,p_strokes_total:ch.strokes,p_store:null,p_evidence_url:null,p_client_request_id:crypto.randomUUID()};
       ({error}=await sb.rpc('submit_play_owner',params))}
-    if(error){results.push({name:p?p.name:ch.pid,c:ch.c,ok:false,reason:error.message});continue}
+    if(error){results.push({name:p?p.name:ch.pid,c:ch.c,ok:false,reason:saveErrorText(error)});continue}
     addLog(`${ch.c+1}코스 <b>${p?p.name:''}</b> 총 ${ch.strokes}타 제출(콘솔 일괄)${reason&&ch.orig!==''?' · 정정: '+reason:''}`);
     if(reason&&ch.orig!==''){await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${p?p.name:''} ${ch.c+1}코스 기록 정정 ${ch.orig}→${ch.strokes}타 — 사유: ${reason}`})} // await 필수: supabase-js 빌더는 await/then 없으면 미전송
     results.push({name:p?p.name:ch.pid,c:ch.c,ok:true,strokes:ch.strokes});
@@ -7791,11 +7805,11 @@ async function cnsScoreCommit(changes,reason){
     <button class="btn" style="width:100%;margin-top:12px" onclick="closeCnsSheet();renderConsole()">확인</button>`)}
 async function cnsLock(stageId){
   const{error}=await sb.rpc('lock_stage_scores',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
-  if(error){toast('확정 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'확정하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   await syncActiveStageState(config.id);toast('스코어를 확정했습니다 — 정정이 잠겼습니다');renderConsole()}
 async function cnsUnlock(stageId){
   const{error}=await sb.rpc('unlock_stage_scores',{t_id:config.id,stage_id:stageId,p_owner_secret:user.secret});
-  if(error){toast('확정 취소 중 오류가 발생했습니다: '+error.message);console.error(error);return}
+  if(error){toast(saveErrorText(error,'확정을 취소하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return}
   await syncActiveStageState(config.id);toast('확정을 취소했습니다 — 정정을 재개할 수 있어요');renderConsole()}
 function cnsTieToggle(key,pid){const s=cnsCutSel[key]=cnsCutSel[key]||new Set();if(s.has(pid))s.delete(pid);else s.add(pid);renderConsole()}
 function cnsTieConfirm(key,needed){const s=cnsCutSel[key];if(!s||s.size!==needed)return;cnsCutFinal[key]=[...s];toast('선택을 확정했습니다');renderConsole()}
@@ -7829,7 +7843,7 @@ async function cnsCutApply(stageId){
 async function cnsDoAdvance(curStage,nextStage,advanced){
   if(!advanced.length){toast('진출 조건을 만족하는 참가자가 없습니다');return false}
   const{error}=await sb.rpc('confirm_advance',{t_id:config.id,cur_stage_id:curStage.id,next_stage_id:nextStage.id,p_owner_secret:user.secret,p_advanced_player_ids:advanced.map(p=>p.id)});
-  if(error){toast('진출자 반영 실패: '+error.message);console.error(error);return false}
+  if(error){toast(saveErrorText(error,'진출자를 반영하지 못했어요 — 잠시 후 다시 시도해 주세요'));console.error(error);return false}
   // 컷 화면이 "[컷 적용]이 다음 단계 명단을 만들고 '명단 확정'이 ✓로 바뀝니다"라고 약속하는데
   // confirm_advance는 players.current_stage만 바꿔서 roster_confirmed가 false로 남았다.
   // 기간형 단계엔 '명단 확정' 중단계 자체가 없어 운영자가 해소할 방법도 없었다(M4 발견) —
