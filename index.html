@@ -6569,7 +6569,14 @@ function cnsUtilBarHTML(){
       ${CNS_TOOLS.map(t=>`<button class="utool" onclick="${t.fn}">${t.ic} <span class="lb">${t.lb}</span></button>`).join('')}
       <button class="umore" onclick="cnsToolMenuSheet()">⋯ <span class="lb">메뉴</span></button>
       <button class="acct" onclick="cnsOpenTool('mypage')">${cnsEsc(user.name)} ▾</button>
-    </div></div>`}
+    </div></div>${cnsDoneBannerHTML()}`}
+// CH38 ⑤: 종료 대회는 컨트롤을 숨기지 않고 "왜 안 되는지"를 상단에 상시 알린다.
+// 유틸바 바로 아래라 콘솔·도구 화면 어디에 있어도 같은 자리에 보인다.
+function cnsDoneBannerHTML(){
+  if(config.tStatus!=='done')return '';
+  return `<div style="background:#FBE9E4;border-bottom:1.5px solid #F0C9BE;padding:10px 20px;display:flex;align-items:center;gap:10px">
+    <b style="color:#C4523A;font-size:14.5px">🔒 종료된 대회 — 기록 보관 중이라 수정할 수 없어요</b>
+    <span style="color:#7A3326;font-size:13.5px">순위 열람·CSV·인쇄·전광판·요강 공유는 그대로 됩니다.</span></div>`}
 async function renderCnsMain(w){
   if(!config.id){cnsGo('signin');return}
   if(cnsTool)return renderCnsTool(w);
@@ -6751,7 +6758,8 @@ function cnsScrClose(subKey,model){
 function cnsConfirmFinalize(){
   const s=cnsCloseSummary();
   openCnsSheet(`<h3 style="font-size:19px;margin-bottom:4px">대회를 종료 확정할까요?</h3>
-    <p style="font-size:13.5px;color:var(--sub);margin-bottom:12px">확정 후에는 기록을 수정할 수 없습니다(열람 전용).</p>
+    <p style="font-size:14px;color:#C4523A;font-weight:700;margin-bottom:4px">⚠ 되돌릴 수 없어요</p>
+    <p style="font-size:13.5px;color:var(--sub);margin-bottom:12px">확정하면 참가자·스코어·조편성·요강까지 <b>전부 잠깁니다</b>(열람 전용). 화면에서 되돌리는 방법은 없습니다 — 아직 고칠 것이 남았다면 지금 취소하세요.</p>
     <div class="chk"><span style="color:var(--goldtx);font-weight:700">🏆</span> 우승 <b style="margin-left:auto">${cnsEsc(s.champ)}</b></div>
     <div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 참가 <b style="margin-left:auto">${s.A}명</b></div>
     <div class="chk"><span style="color:var(--minttx);font-weight:700">✓</span> 기간 <b style="margin-left:auto">${cnsEsc(s.per)}</b></div>
