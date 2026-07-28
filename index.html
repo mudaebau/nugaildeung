@@ -574,6 +574,15 @@ tr:last-child td{border-bottom:none}
 .boardMeta{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;color:#9FBEDC;font-size:12px}
 .boardMeta .live2{margin-left:auto;color:#fff;background:var(--coral);font-weight:600;font-size:12.5px;padding:4px 10px;border-radius:99px;display:flex;gap:6px;align-items:center;visibility:hidden}
 .boardMeta .live2 .dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+/* CH38 ① TV 헤더 — 주인공은 대회명, 브랜딩은 조연 크기. 라임 체계 유지. */
+.btvhead{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:14px 20px 10px;color:#fff}
+.btvhead .btitle{display:flex;align-items:baseline;gap:12px;min-width:0;flex:1}
+.btvhead h1{font-size:clamp(22px,3.2vw,40px);font-weight:800;line-height:1.15;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.btvhead .bstage{flex:none;background:var(--main);color:#0C2A12;font-weight:800;
+  font-size:clamp(12px,1.3vw,17px);padding:5px 13px;border-radius:99px;white-space:nowrap}
+.btvhead .bbrand{flex:none;font-size:clamp(10.5px,1vw,13px);color:#9AAAB9;font-weight:600;white-space:nowrap}
+.btvhead .bbrand b{color:#C7D6E4;font-weight:800}
 .bhead{display:grid;padding:8px 20px;color:#B9D0E6;font-size:11.5px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid rgba(255,255,255,.15)}
 .brow{display:grid;align-items:center;padding:0 20px;height:48px;border-bottom:1px solid rgba(255,255,255,.1);transition:transform .6s cubic-bezier(.2,.8,.2,1), background .3s}
 .brow:nth-child(odd){background:rgba(255,255,255,.045)}
@@ -1363,6 +1372,11 @@ input.numbox{width:64px;height:44px;padding:0;border:1.5px solid var(--line);bor
 <!-- ================= 전광판 ================= -->
 <div class="mobile wide" id="viewBoard" style="display:none">
   <div class="backbar" style="max-width:1100px;margin:0 auto"><button onclick="leaveBoard()">← 뒤로</button><span id="boardHeadName">전광판</span></div>
+  <!-- CH38 ①: TV 헤더 3요소 — 대회명(주인공) · 단계 뱃지(실제 단계명) · 브랜딩(조연). -->
+  <div class="btvhead" id="btvHead">
+    <div class="btitle"><h1 id="btvName">전광판</h1><span class="bstage" id="btvStage"></span></div>
+    <span class="bbrand">파크골프 대회 플랫폼 <b>누가1등</b></span>
+  </div>
   <div class="boardwrap">
     <div class="boardctl" id="boardCtl">
       <div style="margin-left:auto;display:flex;gap:8px">
@@ -5739,6 +5753,7 @@ async function loadBoardData(tournamentId,trusted){
   config.cap=t.cap;config.created=true;
   boardVisibility=t.visibility||'public';
   const stageCoursePars=(stage&&stage.course_pars&&stage.course_pars.length?stage.course_pars:t.course_pars)||[];
+  renderBoardTvHead(t,stage,boardStages);
   $('#boardTitle').textContent=t.name;
   const bhn=$('#boardHeadName');if(bhn)bhn.textContent=t.name;
 
@@ -5940,6 +5955,18 @@ function periodStandings(pool=players,courseIdx=-1){
       if(x.sumSoFar!==y.sumSoFar)return x.sumSoFar-y.sumSoFar;
       return y.p.age-x.p.age})}
   return act.concat(outs)}
+/* CH38 ①: 전광판 TV 헤더 — 대회명(가장 큼·말줄임) + 단계 뱃지 + 브랜딩(조연).
+   단계명은 실제 stages 값을 쓴다(하드코딩 금지). 단판이면 뱃지 생략,
+   종료 대회는 "최종 결과". 6초 갱신은 loadBoardData를 다시 타므로 여기서 같이 갱신되고,
+   자동 순환(startAutoRotate)은 renderBoard만 부르므로 헤더를 건드리지 않는다 — 양쪽 다 상시 유지. */
+function renderBoardTvHead(t,stage,stages){
+  const nm=$('#btvName');if(nm)nm.textContent=t.name||'전광판';
+  const el=$('#btvStage');if(!el)return;
+  let label='';
+  if(t.status==='done')label='최종 결과';
+  else if((stages||[]).length>1&&stage&&stage.name)label=stage.name;
+  el.textContent=label;
+  el.style.display=label?'':'none'}
 function renderPeriodBoard(){
   const box=$('#brows');
   if(!players.length){$('#bhead').innerHTML='';box.innerHTML='<div class="bempty">참가자를 등록하면 명단이 표시됩니다</div>';$('#boardModeChips').innerHTML='';$('#boardScopeChips').innerHTML='';return}
