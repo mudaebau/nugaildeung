@@ -1995,14 +1995,30 @@ function navTo(view,page){
   curView=view;if(page)curPage=page;
   history.pushState({d:navStack.length},'');
   renderLoc()}
-window.addEventListener('popstate',()=>{
-  // 콘솔은 자체 스택을 쓴다 — 예전엔 콘솔이 history에 아무것도 넣지 않아, 허브에서 브라우저
-  // 뒤로가기를 누르면 모바일 스택(navStack)이 튀어나와 콘솔이 통째로 사라지고 엉뚱한 화면이
-  // 떴다(CH37 ②). 콘솔 안에서는 콘솔 화면끼리만 되돌아간다.
-  if(curView==='Console'&&cnsNavStack.length){
-    const c=cnsNavStack.pop();
-    cnsTool=c.tool;cnsMajorSel=c.major;cnsSubSel=c.sub;
-    renderConsole();return}
+/* CH38 ③ ⓐ: 시트·모달·팝업이 열려 있으면 [뒤로]는 그것만 닫는다.
+   열린 오버레이를 하나 닫고 true를 돌려준다. 화면 이동은 하지 않는다. */
+function closeTopOverlay(){
+  const ov=$('#cnsSheetOv');
+  if(ov&&ov.classList.contains('on')){closeCnsSheet();return true}
+  // 모바일 공통 시트류 — .cdim/.ovl 계열 중 실제로 보이는 것 하나
+  const open=[...document.querySelectorAll('.cdim.on,.ovl.on,.sheetwrap.on')].filter(e=>getComputedStyle(e).display!=='none');
+  if(open.length){const t=open[open.length-1];t.classList.remove('on');return true}
+  const menu=$('#boardMoreMenu');
+  if(menu&&menu.classList.contains('on')){menu.classList.remove('on');return true}
+  return false}
+window.addEventListener('popstate',e=>{
+  // ⓐ 열린 시트가 있으면 그것만 닫고, 소비된 history 항목은 되돌려 놓는다.
+  if(closeTopOverlay()){history.pushState(history.state,'');return}
+  // ⓒ/ⓔ 콘솔 위치는 history.state에 통째로 실려 있다 — 뒤로도 앞으로도 같은 경로로 복원된다.
+  // 예전엔 콘솔이 자체 스택(pop만)을 써서 [앞으로]가 동작하지 않았고, 대단계·중단계 이동은
+  // 아예 history에 쌓이지도 않았다(CH38 ③).
+  const s=e.state;
+  if(s&&s.cns){
+    if(!cnsWizardLeaveOK(s)){history.pushState(history.state,'');return} // ⓓ 위저드 미저장 경고
+    curView='Console';
+    cnsScreen=s.screen;cnsTool=s.tool;cnsMajorSel=s.major;cnsSubSel=s.sub;
+    cnsEditKey=s.edit;cnsCourseStageId=s.course;
+    renderLoc();return}
   const l=navStack.pop();
   if(l){curView=l.v;curPage=l.p;renderLoc();
     // CH32-A 보완2 R8: 입력 화면(Judge)에서 뒤로가기로 스코어 탭에 돌아오면 본문을 최신
@@ -6335,8 +6351,9 @@ let cnsMajorSel=null;        // 레일에서 선택한 대단계 key
 let cnsSubSel=null;          // 목록에서 선택한 중단계 key
 let cnsTool=null;            // 유틸바 도구 화면: null | hub | staff | mypage | notice
 function isConsoleViewport(){return window.innerWidth>=1024}
-function openConsole(screen){cnsScreen=screen||cnsScreen;curView='Console';renderLoc();renderConsole()}
-function cnsGo(s){cnsScreen=s;renderConsole()}
+function openConsole(screen){cnsScreen=screen||cnsScreen;curView='Console';renderLoc();renderConsole();cnsMarkNav()}
+// ⓓ 화면 전환(랜딩·대회 선택·위저드·콘솔)도 한 걸음씩 쌓는다 — 로그인 직후 [뒤로]=랜딩.
+function cnsGo(s){cnsScreen=s;renderConsole();cnsPushNav()}
 function cnsEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 async function renderConsole(){
   const w=$('#cnsWrap');if(!w)return;
@@ -6611,7 +6628,7 @@ function cnsToolMenuSheet(){
     </div>
     <button class="btn soft" style="width:100%;margin-top:12px" onclick="closeCnsSheet()">닫기</button>`)}
 function cnsUtilBarHTML(){
-  return `<div class="util"><span class="lg" onclick="cnsCloseTool();cnsGo('signin')">누가<i>1</i>등</span><span class="tname" onclick="cnsCloseTool()" style="cursor:pointer">${cnsEsc(config.name)}</span>
+  return `<div class="util"><span class="lg" onclick="cnsGoPick()">누가<i>1</i>등</span><span class="tname" onclick="cnsCloseTool()" style="cursor:pointer">${cnsEsc(config.name)}</span>
     <div class="tools">
       ${CNS_TOOLS.map(t=>`<button class="utool" onclick="${t.fn}">${t.ic} <span class="lb">${t.lb}</span></button>`).join('')}
       <button class="umore" onclick="cnsToolMenuSheet()">⋯ <span class="lb">메뉴</span></button>
@@ -6814,18 +6831,35 @@ function cnsConfirmFinalize(){
 function selectCnsMajor(key){
   const m=(cnsModel?cnsModel.majors:[]).find(x=>x.key===key);if(!m)return;
   if(m.status==='todo'){toast('아직 시작할 수 없어요 — 이전 단계를 먼저 마쳐야 해요');return} // 미래=준비물 안내
-  cnsScoreLeaveThen(()=>{cnsMajorSel=key;cnsSubSel=null;renderConsole()})}
-function selectCnsSub(key){cnsScoreLeaveThen(()=>{cnsSubSel=key;renderConsole()})}
+  cnsScoreLeaveThen(()=>{cnsMajorSel=key;cnsSubSel=null;renderConsole();cnsPushNav()})} // ⓒ
+function selectCnsSub(key){cnsScoreLeaveThen(()=>{cnsSubSel=key;renderConsole();cnsPushNav()})} // ⓒ
 function closeCnsSheet(){$('#cnsSheetOv').classList.remove('on')}
 /* ===== 유틸바 도구 화면 (화면 7·J·M·R) — 모두 기존 함수·RPC 재사용 ===== */
 // 콘솔 전용 뒤로가기 스택 — 도구 화면(허브·심판진·요강 등)에 들어갈 때 직전 상태를 쌓아,
 // 브라우저 뒤로가기가 콘솔 밖으로 나가지 않게 한다(CH37 ②).
-let cnsNavStack=[];
-function cnsPushNav(){
-  cnsNavStack.push({tool:cnsTool,major:cnsMajorSel,sub:cnsSubSel});
-  history.pushState({cns:cnsNavStack.length},'')}
-function cnsOpenTool(t){cnsScoreLeaveThen(()=>{if(cnsTool!==t)cnsPushNav();cnsTool=t;renderConsole()})}
-function cnsCloseTool(){if(cnsNavStack.length)cnsNavStack.pop();cnsTool=null;renderConsole()}
+/* CH38 ③: 콘솔 위치를 history.state에 통째로 실어 [뒤로]/[앞으로]를 대칭으로 만든다.
+   스택(pop 전용)이 아니라 상태 스냅샷이라 [앞으로]로 재방문이 되고, 대단계·중단계 이동도
+   똑같이 쌓인다(ⓒ). 앱 안의 [← 콘솔로]는 history.back()을 부르므로 브라우저 [뒤로]와
+   목적지가 항상 같다(ⓔ). */
+function cnsLoc(){return{cns:1,screen:cnsScreen,tool:cnsTool,major:cnsMajorSel,sub:cnsSubSel,
+  edit:cnsEditKey,course:cnsCourseStageId}}
+function cnsSame(a,b){return a&&b&&a.screen===b.screen&&a.tool===b.tool&&a.major===b.major
+  &&a.sub===b.sub&&a.edit===b.edit&&a.course===b.course}
+// 현재(=바뀐 뒤) 위치를 history에 쌓는다. 같은 자리면 쌓지 않는다(뒤로가 헛돌지 않게).
+function cnsPushNav(){const l=cnsLoc();if(cnsSame(history.state,l))return;history.pushState(l,'')}
+// 콘솔 진입 시 기준점 — 이게 없으면 첫 화면에서 뒤로가 state:null로 떨어져 모바일 스택이 튄다.
+function cnsMarkNav(){history.replaceState(cnsLoc(),'')}
+// ⓓ 위저드 작성 중 이탈 경고 — 대회명·장소를 한 글자라도 넣었으면 확인을 받는다.
+function cnsWizardLeaveOK(next){
+  if(cnsScreen!=='wizard')return true;
+  if(next&&next.screen==='wizard')return true;
+  const v=id=>{const el=document.getElementById(id);return el&&el.value.trim()};
+  if(!v('cnsWName')&&!v('cnsWPlace'))return true;
+  return confirm('작성 중인 대회 정보가 저장되지 않았어요. 나가면 입력한 내용이 사라집니다. 나갈까요?')}
+function cnsOpenTool(t){cnsScoreLeaveThen(()=>{cnsTool=t;renderConsole();cnsPushNav()})}
+function cnsCloseTool(){if(!cnsTool)return;history.back()}   // ⓔ 앱 내 [←]도 브라우저 [뒤로]와 같은 경로
+// 로고 클릭 = 대회 선택으로 '전진'(뒤로가기가 아니다) — 도구를 닫고 signin으로 한 걸음 쌓는다.
+function cnsGoPick(){cnsTool=null;cnsEditKey=null;cnsGo('signin')}
 function cnsDateK(d){return(d||'').replaceAll('-','.')}
 async function renderCnsTool(w){
   if(cnsTool==='mypage')return renderCnsMypage(w);
@@ -6844,8 +6878,8 @@ async function renderCnsTool(w){
 function cnsFieldsSummary(){const f=config.fields||{};const on=[];if(f.sex)on.push('성별');if(f.age)on.push('나이');if(f.club)on.push('소속');return on.join(' · ')||'기본만'}
 /* --- CH33-D: 정보 수정 PC 네이티브 — 공통 편집 프레임 1개 + 9개 필드 폼(로직·RPC 재사용) --- */
 let cnsEditKey=null,cnsCourseStageId=null;
-function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='stagerow')editStageVenues=null;if(key!=='course'&&key!=='stagerow')cnsCourseStageId=null;cnsTool='edit';renderConsole()})} // 진입 시 draft 리셋(⑮)
-function cnsEditCourseFor(id){cnsCourseStageId=id;cnsEditKey='course';editFieldsDraft=null;cnsTool='edit';renderConsole()} // ⑬⑯ 단계별 코스·컷
+function cnsEditField(key){cnsScoreLeaveThen(()=>{cnsEditKey=key;editFieldsDraft=null;if(key!=='stagerow')editStageVenues=null;if(key!=='course'&&key!=='stagerow')cnsCourseStageId=null;cnsTool='edit';renderConsole();cnsPushNav()})} // 진입 시 draft 리셋(⑮) · ⓑ 허브→편집도 한 걸음
+function cnsEditCourseFor(id){cnsCourseStageId=id;cnsEditKey='course';editFieldsDraft=null;cnsTool='edit';renderConsole();cnsPushNav()} // ⑬⑯ 단계별 코스·컷
 function cnsEditSchedFor(id){cnsEditField('schedule')} // ⑬ 단계별 일정 표기는 허브에서, 편집은 개설(위저드)·전체 범위 에디터
 function cnsEL(t){return `<label style="display:block;font-size:14px;font-weight:700;color:var(--sub);margin:16px 0 6px">${t}</label>`}
 function cnsEI(id,val,ph,type){return `<input id="${id}" ${type?`type="${type}"`:''} class="cfield" value="${cnsEsc(val==null?'':String(val))}" placeholder="${ph||''}" style="font-size:18px;width:100%">`}
