@@ -6896,10 +6896,14 @@ async function cnsEditBody(key){
     </div>`).join('');
     return cnsEditFrame(`${editStage.name} — 일정 · 장소 · 코스 · 컷`,
       (editStageLocked?`<div class="grp" style="padding:14px;background:#FBE9E4"><p style="color:#7A3326;font-size:14px">이 단계에 기록 ${sc+pl}건이 있어 코스·파·컷은 잠겼습니다(P31). 이름만 확인할 수 있어요.</p></div>`:'')
-      +cnsEL('일정')+`<div style="display:flex;gap:10px">
-        <input class="cfield" value="${dS}" disabled style="flex:1;font-size:16px">
-        <input class="cfield" value="${editStage.kind==='period'?dE:'(지정일 단일)'}" disabled style="flex:1;font-size:16px"></div>
-        <p style="font-size:12.5px;color:#C4523A;margin:6px 0 4px">단계별 일정 편집은 아직 저장 경로(RPC)가 없어 읽기 전용입니다 — 0051 실행 후 열립니다.</p>`
+      +cnsEL(editStage.kind==='period'?'일정 (기간)':'일정 (대회일)')
+      +(editStage.kind==='period'
+        ?`<div style="display:flex;gap:10px">
+            <div style="flex:1">${cnsEL('시작일')}<input type="date" class="cfield" id="eiStDateS" value="${editStage.date_start||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
+            <div style="flex:1">${cnsEL('종료일')}<input type="date" class="cfield" id="eiStDateE" value="${editStage.date_end||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
+          </div>`
+        :`<input type="date" class="cfield" id="eiStDateS" value="${editStage.date_start||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%">
+          <p style="font-size:12.5px;color:var(--sub);margin:6px 0 4px">지정일 단계는 대회일 하루입니다 — 종료일은 시작일과 같게 저장됩니다.</p>`)
       +cnsEL(`코스 (${editStageVenues.length}/6)`)+courseRows
       +(!editStageLocked&&editStageVenues.length<6?`<button class="btn soft" onclick="cnsStageCourseAdd()">＋ 코스 추가</button>`:'')
       +(hasNext&&!editStageLocked?cnsEL('참가 인원 (컷)')+`<select id="eiCutMode" class="cfield" style="font-size:16px;width:100%" onchange="cnsEdCutMode()"><option value="total" ${!cut.m?'selected':''}>전체 인원</option><option value="gender" ${cut.m?'selected':''}>남녀 구분</option></select>
@@ -7000,7 +7004,19 @@ async function cnsEditSave(){
     let cut=editStage.advance_cut;
     if(hasNext&&$('#eiCutMode')){const mode=$('#eiCutMode').value;
       cut=mode==='gender'?{m:Math.max(1,+$('#eiCutM').value||12),f:Math.max(1,+$('#eiCutF').value||12)}:{total:Math.max(2,+$('#eiCutTotal').value||24)}}
-    openWarnEdit(`'${editStage.name}' 단계의 코스 구성${hasNext?'·참가 인원(컷)':''}이(가) 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
+    // 일정(0051 update_stage_dates) — 지정일은 종료일을 RPC가 시작일로 맞춰준다.
+    const dS0=$('#eiStDateS')?$('#eiStDateS').value||null:null;
+    const dE0=$('#eiStDateE')?$('#eiStDateE').value||null:null;
+    const dateChanged=dS0!==(editStage.date_start||null)||
+      (editStage.kind==='period'&&dE0!==(editStage.date_end||null));
+    if(dateChanged&&editStage.kind==='period'&&dS0&&dE0&&dE0<dS0){
+      toast('종료일이 시작일보다 앞설 수 없습니다');return}
+    openWarnEdit(`'${editStage.name}' 단계의 ${dateChanged?'일정·':''}코스 구성${hasNext?'·참가 인원(컷)':''}이(가) 바뀝니다. 참가자에게 별도로 안내해 주세요.`,async()=>{
+      if(dateChanged){
+        const r0=await sb.rpc('update_stage_dates',{t_id:config.id,p_owner_secret:user.secret,stage_id:editStage.id,
+          p_date_start:dS0,p_date_end:editStage.kind==='period'?dE0:dS0,p_who:user.name});
+        if(r0.error){toast(r0.error.message||'일정 저장 중 오류가 발생했습니다');console.error(r0.error);return}
+        editStage.date_start=dS0;editStage.date_end=editStage.kind==='period'?(dE0||dS0):dS0}
       const r1=await sb.rpc('update_stage_venues',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,p_venues:venues});
       if(r1.error){toast('장소·코스 저장 중 오류가 발생했습니다');console.error(r1.error);return}
       const r2=await sb.rpc('update_stage_course',{t_id:config.id,stage_id:editStage.id,p_owner_secret:user.secret,
@@ -7008,7 +7024,9 @@ async function cnsEditSave(){
       if(r2.error){toast('코스 파·컷 저장 중 오류가 발생했습니다');console.error(r2.error);return}
       editStage.venues=venues;editStage.course_pars=editCoursePars;editStage.advance_cut=cut;
       const active=curActiveStage(stages);if(active&&editStage.id===active.id){coursePars=editCoursePars;config.venues=venues}
-      back();toast(`${editStage.name} 단계를 저장했습니다 — 코스 ${venues.length}개`)});return}}
+      // 레일·요강이 대회 기간을 config에서 읽으므로 단계 일정이 바뀌면 함께 다시 읽는다.
+      if(dateChanged)await syncActiveStageState(config.id);
+      back();toast(`${editStage.name} 단계를 저장했습니다${dateChanged?' — 일정 반영':''} · 코스 ${venues.length}개`)});return}}
 async function cnsHubHTML(){
   const stages=await loadAllStages(config.id);
   editStage=curActiveStage(stages);
@@ -7248,9 +7266,37 @@ function cnsScrGroups(stage){
     cards=`<div class="grp" style="padding:22px 20px;text-align:center"><p style="font-size:15px;margin-bottom:4px">확정 참가자 <b class="num" style="font-size:20px">${players.filter(p=>!isOut(p)).length}명</b></p>
       <p style="color:var(--sub);font-size:14px;line-height:1.8">4인 1조 기준으로 자동 편성합니다(최소 2인). 같은 클럽은 서로 다른 조로 분산돼요.</p></div>`;
   }else{
-    cards=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${groups.map((g,i)=>`<div class="grp"><h5>${i+1}조</h5><p>${g.map(pi=>cnsEsc(players[pi]?players[pi].name:'')).filter(Boolean).join(' · ')||'<span style="color:var(--dim)">비어 있음</span>'}</p></div>`).join('')}</div>
-    <p class="cap">직접 지정 후 [자동 편성]=덮어씀 경고 · 최소 2인 조 · 조 편집은 모바일 조편성과 동일 규칙</p>`}
+    // ⑫ 조편성 변경 실동작 — 선수를 눌러 고르고, 다른 선수를 누르면 맞바꾸기,
+    // 조 제목을 누르면 그 조로 이동. 저장은 기존 persistGroups로.
+    const sel=cnsGroupSel;
+    cards=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${groups.map((g,i)=>`<div class="grp">
+      <h5 style="cursor:pointer" onclick="cnsGroupMoveTo(${i})">${i+1}조 ${sel?'<small style="color:var(--act)">여기로 이동</small>':''}</h5>
+      <p>${g.length?g.map((pi,k)=>{const on=sel&&sel.gi===i&&sel.k===k;
+        return `<button class="btn soft" style="margin:2px 4px 2px 0;padding:5px 10px;font-size:14px;${on?'background:var(--act);color:#fff':''}" onclick="cnsGroupPick(${i},${k})">${cnsEsc(players[pi]?players[pi].name:'?')}</button>`}).join('')
+        :'<span style="color:var(--dim)">비어 있음</span>'}</p></div>`).join('')}</div>
+    <p class="cap">${sel?'<b style="color:var(--act)">선택됨</b> — 다른 선수를 누르면 <b>맞바꾸기</b>, 조 제목을 누르면 <b>그 조로 이동</b>. 다시 누르면 선택 해제.':'선수를 눌러 고른 뒤 맞바꾸거나 다른 조로 옮길 수 있어요.'} · 직접 지정 후 [자동 편성]=덮어씀 경고 · 최소 2인 조</p>`}
   return cnsStripAppend(strip,tools)+cards}
+/* ⑫ 조편성 변경 — 선택 → 맞바꾸기/이동. 조편성은 이미 groups(선수 인덱스 배열)로
+   관리되므로 배열만 손보고 기존 persistGroups로 저장한다(저장 규칙 재구현 없음). */
+let cnsGroupSel=null;
+function cnsGroupPick(gi,k){
+  if(cnsGroupSel&&cnsGroupSel.gi===gi&&cnsGroupSel.k===k){cnsGroupSel=null;renderConsole();return}
+  if(!cnsGroupSel){cnsGroupSel={gi,k};renderConsole();return}
+  const a=cnsGroupSel,b={gi,k};
+  const tmp=groups[a.gi][a.k];groups[a.gi][a.k]=groups[b.gi][b.k];groups[b.gi][b.k]=tmp;
+  cnsGroupSel=null;cnsGroupsChanged(`${players[groups[b.gi][b.k]].name} ↔ ${players[groups[a.gi][a.k]].name} 맞바꿨습니다`)}
+function cnsGroupMoveTo(gi){
+  if(!cnsGroupSel)return;
+  const a=cnsGroupSel;
+  if(a.gi===gi){cnsGroupSel=null;renderConsole();return}
+  const pi=groups[a.gi].splice(a.k,1)[0];
+  groups[gi].push(pi);
+  cnsGroupSel=null;cnsGroupsChanged(`${players[pi].name} 님을 ${gi+1}조로 옮겼습니다`)}
+async function cnsGroupsChanged(msg){
+  groupsSource='manual';
+  await persistGroups();
+  toast(msg);
+  renderConsole()}
 /* 시작(사전 점검, 화면 4는 모달) */
 function cnsScrStart(stage){
   if(cnsStageOpen(stage))
