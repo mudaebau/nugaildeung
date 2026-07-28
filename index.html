@@ -1990,6 +1990,30 @@ function mgShow(id){
   window.scrollTo(0,0)}
 // CH32-A 보완3 ②(S81): 리더보드 진입은 반드시 단계 상태 일원화 경로(syncActiveStageState)를
 // 지난다. 위저드→[대회 관리로 가기] 직행 세션은 boardStageKind가 기본값('round')에 머물러,
+// 부문 수상자 "선정"만 담당하는 순수 함수 — 마크업은 화면마다 다르지만 누가 받는지는
+// 한 곳에서만 정한다. 중복 수상 제외 순서: 종합 3위 → 남녀부 → 연령부.
+// (CH37 ⑭ — 콘솔 '부문 수상 확인'이 이 계산을 아예 안 하고 안내문만 띄우고 있었다)
+function divisionAwardPicks(done,doneAll){
+  const awarded=new Set((doneAll||[]).slice(0,3).map(s=>s.p.id));
+  const picks=[];
+  if(config.awards.gender&&config.fields.sex&&done.length){
+    const m=done.find(s=>s.p.sex==='남'&&!awarded.has(s.p.id));if(m)awarded.add(m.p.id);
+    const f=done.find(s=>s.p.sex==='여'&&!awarded.has(s.p.id));if(f)awarded.add(f.p.id);
+    picks.push({sec:'남녀부 시상',rows:[{label:'남자부 1위',s:m},{label:'여자부 1위',s:f}]})}
+  if(config.awards.age&&config.fields.age&&done.length){
+    const rows=[];
+    [['60대부',60,69],['70대부',70,79],['80세 이상부',80,150]].forEach(([lb,lo,hi])=>{
+      const w=done.find(s=>s.p.age>=lo&&s.p.age<=hi&&!awarded.has(s.p.id));
+      if(w)awarded.add(w.p.id);
+      rows.push({label:lb+' 1위',s:w})});
+    picks.push({sec:'연령부 시상',rows})}
+  if(config.awards.club&&config.fields.club&&done.length){
+    const byClub={};done.forEach(s=>{(byClub[s.p.club||'무소속']=byClub[s.p.club||'무소속']||[]).push(s)});
+    const teams=Object.entries(byClub).filter(([c,a])=>a.length>=4)
+      .map(([c,a])=>({club:c,sum:a.slice(0,4).reduce((x,s)=>x+s.tot,0),members:a.slice(0,4)}))
+      .sort((x,y)=>x.sum-y.sum);
+    picks.push({sec:'클럽 대항전',teams})}
+  return picks}
 // 기간형 대회의 리더보드가 라운드 분기로 렌더되다 sums()에서 예외(또는 빈 순위)로 끝나
 // "무표시"가 됐다. 지난 단계 스냅숏(pastStageSnap) 열람 중엔 스냅숏을 보존한다.
 async function renderResultFresh(){
@@ -6058,7 +6082,8 @@ function renderResult(){
 
   /* ---- 부문 시상 (중복 수상 제외: 종합 → 남녀 → 연령) — 항상 전체(doneAll) 기준, 요약 뷰에서만 노출 ---- */
   $('#awardsBox').style.display=summaryView?'':'none';
-  const awarded=new Set(doneAll.slice(0,3).map(s=>s.p.id));
+  // 선정 규칙은 divisionAwardPicks 하나만 쓴다(마크업만 화면별로 다름) — 콘솔 '부문 수상 확인'이
+  // 안내문만 띄우고 실제 수상자를 안 보여주던 문제를 이 함수를 공유해 해결한다(CH37 ⑭).
   let aw='';
   const podRow=(label,s,color)=>s?`<div class="pod"><div class="medal">🏅</div>
       <div class="pi"><b>${s.p.name}</b><span>${s.p.club||''} · ${s.p.sex} ${s.p.age}세</span></div>
@@ -6066,21 +6091,19 @@ function renderResult(){
       <div class="sc num">${fmt(s)}</div></div></div>`
     :`<div class="pod" style="opacity:.55"><div class="medal">🏅</div>
       <div class="pi"><b>해당자 없음</b><span>${label}</span></div></div>`;
-  if(config.awards.gender&&config.fields.sex&&done.length){
-    const m=done.find(s=>s.p.sex==='남'&&!awarded.has(s.p.id));if(m)awarded.add(m.p.id);
-    const f=done.find(s=>s.p.sex==='여'&&!awarded.has(s.p.id));if(f)awarded.add(f.p.id);
-    aw+=`<div class="secttl">남녀부 시상</div>`+podRow('남자부 1위',m,'var(--main)')+podRow('여자부 1위',f,'var(--coral)')}
-  if(config.awards.age&&config.fields.age&&done.length){
+  const picks=divisionAwardPicks(done,doneAll);
+  const secOf=n=>picks.find(x=>x.sec===n);
+  const gsec=secOf('남녀부 시상');
+  if(gsec){
+    aw+=`<div class="secttl">남녀부 시상</div>`
+      +podRow('남자부 1위',gsec.rows[0].s,'var(--main)')+podRow('여자부 1위',gsec.rows[1].s,'var(--coral)')}
+  const asec=secOf('연령부 시상');
+  if(asec){
     aw+=`<div class="secttl">연령부 시상</div>`;
-    [['60대부',60,69],['70대부',70,79],['80세 이상부',80,150]].forEach(([lb,lo,hi])=>{
-      const w=done.find(s=>s.p.age>=lo&&s.p.age<=hi&&!awarded.has(s.p.id));
-      if(w)awarded.add(w.p.id);
-      aw+=podRow(lb+' 1위',w,'var(--mint)')})}
-  if(config.awards.club&&config.fields.club&&done.length){
-    const byClub={};done.forEach(s=>{(byClub[s.p.club||'무소속']=byClub[s.p.club||'무소속']||[]).push(s)});
-    const teams=Object.entries(byClub).filter(([c,a])=>a.length>=4)
-      .map(([c,a])=>({club:c,sum:a.slice(0,4).reduce((x,s)=>x+s.tot,0),members:a.slice(0,4)}))
-      .sort((x,y)=>x.sum-y.sum);
+    asec.rows.forEach(r=>{aw+=podRow(r.label,r.s,'var(--mint)')})}
+  const csec=secOf('클럽 대항전');
+  if(csec){
+    const teams=csec.teams;
     aw+=`<div class="secttl">클럽 대항전 (상위 4인 합산)</div>`;
     aw+=teams.length?teams.slice(0,3).map((tm,i)=>
       `<div class="pod ${i===0?'first':''}"><div class="medal">${medals[i]||'🏅'}</div>
@@ -6623,8 +6646,34 @@ function cnsScrAward(subKey,model){
   const strip=cnsStrip([{v:A,l:'완주'},{v:model.stages.length,l:'단계'}]);
   const table=`<table style="margin-bottom:12px"><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th>클럽</th><th style="width:100px">합계</th></tr>${cnsFinalRows()}</table>`;
   if(subKey==='divAward'){
-    return strip+table+`<div class="grp"><h5 style="color:var(--goldtx)">🏆 부문 수상</h5>
-      <p>부문별 1위·특별상은 최종 순위에서 자동 산출됩니다 <span style="color:var(--sub);font-size:12.5px">(중복 수상 제외 적용)</span> — 상세는 모바일 결과 화면과 동일 규칙.</p></div>`}
+    // ⑭ 안내문만 띄우던 화면 — 실제 수상자와 설정한 등위별 시상을 여기서 보여준다.
+    // 선정은 모바일 결과 화면과 같은 divisionAwardPicks를 그대로 쓴다(규칙 재구현 금지).
+    const period=boardStageKind==='period'||boardStageRecordMode==='total';
+    const st=(period?periodStandings():standings()).filter(s=>!s.out);
+    const done=st.filter(s=>s.tot!=null);
+    const nm=s=>s?`<b>${cnsEsc(s.p.name)}</b>${s.p.club?` <span style="color:var(--sub)">${cnsEsc(s.p.club)}</span>`:''} — ${s.tot}타`
+                :'<span style="color:var(--dim)">해당자 없음</span>';
+    let secs='';
+    if(done.length>=1){
+      secs+=`<div class="grp"><h5>🥇 종합</h5>`+done.slice(0,3).map((s,i)=>
+        `<div class="ynqrow"><span>${['1위','2위','3위'][i]}</span><span>${nm(s)}</span></div>`).join('')+`</div>`}
+    divisionAwardPicks(done,done).forEach(pk=>{
+      if(pk.teams){
+        secs+=`<div class="grp"><h5>🏢 ${cnsEsc(pk.sec)} (상위 4인 합산)</h5>`
+          +(pk.teams.length?pk.teams.slice(0,3).map((tm,i)=>`<div class="ynqrow"><span>${i+1}위</span><span><b>${cnsEsc(tm.club)}</b> — ${tm.sum}타</span></div>`).join('')
+            :'<p style="color:var(--sub)">완주 4인 이상인 클럽이 아직 없습니다.</p>')+`</div>`;
+        return}
+      secs+=`<div class="grp"><h5>🏅 ${cnsEsc(pk.sec)}</h5>`
+        +pk.rows.map(r=>`<div class="ynqrow"><span>${cnsEsc(r.label)}</span><span>${nm(r.s)}</span></div>`).join('')+`</div>`});
+    // 설정한 시상 내역(등위별)과의 연결 — 어떤 상이 누구에게 가는지 한 화면에서 확인
+    const prizeList=(config.prizes||[]).filter(p=>p.label);
+    const prizeSec=(config.prizeTotal||prizeList.length)?`<div class="grp"><h5>🎁 설정한 시상 내역</h5>
+      ${config.prizeTotal?`<div class="ynqrow"><span>총상금</span><span><b>${cnsEsc(config.prizeTotal)}</b></span></div>`:''}
+      ${prizeList.map((p,i)=>`<div class="ynqrow"><span>${cnsEsc(p.label)}</span><span>${cnsEsc(p.item||p.amount||'—')}${done[i]?` · 수상 ${cnsEsc(done[i].p.name)}`:''}</span></div>`).join('')}
+      <p class="cap">시상명은 입력 순서대로 종합 순위에 대응시켜 표시합니다 — [대회 정보]→[시상]에서 수정.</p></div>`
+      :`<div class="grp"><h5>🎁 설정한 시상 내역</h5><p style="color:var(--sub)">아직 없습니다 — 유틸바 <b>⚙️ 대회 정보</b> → <b>🏆 시상 내역</b>에서 등록하세요.</p></div>`;
+    return strip+table+secs+prizeSec+
+      `<p class="cap">부문별 1위는 최종 순위에서 자동 산출됩니다(중복 수상 제외: 종합 → 남녀부 → 연령부) — 모바일 결과 화면과 같은 규칙.</p>`}
   if(subKey==='announce'){
     return strip+table+`<div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" onclick="openBoard()">📺 전광판에 결과 띄우기</button>
