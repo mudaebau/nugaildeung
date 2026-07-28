@@ -7383,6 +7383,37 @@ function cnsCutAdvanced(cx){
     const picks=(cnsCutFinal[g.key]||[]).map(id=>g.res.tied.find(p=>p.id===id)).filter(Boolean);
     adv=adv.concat(g.res.base,picks)});
   return adv}
+/* ⑪ 진출자 확정 v2 (화면 5 v2 · P74) — 자동 컷 결과 위에 운영자 개입을 얹는다.
+   컷·동점 계산(cnsBuildCut/cnsCutAdvanced)은 건드리지 않고, 그 결과를 받아
+   ▲올리기/▼내리기(강제 진출·강제 탈락)와 컷 인원 가감(±)을 적용한다.
+   개입 내역은 전부 남겨 [컷 적용] 때 로그로 기록한다. */
+let cnsCutForceIn=new Set(),cnsCutForceOut=new Set(),cnsCutDelta=0;
+function cnsCutReset(){cnsCutForceIn=new Set();cnsCutForceOut=new Set();cnsCutDelta=0}
+// 자동 결과 + 개입 = 최종 진출 명단. 순위 순서(cx.done)를 그대로 따라 결정적으로 만든다.
+function cnsCutFinalList(cx){
+  const base=new Set(cnsCutAdvanced(cx).map(p=>p.id));
+  const ordered=cx.done.map(s=>s.p);
+  // 컷 인원 가감: +면 아래에서 끌어올리고, -면 위에서 잘라낸다.
+  let target=base.size+cnsCutDelta;
+  target=Math.max(0,Math.min(ordered.length,target));
+  const picked=[];
+  ordered.forEach(p=>{if(base.has(p.id)&&picked.length<target)picked.push(p)});
+  if(picked.length<target)ordered.forEach(p=>{if(!base.has(p.id)&&picked.length<target)picked.push(p)});
+  const ids=new Set(picked.map(p=>p.id));
+  cnsCutForceIn.forEach(id=>ids.add(id));
+  cnsCutForceOut.forEach(id=>ids.delete(id));
+  return ordered.filter(p=>ids.has(p.id))}
+function cnsCutUp(pid){cnsCutForceOut.delete(pid);cnsCutForceIn.add(pid);renderConsole()}
+function cnsCutDown(pid){cnsCutForceIn.delete(pid);cnsCutForceOut.add(pid);renderConsole()}
+function cnsCutBump(d){cnsCutDelta+=d;renderConsole()}
+// P74: 수동 개입을 사람이 읽는 문장으로. 없으면 빈 배열.
+function cnsCutInterventions(cx){
+  const nameOf=id=>{const s=cx.done.find(x=>x.p.id===id);return s?s.p.name:id.slice(0,8)};
+  const out=[];
+  if(cnsCutDelta)out.push(`컷 인원 ${cnsCutDelta>0?'+':''}${cnsCutDelta}명`);
+  cnsCutForceIn.forEach(id=>out.push(`${nameOf(id)} 올리기(강제 진출)`));
+  cnsCutForceOut.forEach(id=>out.push(`${nameOf(id)} 내리기(강제 탈락)`));
+  return out}
 function cnsScrCut(stage,model){
   if(!stage.scores_locked)
     return `<div class="grp" style="padding:20px"><h5>진출자 확정 — 스코어 확정 먼저</h5>
@@ -7399,7 +7430,7 @@ function cnsScrCut(stage,model){
   if(!cx.cut||!cx.groups.length)
     return `<div class="grp" style="padding:20px"><p style="color:var(--sub);font-size:14.5px;line-height:1.9">이 단계에 컷 조건이 설정돼 있지 않아요 — 전원 진출로 처리하거나 대회 정보에서 컷을 지정하세요.</p>
       <button class="btn" style="margin-top:12px" onclick="cnsCutApply('${stage.id}')">전원 진출 — ${cnsEsc(nextStage.name)} 명단 만들기</button></div>`;
-  const adv=cnsCutAdvanced(cx);
+  const adv=cnsCutFinalList(cx);          // ⑪ 자동 컷 + 운영자 개입(▲▼·±)
   const advIds=new Set(adv.map(p=>p.id));
   const unresolved=cx.groups.filter(g=>!g.res.autoResolved&&!(cnsCutFinal[g.key]&&cnsCutFinal[g.key].length));
   // 미해소 동점(수동 선택 대상)
@@ -7429,7 +7460,12 @@ function cnsScrCut(stage,model){
       :bt?` <span style="font-size:11.5px;color:var(--goldtx)">동점 — ${cnsEsc(shortRule)} ${bt}</span>`:'';
     return `<tr style="${bg}${line}"><td><b class="num" style="font-size:18px;${adv?'':'color:var(--dim)'}">${i+1}</b></td>
       <td><b${adv?'':' style="color:var(--sub)"'}>${cnsEsc(s.p.name)}</b></td><td>${cnsEsc(s.p.sex||'—')}</td>
-      <td class="num">${s.tot}</td><td><span class="pill ${adv?'mint':'dim'}">${adv?'진출':'탈락'}</span>${verdict}</td></tr>`}).join('');
+      <td class="num">${s.tot}</td><td><span class="pill ${adv?'mint':'dim'}">${adv?'진출':'탈락'}</span>${verdict}${
+        cnsCutForceIn.has(s.p.id)?' <span style="font-size:11.5px;color:var(--act)">↑수동</span>'
+        :cnsCutForceOut.has(s.p.id)?' <span style="font-size:11.5px;color:#C4523A">↓수동</span>':''}</td>
+      <td style="width:96px;text-align:right">${adv
+        ?`<button class="btn soft" style="padding:4px 9px;font-size:13px" onclick="cnsCutDown('${s.p.id}')">▼ 내리기</button>`
+        :`<button class="btn soft" style="padding:4px 9px;font-size:13px" onclick="cnsCutUp('${s.p.id}')">▲ 올리기</button>`}</td></tr>`}).join('');
   const tieUI=unresolved.map(g=>{
     const needed=g.cutN-g.res.base.length;const sel=cnsCutSel[g.key]||new Set();
     return `<div class="grp" style="margin-top:12px;background:#FFF9E8;border-color:#EFD9A0"><h5 style="color:var(--goldtx)">${g.label?g.label+' ':''}${g.cutN}위 경계 동점 ${g.res.tied.length}명 — 자동 해소 불가(규칙: ${cnsEsc(cx.tieRule)})</h5>
@@ -7437,7 +7473,19 @@ function cnsScrCut(stage,model){
       <p style="font-size:13px;color:var(--sub);margin-bottom:8px">잔여 진출 ${needed}자리 — 필요한 인원만 고르거나 전원 진출(컷 확대)</p>
       <button class="btn soft" onclick="cnsTieExpand('${g.key}')">동점자 전원 진출(컷 확대)</button>
       <button class="btn" style="margin-left:8px;${sel.size===needed?'':'opacity:.5;pointer-events:none'}" onclick="cnsTieConfirm('${g.key}',${needed})">선택 완료(${sel.size}/${needed})</button></div>`}).join('');
-  return strip+`<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th></tr>${rows}</table>${tieUI}
+  // ⑪ 컷 인원 가감 + 개입 내역(P74: 수동 개입은 화면에서도 보이고 로그로도 남는다)
+  const iv=cnsCutInterventions(cx);
+  const cutBar=`<div class="grp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <b style="font-size:15px">진출 인원</b>
+    <button class="btn soft" onclick="cnsCutBump(-1)"${adv.length<=0?' style="opacity:.5;pointer-events:none"':''}>−</button>
+    <b class="num" style="font-size:20px;min-width:34px;text-align:center">${adv.length}</b>
+    <button class="btn soft" onclick="cnsCutBump(1)"${adv.length>=cx.done.length?' style="opacity:.5;pointer-events:none"':''}>＋</button>
+    <span style="font-size:13px;color:var(--sub)">설정값 ${cnsEsc(cutLabel)} · 초과·미달 허용</span>
+    ${iv.length?`<button class="btn soft" style="margin-left:auto" onclick="cnsCutReset();renderConsole()">개입 되돌리기</button>`:''}
+  </div>
+  ${iv.length?`<div class="grp" style="background:#FFF9E8;border-color:#EFD9A0"><h5 style="color:var(--goldtx)">✍ 수동 개입 ${iv.length}건 — 적용 시 기록에 남습니다</h5>
+    <p style="font-size:14px;line-height:1.9">${iv.map(cnsEsc).join('<br>')}</p></div>`:''}`;
+  return strip+cutBar+`<table><tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th><th style="width:96px"></th></tr>${rows}</table>${tieUI}
     <p class="cap">빨간 점선=컷 라인 · 골드 행=경계 동점(판정 사유 병기) · [컷 적용]이 ${cnsEsc(nextStage.name)} 명단을 만들고 그 단계의 '명단 확정'이 ✓로 바뀝니다.</p>`}
 /* 단계 마감 */
 function cnsScrClose2(stage){
@@ -7716,10 +7764,15 @@ async function cnsCutApply(stageId){
   else{
     const unresolved=cx.groups.filter(g=>!g.res.autoResolved&&!(cnsCutFinal[g.key]&&cnsCutFinal[g.key].length));
     if(unresolved.length){toast('경계 동점자 처리를 먼저 완료하세요');return}
-    advanced=cnsCutAdvanced(cx);
+    advanced=cnsCutFinalList(cx);   // ⑪ 자동 컷 + 운영자 개입(▲▼·±)이 최종 명단
     const logLines=cx.groups.filter(g=>!g.res.autoResolved).map(g=>`${g.label||'전체'} ${g.cutN}위 동점 ${g.res.tied.length}명 중 ${(cnsCutFinal[g.key]||[]).length}명 수동 선택`);
-    if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${stage.name}→${nextStage.name} 컷 동점 처리(규칙: ${cx.tieRule}) — ${logLines.join(' / ')}`})}
-  cnsCutSel={};cnsCutFinal={};
+    if(logLines.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,what:`${stage.name}→${nextStage.name} 컷 동점 처리(규칙: ${cx.tieRule}) — ${logLines.join(' / ')}`});
+    // P74: 수동 개입(올리기·내리기·인원 가감)은 빠짐없이 기록한다 — 왜 그 사람이 올라갔는지
+    // 나중에 설명할 수 있어야 한다. await 필수(빌더는 await 없으면 전송되지 않는다).
+    const iv=cnsCutInterventions(cx);
+    if(iv.length)await sb.from('tournament_edit_logs').insert({tournament_id:config.id,who:user.name,
+      what:`${stage.name}→${nextStage.name} 진출자 수동 개입 ${iv.length}건 — ${iv.join(' / ')} (최종 ${advanced.length}명)`})}
+  cnsCutSel={};cnsCutFinal={};cnsCutReset();
   // ⑦ 콘솔 확정=confirm_advance(진출만, 자동 마감 없음). 모바일 advance_stage는 무수정.
   const ok=await cnsDoAdvance(stage,nextStage,advanced);if(!ok)return;
   cnsModel=await buildConsoleModel();cnsMajorSel='stage:'+stageId;cnsSubSel='close';
