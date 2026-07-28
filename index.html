@@ -6875,7 +6875,10 @@ async function cnsEditBody(key){
     const pl=(await fetchPlays(config.id)).filter(r=>r.stage_id===editStage.id).length;
     editStageLocked=(sc+pl)>0;
     const hasNext=stages.some(s=>s.seq===editStage.seq+1);
-    const cut=editStage.advance_cut||{total:24};
+    // 일정·컷은 draft가 있으면 draft를 쓴다 — 코스 추가·삭제가 재렌더를 돌리므로,
+    // DB 값으로 다시 그리면 아직 저장 전인 입력이 되감긴다(5-3c, 스윕에서 실기 재현).
+    const sf=editStageForm||{};
+    const cut=sf.cut||editStage.advance_cut||{total:24};
     // 코스 목록 = venues(이름) × course_pars(파). 길이를 항상 맞춰 둔다.
     // 진입할 때만 DB 값으로 채운다 — 매 렌더 초기화하면 [＋ 코스 추가]가 누른 즉시
     // 되감겨 아무 일도 안 일어난다(CH35-A⑮와 같은 계열, 재렌더가 편집 상태를 덮어씀).
@@ -6899,10 +6902,10 @@ async function cnsEditBody(key){
       +cnsEL(editStage.kind==='period'?'일정 (기간)':'일정 (대회일)')
       +(editStage.kind==='period'
         ?`<div style="display:flex;gap:10px">
-            <div style="flex:1">${cnsEL('시작일')}<input type="date" class="cfield" id="eiStDateS" value="${editStage.date_start||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
-            <div style="flex:1">${cnsEL('종료일')}<input type="date" class="cfield" id="eiStDateE" value="${editStage.date_end||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
+            <div style="flex:1">${cnsEL('시작일')}<input type="date" class="cfield" id="eiStDateS" value="${sf.dS!=null?sf.dS:(editStage.date_start||'')}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
+            <div style="flex:1">${cnsEL('종료일')}<input type="date" class="cfield" id="eiStDateE" value="${sf.dE!=null?sf.dE:(editStage.date_end||'')}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%"></div>
           </div>`
-        :`<input type="date" class="cfield" id="eiStDateS" value="${editStage.date_start||''}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%">
+        :`<input type="date" class="cfield" id="eiStDateS" value="${sf.dS!=null?sf.dS:(editStage.date_start||'')}"${editStageLocked?' disabled':''} style="font-size:16px;width:100%">
           <p style="font-size:12.5px;color:var(--sub);margin:6px 0 4px">지정일 단계는 대회일 하루입니다 — 종료일은 시작일과 같게 저장됩니다.</p>`)
       +cnsEL(`코스 (${editStageVenues.length}/6)`)+courseRows
       +(!editStageLocked&&editStageVenues.length<6?`<button class="btn soft" onclick="cnsStageCourseAdd()">＋ 코스 추가</button>`:'')
@@ -6914,14 +6917,31 @@ async function cnsEditBody(key){
   return cnsEditFrame('편집',`<p style="color:var(--sub)">지원하지 않는 항목입니다.</p>`,false)}
 let editStageVenues=null;
 function cnsStageSyncNames(){document.querySelectorAll('.eiCvName').forEach(el=>{editStageVenues[+el.dataset.i]=el.value})}
-function cnsStageCourseAdd(){
+// 코스 추가·삭제는 행 개수가 바뀌어 재렌더가 불가피하다(course 화면처럼 DOM 직접 갱신으로
+// 끝낼 수 없다). 그래서 재렌더 전에 화면의 "모든" 입력을 draft로 거둬 둔다 — 코스 이름만
+// 챙기면 일정·컷이 DB 값으로 되감긴다(5-3c 스윕에서 실기 재현).
+let editStageForm=null;
+function cnsStageSyncAll(){
   cnsStageSyncNames();
+  document.querySelectorAll('.eiTotalParIn').forEach(el=>{const i=+el.dataset.i,v=+el.value;if(Number.isFinite(v)&&v>0)editCoursePars[i]=v});
+  const f=editStageForm||{};
+  const dS=$('#eiStDateS'),dE=$('#eiStDateE');
+  if(dS)f.dS=dS.value;
+  if(dE)f.dE=dE.value;
+  const mode=$('#eiCutMode');
+  if(mode){
+    f.cut=mode.value==='gender'
+      ?{m:Math.max(1,+($('#eiCutM')||{}).value||12),f:Math.max(1,+($('#eiCutF')||{}).value||12)}
+      :{total:Math.max(2,+($('#eiCutTotal')||{}).value||24)}}
+  editStageForm=f}
+function cnsStageCourseAdd(){
+  cnsStageSyncAll();
   if(editStageVenues.length>=6){toast('코스는 최대 6개까지예요');return}
   editStageVenues.push(`${editStageVenues.length+1}코스`);
   editCoursePars.push(PRESET66.slice());
   renderConsole()}
 function cnsStageCourseDel(i){
-  cnsStageSyncNames();
+  cnsStageSyncAll();
   if(editStageVenues.length<=1){toast('코스는 최소 1개가 필요해요');return}
   editStageVenues.splice(i,1);editCoursePars.splice(i,1);
   renderConsole()}
@@ -7157,7 +7177,7 @@ async function cnsDeleteStageGo(stageId){
   toast('단계를 삭제했습니다');
   renderConsole()}
 // 단계 행 › — 그 단계의 일정·장소·코스·컷을 한 화면에서. 기존 편집기를 그대로 재사용한다.
-function cnsEditStageRow(stageId){cnsCourseStageId=stageId;editStageVenues=null;cnsEditField('stagerow')} // 진입 시 draft 비움 → body가 DB 값으로 채운다
+function cnsEditStageRow(stageId){cnsCourseStageId=stageId;editStageVenues=null;editStageForm=null;cnsEditField('stagerow')} // 진입 시 draft 비움 → body가 DB 값으로 채운다
 /* --- 화면 J: 심판진 --- */
 function cnsStaffHTML(){
   const js=judges(),connected=js.filter(s=>s.link_opened_at).length;
