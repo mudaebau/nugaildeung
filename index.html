@@ -1970,7 +1970,10 @@ function runToastUndo(){
   const t=$('#toastEl');t.classList.remove('on');t.style.pointerEvents='none';toastUndoFn=null}
 function maskPhone(p){return p.replace(/(\d{3})-?(\d{2})\d{2}-?(\d{4})/,'$1-$2••-$3')}
 function fmtDate(d){const[Y,M,D]=d.split('-');return `${M}.${D}`}
-function dday(d){const diff=Math.ceil((new Date(d)-new Date('2026-07-03'))/86400000);return diff>0?`D-${diff}`:diff===0?'D-DAY':''}
+// 기준일은 '오늘 자정'. 예전엔 new Date('2026-07-03')이 박혀 있어 D-day가 26일 부풀려졌다
+// (파일럿 대회가 D-1인데 신청 화면에 D-27로 표시됨). 참가자 대외 화면의 날짜 오정보였다.
+function dday(d){if(!d)return'';const t0=new Date();t0.setHours(0,0,0,0);
+  const diff=Math.ceil((new Date(d)-t0)/86400000);return diff>0?`D-${diff}`:diff===0?'D-DAY':''}
 
 /* ================= 화면 전환 + 뒤로가기 (History API) ================= */
 let curView='Owner',curPage='opHome',navStack=[];
@@ -4473,7 +4476,9 @@ async function openApply(id){
   const ne=t.noticeExtra||{};
   $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 미정'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
   renderCap();
-  $('#apDday').textContent='접수 마감 '+(dday(t.date)||'—');
+  // 접수 마감은 apply_deadline 이 있으면 그것을, 없으면 대회 시작일을 쓴다.
+  // ne 는 dbToTournament(2564행)가 매핑한 notice_extra 라 별도 매핑 추가가 필요 없다.
+  $('#apDday').textContent='접수 마감 '+(dday(ne.apply_deadline||t.date)||'—');
   const elig=ne.eligibility;
   const restricted=elig&&elig.type==='restricted';
   $('#apEligCard').style.display=restricted?'block':'none';
