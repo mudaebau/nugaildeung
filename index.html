@@ -2010,6 +2010,13 @@ function closeTopOverlay(){
   if(menu&&menu.classList.contains('on')){menu.classList.remove('on');return true}
   return false}
 window.addEventListener('popstate',e=>{
+  // ⑧ 위로 접어 들어온 경우 — 도착한 자리를 목적지로 바꿔 끼우고 끝낸다(새 항목 없음).
+  if(cnsPendingLoc){
+    const l=cnsPendingLoc;cnsPendingLoc=null;
+    curView='Console';navStack.length=0;
+    cnsScreen=l.screen;cnsTool=l.tool;cnsMajorSel=l.major;cnsSubSel=l.sub;
+    cnsEditKey=l.edit;cnsCourseStageId=l.course;
+    history.replaceState(l,'');renderLoc();return}
   // ⓐ 열린 시트가 있으면 그것만 닫고, 소비된 history 항목은 되돌려 놓는다.
   if(closeTopOverlay()){history.pushState(history.state,'');return}
   // ⓒ/ⓔ 콘솔 위치는 history.state에 통째로 실려 있다 — 뒤로도 앞으로도 같은 경로로 복원된다.
@@ -6857,8 +6864,28 @@ function cnsLoc(){return{cns:1,screen:cnsScreen,tool:cnsTool,major:cnsMajorSel,s
   edit:cnsEditKey,course:cnsCourseStageId}}
 function cnsSame(a,b){return a&&b&&a.screen===b.screen&&a.tool===b.tool&&a.major===b.major
   &&a.sub===b.sub&&a.edit===b.edit&&a.course===b.course}
-// 현재(=바뀐 뒤) 위치를 history에 쌓는다. 같은 자리면 쌓지 않는다(뒤로가 헛돌지 않게).
-function cnsPushNav(){const l=cnsLoc();if(cnsSame(history.state,l))return;history.pushState(l,'')}
+/* CH38 ⑧: 화면 깊이 — 0 콘솔 본체 · 1 도구 · 2 구조(허브 하위) · 3 편집(허브·구조 하위).
+   깊이가 같거나 얕아지는 이동은 '옆으로/위로' 가는 것이라 쌓으면 안 된다. 예전엔 전부 push라
+   편집 → 유틸바 [대회 정보] → [뒤로] 가 편집으로 되돌아오는 고리가 생겼다(파일럿 ⑧).
+   단, 콘솔 본체(0)끼리 이동(중단계·랜딩·위저드)은 ⓒ·ⓓ가 쌓기를 요구하므로 예외. */
+function cnsDepth(l){
+  if(!l||!l.tool)return 0;
+  if(l.tool==='edit')return 3;
+  if(l.tool==='structure')return 2;
+  return 1}
+// 현재(=바뀐 뒤) 위치를 history에 반영한다. 같은 자리면 아무것도 하지 않는다.
+let cnsPendingLoc=null;   // 얕은 곳으로 접어 들어갈 때 도착 즉시 덮어쓸 목적지
+function cnsPushNav(){
+  const l=cnsLoc(),cur=history.state;
+  if(cnsSame(cur,l))return;
+  const dn=cnsDepth(l),dc=cnsDepth(cur&&cur.cns?cur:null);
+  if(cur&&cur.cns&&dn<dc){
+    // 위로 올라가는 이동은 새 항목을 만들지 않고 히스토리를 한 칸 접는다.
+    // 접은 자리가 목적지와 다르면(예: 편집 → 다른 도구) 그 자리를 목적지로 바꿔 끼운다.
+    // 이렇게 해야 [뒤로]가 지나온 화면을 다시 만나지 않고 계속 과거로만 간다(⑧).
+    cnsPendingLoc=l;history.back();return}
+  if(cur&&cur.cns&&dn===dc&&dn>0){history.replaceState(l,'');return}   // 도구끼리 = 형제
+  history.pushState(l,'')}
 // 콘솔 진입 시 기준점 — 이게 없으면 첫 화면에서 뒤로가 state:null로 떨어져 모바일 스택이 튄다.
 function cnsMarkNav(){history.replaceState(cnsLoc(),'')}
 // ⓓ 위저드 작성 중 이탈 경고 — 대회명·장소를 한 글자라도 넣었으면 확인을 받는다.
@@ -6868,7 +6895,8 @@ function cnsWizardLeaveOK(next){
   const v=id=>{const el=document.getElementById(id);return el&&el.value.trim()};
   if(!v('cnsWName')&&!v('cnsWPlace'))return true;
   return confirm('작성 중인 대회 정보가 저장되지 않았어요. 나가면 입력한 내용이 사라집니다. 나갈까요?')}
-function cnsOpenTool(t){cnsScoreLeaveThen(()=>{cnsTool=t;renderConsole();cnsPushNav()})}
+// 도구로 나갈 때 편집 키를 비운다 — 안 비우면 state 스냅샷에 죽은 edit 키가 실려 남는다(⑧).
+function cnsOpenTool(t){cnsScoreLeaveThen(()=>{if(t!=='edit')cnsEditKey=null;cnsTool=t;renderConsole();cnsPushNav()})}
 function cnsCloseTool(){if(!cnsTool)return;history.back()}   // ⓔ 앱 내 [←]도 브라우저 [뒤로]와 같은 경로
 // 로고 클릭 = 대회 선택으로 '전진'(뒤로가기가 아니다) — 도구를 닫고 signin으로 한 걸음 쌓는다.
 function cnsGoPick(){cnsTool=null;cnsEditKey=null;cnsGo('signin')}
