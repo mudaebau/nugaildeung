@@ -6417,9 +6417,44 @@ async function renderConsole(){
     if(cnsScreen==='main')return await renderCnsMain(w)}
   catch(e){console.error('[console render]',e);toast('화면을 그리지 못했습니다 — '+((e&&e.message)||e))}}
 /* ---- 화면 L: 랜딩 ---- */
+/* CH38 ⑦: 랜딩(L)과 대회 선택(화면 0 우측 패널)을 한 화면으로 합쳤다.
+   예전엔 로그인한 운영자가 랜딩 → [내 대회로] → 대회 선택 → 대회로, 두 번을 거쳐야 했다.
+   히어로는 그대로 두고 그 아래에 대회 선택 패널을 이식한다 — 비로그인은 CTA 박스만,
+   로그인은 인사 + 내 대회 카드(진행 중이 파란 테두리로 맨 위) + [＋ 새 대회 개설하기].
+   3장짜리 소개 카드는 그 아래로 내린다(주인공은 내 대회). */
+function cnsMyTournamentCards(){
+  const mine=tournaments.filter(t=>t.mine);
+  const order={live:0,open:1,ready:1,done:2};
+  mine.sort((a,b)=>(order[a.status]??3)-(order[b.status]??3));
+  return mine.map(t=>{
+    const cur=t.status==='live';
+    const label=t.status==='live'?'진행 중':t.status==='open'?'접수 중':t.status==='done'?'종료':'개설 완료';
+    return `<button class="grp" style="width:100%;text-align:left;margin-bottom:10px;${cur?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsEnterTournament('${t.id}')">
+      <h5 style="${cur?'':'color:var(--sub)'}">${cur?'● ':''}${cnsEsc(t.name)}</h5><p style="font-size:13.5px;color:var(--sub)">${label}${t.players?' · '+t.players+'명':''}</p></button>`}).join('')
+    ||'<p style="font-size:13.5px;color:var(--sub);padding:8px 2px">아직 운영 중인 대회가 없어요 — 아래 버튼으로 시작하세요</p>'}
+function cnsScrollToMine(){const el=$('#cnsMyList');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
 function renderCnsLanding(w){
-  const cta=user.loggedIn?`<button class="btn" style="padding:10px 18px" onclick="cnsGo('signin')">내 대회로</button>`
+  const li=user.loggedIn;
+  const cta=li?`<button class="btn" style="padding:10px 18px" onclick="cnsScrollToMine()">내 대회로</button>`
     :`<button class="btn" style="padding:10px 18px" onclick="cnsGo('signin')">대회 개설하기</button>`;
+  const heroBtn=li
+    ?`<button style="background:#fff;color:var(--act);font-weight:700;border-radius:14px;padding:15px 30px;font-size:17px" onclick="cnsGo('wizard')">＋ 새 대회 개설하기</button>`
+    :`<button style="background:#fff;color:var(--act);font-weight:700;border-radius:14px;padding:15px 30px;font-size:17px" onclick="cnsGo('signin')">＋ 무료로 대회 개설하기</button>`;
+  // 히어로 아래 패널 — 비로그인은 시작 안내 한 박스, 로그인은 인사 + 내 대회 리스트
+  const panel=li?`
+    <div id="cnsMyList" style="max-width:520px;margin:0 auto;padding:24px 26px 6px">
+      <p style="font-size:14px;font-weight:700;margin-bottom:12px">다시 오셨네요, ${cnsEsc(user.name)}님 👋</p>
+      ${cnsMyTournamentCards()}
+      <button class="btn soft" style="width:100%;text-align:center;margin-top:4px" onclick="cnsGo('wizard')">＋ 새 대회 개설하기</button>
+      <p style="font-size:12px;color:var(--sub);margin-top:14px;text-align:center"><span style="cursor:pointer" onclick="cnsLogout()">로그아웃</span></p>
+    </div>`
+    :`<div id="cnsMyList" style="max-width:520px;margin:0 auto;padding:24px 26px 6px">
+      <div class="grp" style="padding:20px;text-align:center">
+        <b style="font-size:16px">전화번호만 있으면 시작할 수 있어요</b>
+        <p style="font-size:14px;color:var(--sub);margin:6px 0 14px">가입 절차 없음 — 참가자·심판은 링크로 참여하니 계정이 필요 없습니다</p>
+        <button class="btn" style="width:100%;text-align:center;font-size:16px" onclick="cnsGo('signin')">대회 개설 시작하기</button>
+      </div>
+    </div>`;
   w.innerHTML=`
     <div style="background:#fff">
       <div style="display:flex;align-items:center;padding:14px 26px;border-bottom:1px solid var(--line)">
@@ -6430,38 +6465,20 @@ function renderCnsLanding(w){
         <p style="font-size:13.5px;font-weight:700;opacity:.85;margin-bottom:10px">파크골프 대회 관리 플랫폼</p>
         <h2 style="font-size:32px;line-height:1.45;margin-bottom:8px">대회 개설부터 시상까지,<br>한 번에 끝내세요</h2>
         <p style="font-size:16px;opacity:.9;margin-bottom:20px">신청 접수 · 조편성 · 스코어 · 실시간 전광판 — 총무 혼자서도 충분합니다</p>
-        <button style="background:#fff;color:var(--act);font-weight:700;border-radius:14px;padding:15px 30px;font-size:17px" onclick="cnsGo('signin')">＋ 무료로 대회 개설하기</button>
+        ${heroBtn}
       </div>
+      ${panel}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:22px 26px">
-        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📝</p><b style="font-size:15px">단계를 따라가면 끝</b><p style="font-size:14px;color:var(--sub);margin-top:4px">개설→모집→경기→시상, 할 일이 순서대로</p></div>
-        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📋</p><b style="font-size:15px">카톡 명단 그대로</b><p style="font-size:14px;color:var(--sub);margin-top:4px">복사해 붙여넣으면 등록·조편성까지</p></div>
-        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📺</p><b style="font-size:15px">실시간 전광판</b><p style="font-size:14px;color:var(--sub);margin-top:4px">TV에 띄우는 순위 — 참가자는 링크로</p></div>
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📝</p><b style="font-size:16px">단계를 따라가면 끝</b><p style="font-size:14px;color:var(--sub);margin-top:4px">개설→모집→경기→시상, 할 일이 순서대로</p></div>
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📋</p><b style="font-size:16px">카톡 명단 그대로</b><p style="font-size:14px;color:var(--sub);margin-top:4px">복사해 붙여넣으면 등록·조편성까지</p></div>
+        <div class="grp" style="text-align:center;padding:18px"><p style="font-size:26px;margin-bottom:6px">📺</p><b style="font-size:16px">실시간 전광판</b><p style="font-size:14px;color:var(--sub);margin-top:4px">TV에 띄우는 순위 — 참가자는 링크로</p></div>
       </div>
     </div>`}
 /* ---- 화면 0: 시작하기 + 대회 선택 ---- */
 async function renderCnsSignin(w){
-  if(user.loggedIn){
-    const mine=tournaments.filter(t=>t.mine);
-    const order={live:0,open:1,ready:1,done:2};
-    mine.sort((a,b)=>(order[a.status]??3)-(order[b.status]??3));
-    const cards=mine.map(t=>{
-      const cur=t.status==='live';
-      const label=t.status==='live'?'진행 중':t.status==='open'?'접수 중':t.status==='done'?'종료':'개설 완료';
-      return `<button class="grp" style="width:100%;text-align:left;margin-bottom:10px;${cur?'border:2px solid var(--act);box-shadow:0 4px 12px rgba(21,80,180,.18)':''}" onclick="cnsEnterTournament('${t.id}')">
-        <h5 style="${cur?'':'color:var(--sub)'}">${cur?'● ':''}${cnsEsc(t.name)}</h5><p style="font-size:13.5px;color:var(--sub)">${label}${t.players?' · '+t.players+'명':''}</p></button>`}).join('')
-      ||'<p style="font-size:13.5px;color:var(--sub);padding:8px 2px">아직 운영 중인 대회가 없어요 — 아래 버튼으로 시작하세요</p>';
-    w.innerHTML=`<div style="display:flex;min-height:100vh">
-      <div style="flex:1;background:linear-gradient(140deg,#1B64DA,#2E7BE8);padding:44px 30px;display:flex;align-items:center;justify-content:center;color:#fff">
-        <div style="text-align:center"><span class="lg" style="box-shadow:none">누가<i>1</i>등</span><h3 style="font-size:20px;margin:14px 0 6px">${cnsEsc(user.name)} 님, 반가워요</h3><p style="font-size:14px;opacity:.9">진행 중인 대회를 고르거나 새로 시작하세요</p></div>
-      </div>
-      <div style="flex:1;background:var(--cbg);padding:22px 24px;max-width:520px">
-        <p style="font-size:14px;font-weight:700;margin-bottom:12px">다시 오셨네요, ${cnsEsc(user.name)}님 👋</p>
-        ${cards}
-        <button class="btn soft" style="width:100%;text-align:center;margin-top:4px" onclick="cnsGo('wizard')">＋ 새 대회 개설하기</button>
-        <p style="font-size:12px;color:var(--sub);margin-top:14px;text-align:center"><span style="cursor:pointer" onclick="cnsLogout()">로그아웃</span></p>
-      </div>
-    </div>`;
-    return}
+  // CH38 ⑦: 로그인한 사람에게 보여줄 '대회 선택' 중간 화면은 없앴다 — 랜딩이 그 역할을 한다.
+  // 남은 링크·뒤로가기로 여기 들어오면 곧장 랜딩으로 돌려보낸다.
+  if(user.loggedIn){cnsScreen='landing';history.replaceState(cnsLoc(),'');return renderCnsLanding(w)}
   w.innerHTML=`<div style="display:flex;min-height:100vh">
     <div style="flex:1;background:linear-gradient(140deg,#1B64DA,#2E7BE8);padding:44px 30px;display:flex;align-items:center;justify-content:center">
       <div style="background:#fff;border-radius:18px;padding:26px;width:340px;box-shadow:0 14px 36px rgba(0,0,0,.25)">
@@ -6487,8 +6504,10 @@ async function cnsStartSignIn(){
   if(row.is_new){toast(`${user.name} 님, 가입 완료!`);cnsGo('wizard');return}
   await loadTournaments();
   toast(`${row.name} 님, 다시 오셨어요 — 진행 중 ${row.active_count||0}개`);
-  renderConsole()}
-function cnsLogout(){cnsStopLive();user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';cnsGo('signin')}
+  // ⑦+ⓓ1: 로그인 성공 = 통합 랜딩으로. 전화번호 화면은 history에서 replace로 지운다 —
+  // 남겨 두면 로그인 직후 [뒤로]가 이미 로그인한 사람에게 로그인 화면을 다시 보여준다.
+  cnsScreen='landing';history.replaceState(cnsLoc(),'');renderConsole()}
+function cnsLogout(){cnsStopLive();user.loggedIn=false;user.id=null;user.name='';user.secret=null;user.phone='';cnsGo('landing')} // ⑦ 로그아웃 → 통합 랜딩
 async function cnsEnterTournament(id){
   const ok=await loadMyTournament(id);
   if(!ok){toast('대회 정보를 불러오지 못했습니다');return}
@@ -6563,7 +6582,7 @@ function renderCnsWizard(w){
       <div style="margin-bottom:3px"><span style="font-size:12px;color:var(--sub);font-weight:700;margin-right:4px">입력</span>${chip(s.rec==='total','총타수 제출',`cnsWizSet(${i},'rec','total')`)}${chip(s.rec==='hole','홀별 입력',`cnsWizSet(${i},'rec','hole')`,s.kind==='period')}</div>
       ${dateUI}</div>`}).join('');
   w.innerHTML=`
-    <div class="util"><span class="lg" onclick="cnsGo('signin')">누가<i>1</i>등</span><span class="tname">새 대회 개설</span></div>
+    <div class="util"><span class="lg" onclick="cnsGo('landing')">누가<i>1</i>등</span><span class="tname">새 대회 개설</span></div>
     <div style="display:flex;background:var(--cbg);min-height:calc(100vh - 56px)">
       <div style="flex:1;padding:20px 22px;border-right:1.5px solid var(--line)">
         <p style="font-size:14px;font-weight:700;margin-bottom:10px">1. 기본 정보</p>
@@ -6693,7 +6712,7 @@ function cnsDoneBannerHTML(){
     <b style="color:#C4523A;font-size:14.5px">🔒 종료된 대회 — 기록 보관 중이라 수정할 수 없어요</b>
     <span style="color:#7A3326;font-size:13.5px">순위 열람·CSV·인쇄·전광판·요강 공유는 그대로 됩니다.</span></div>`}
 async function renderCnsMain(w){
-  if(!config.id){cnsGo('signin');return}
+  if(!config.id){cnsGo('landing');return}
   if(cnsTool)return renderCnsTool(w);
   cnsModel=await buildConsoleModel();
   const model=cnsModel;
@@ -6931,7 +6950,7 @@ function cnsWizardLeaveOK(next){
 function cnsOpenTool(t){cnsScoreLeaveThen(()=>{if(t!=='edit')cnsEditKey=null;cnsTool=t;renderConsole();cnsPushNav()})}
 function cnsCloseTool(){if(!cnsTool)return;history.back()}   // ⓔ 앱 내 [←]도 브라우저 [뒤로]와 같은 경로
 // 로고 클릭 = 대회 선택으로 '전진'(뒤로가기가 아니다) — 도구를 닫고 signin으로 한 걸음 쌓는다.
-function cnsGoPick(){cnsTool=null;cnsEditKey=null;cnsGo('signin')}
+function cnsGoPick(){cnsTool=null;cnsEditKey=null;cnsGo('landing')} // ⑦ 로고 = 통합 랜딩(내 대회 리스트 포함)
 function cnsDateK(d){return(d||'').replaceAll('-','.')}
 async function renderCnsTool(w){
   if(cnsTool==='mypage')return renderCnsMypage(w);
@@ -8169,7 +8188,7 @@ window.addEventListener('beforeunload',e=>{
   if(applyId){openApply(applyId);return}
   // CH33 라우팅: 운영자 진입 — PC 폭(≥1024)이거나 ?console=1 → 콘솔, ?console=0 → 강제 모바일
   const _cQ=qs.get('console');
-  if(_cQ==='1'||(_cQ!=='0'&&isConsoleViewport())){openConsole(user.loggedIn?'signin':'landing');return}})();
+  if(_cQ==='1'||(_cQ!=='0'&&isConsoleViewport())){openConsole('landing');return}})();   // ⑦ 로그인 여부와 무관하게 통합 랜딩이 홈
 </script>
 </body>
 </html>
