@@ -2108,6 +2108,14 @@ function divisionAwardPicks(done,doneAll){
       .sort((x,y)=>x.sum-y.sum);
     picks.push({sec:'클럽 대항전',teams})}
   return picks}
+/* CH38 ⑩ 분기: 진행 중에는 설정한 상을 수상자가 없어도 그대로 보여준다 — "아직 없습니다"가
+   그 상이 살아 있다는 정직한 안내이기 때문. 대회가 끝난 뒤(시상·최종 결과·인쇄·전광판 결과)는
+   수상자가 성립하지 않은 부문을 문서에서 아예 뺀다 — 끝난 대회의 시상표에 빈 상이 남으면 안 된다. */
+function awardPicksForView(done,doneAll,finished){
+  const picks=divisionAwardPicks(done,doneAll);
+  if(!finished)return picks;
+  return picks.filter(pk=>pk.teams?pk.teams.length>0:(pk.rows||[]).some(r=>r.s))}
+function tournamentFinished(){return config.tStatus==='done'}
 // 기간형 대회의 리더보드가 라운드 분기로 렌더되다 sums()에서 예외(또는 빈 순위)로 끝나
 // "무표시"가 됐다. 지난 단계 스냅숏(pastStageSnap) 열람 중엔 스냅숏을 보존한다.
 async function renderResultFresh(){
@@ -6150,19 +6158,22 @@ function renderPeriodResult(){
     +outs.map(outRowHTML).join('');
 
   let aw='';
+  const fin=tournamentFinished();   // ⑩ 종료 후엔 수상자 없는 줄을 아예 뺀다
   if(config.awards.gender&&config.fields.sex&&fullyDone.length){
     const m=fullyDone.find(s=>s.p.sex==='남'),f=fullyDone.find(s=>s.p.sex==='여');
-    aw+=`남자부 1위 ${m?m.p.name:'해당자 없음'} · 여자부 1위 ${f?f.p.name:'해당자 없음'}<br>`}
+    if(!fin||m||f)
+      aw+=`남자부 1위 ${m?m.p.name:'해당자 없음'} · 여자부 1위 ${f?f.p.name:'해당자 없음'}<br>`}
   if(config.awards.age&&config.fields.age&&fullyDone.length){
     const bands=[['60대부',60,69],['70대부',70,79],['80세 이상부',80,150]];
-    aw+=bands.map(([lb,lo,hi])=>{
-      const w=fullyDone.find(s=>s.p.age>=lo&&s.p.age<=hi);
-      return`${lb} 1위 ${w?w.p.name:'해당자 없음'}`}).join(' · ')+'<br>'}
+    const rows=bands.map(([lb,lo,hi])=>({lb,w:fullyDone.find(s=>s.p.age>=lo&&s.p.age<=hi)}))
+      .filter(r=>!fin||r.w);
+    if(rows.length)aw+=rows.map(r=>`${r.lb} 1위 ${r.w?r.w.p.name:'해당자 없음'}`).join(' · ')+'<br>'}
   if(config.awards.club&&config.fields.club&&fullyDone.length){
     const byClub={};fullyDone.forEach(s=>{(byClub[s.p.club||'무소속']=byClub[s.p.club||'무소속']||[]).push(s)});
     const teams=Object.entries(byClub).filter(([c,a])=>a.length>=4)
       .map(([c,a])=>({club:c,sum:a.slice(0,4).reduce((x,s)=>x+s.tot,0)})).sort((x,y)=>x.sum-y.sum);
-    aw+=`클럽 대항전 1위 ${teams.length?teams[0].club:'해당자 없음'}<br>`}
+    if(!fin||teams.length)
+      aw+=`클럽 대항전 1위 ${teams.length?teams[0].club:'해당자 없음'}<br>`}
   if(players.length){
     const top=[...players].sort((a,b)=>(b.playCount||0)-(a.playCount||0))[0];
     aw+=`<span style="color:var(--muted)">도전왕 (최다 플레이 ${top?.playCount||0}회) ${top&&top.playCount?top.name:'해당자 없음'}</span>`}
@@ -6229,7 +6240,7 @@ function renderResult(){
       <div class="sc num">${fmt(s)}</div></div></div>`
     :`<div class="pod" style="opacity:.55"><div class="medal">🏅</div>
       <div class="pi"><b>해당자 없음</b><span>${label}</span></div></div>`;
-  const picks=divisionAwardPicks(done,doneAll);
+  const picks=awardPicksForView(done,doneAll,tournamentFinished());   // ⑩ 종료 후엔 미성립 부문 제외
   const secOf=n=>picks.find(x=>x.sec===n);
   const gsec=secOf('남녀부 시상');
   if(gsec){
@@ -6807,7 +6818,7 @@ function cnsScrAward(subKey,model){
     if(done.length>=1){
       secs+=`<div class="grp"><h5>🥇 종합</h5>`+done.slice(0,3).map((s,i)=>
         `<div class="ynqrow"><span>${['1위','2위','3위'][i]}</span><span>${nm(s)}</span></div>`).join('')+`</div>`}
-    divisionAwardPicks(done,done).forEach(pk=>{
+    awardPicksForView(done,done,tournamentFinished()).forEach(pk=>{   // ⑩ 종료 후엔 미성립 부문 제외
       if(pk.teams){
         secs+=`<div class="grp"><h5>🏢 ${cnsEsc(pk.sec)} (상위 4인 합산)</h5>`
           +(pk.teams.length?pk.teams.slice(0,3).map((tm,i)=>`<div class="ynqrow"><span>${i+1}위</span><span><b>${cnsEsc(tm.club)}</b> — ${tm.sum}타</span></div>`).join('')
