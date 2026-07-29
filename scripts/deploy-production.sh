@@ -41,9 +41,24 @@ URL=$(printf '%s' "$OUT" | grep -oE 'https://[a-z0-9.-]+\.vercel\.app' | tail -1
 [ -n "$URL" ] || { echo "$OUT" >&2; fail "배포 URL을 읽지 못했다"; }
 echo "· 배포됨: $URL"
 
-# ── 4. 실제로 운영 도메인에 그 내용이 올라갔는지 본문 대조 ──
-#    (배포 URL 자체는 보호 리다이렉트를 주므로 별칭 도메인 본문으로 판정한다)
-sleep 3
+# ── 4. 운영 도메인 별칭 할당 검증 ──
+#    이 프로젝트는 새 Production 빌드에 운영 도메인이 자동 할당되지 않는다(2026-07-29 확인).
+#    CLI 배포는 nuga1-nuga1.vercel.app 계열 별칭만 받고 nuga1.vercel.app 은 그대로 있었다.
+#    그래서 배포 성공 = 반영 완료가 아니다. 여기서 별칭을 실제로 확인하고, 없으면
+#    "대시보드에서 Promote 하라"고 안내하며 실패로 끝낸다 — 성공으로 착각하면 안 된다.
+ALIASES=$(vercel inspect "$URL" 2>&1 | grep -oE 'https://[a-z0-9.-]+\.vercel\.app' || true)
+echo "· 이 배포의 Aliases:"; printf '%s\n' "$ALIASES" | sed 's/^/    /'
+if ! printf '%s\n' "$ALIASES" | grep -qx "$EXPECT_ALIAS"; then
+  echo "" >&2
+  echo "⚠ 이 배포에 운영 도메인($EXPECT_ALIAS)이 자동 할당되지 않았다 — 배포는 됐지만 아직 아무도 못 본다." >&2
+  echo "   다음 순서로 승격한 뒤 이 스크립트를 다시 돌려 검증만 받으면 된다:" >&2
+  echo "     1) Vercel 대시보드 → 프로젝트 nuga1 → Deployments" >&2
+  echo "     2) $URL 행의 ⋯ 메뉴 → Promote to Production" >&2
+  echo "     3) Domains 탭에서 $EXPECT_ALIAS 가 이 배포를 가리키는지 확인" >&2
+  fail "운영 도메인 미할당 — 대시보드 Promote 필요"
+fi
+
+# ── 5. 실제로 운영 도메인에 그 내용이 올라갔는지 본문 대조 ──
 LIVE=$(mktemp); curl -sL "$EXPECT_ALIAS/" -o "$LIVE"
 LIVE_MD5=$(md5sum "$LIVE" | cut -d' ' -f1)
 LIVE_SIZE=$(wc -c < "$LIVE")
