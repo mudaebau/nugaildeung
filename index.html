@@ -4471,7 +4471,7 @@ async function openApply(id){
   $('#apName').textContent=t.name;
   const scale=t.type==='screen'?`${t.rounds}개 코스(대회기간 라운드)`:`${t.rounds*18}홀 스트로크 · ${t.rounds}개 코스`;
   const ne=t.noticeExtra||{};
-  $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 20,000원 · 중식 포함 · 현장 납부'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
+  $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 미정'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
   renderCap();
   $('#apDday').textContent='접수 마감 '+(dday(t.date)||'—');
   const elig=ne.eligibility;
