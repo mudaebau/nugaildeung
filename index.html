@@ -1972,8 +1972,14 @@ function maskPhone(p){return p.replace(/(\d{3})-?(\d{2})\d{2}-?(\d{4})/,'$1-$2�
 function fmtDate(d){const[Y,M,D]=d.split('-');return `${M}.${D}`}
 // 기준일은 '오늘 자정'. 예전엔 new Date('2026-07-03')이 박혀 있어 D-day가 26일 부풀려졌다
 // (파일럿 대회가 D-1인데 신청 화면에 D-27로 표시됨). 참가자 대외 화면의 날짜 오정보였다.
-function dday(d){if(!d)return'';const t0=new Date();t0.setHours(0,0,0,0);
-  const diff=Math.ceil((new Date(d)-t0)/86400000);return diff>0?`D-${diff}`:diff===0?'D-DAY':''}
+// 'YYYY-MM-DD'는 UTC 자정으로 파싱되는데 오늘은 로컬(KST) 자정이라, 그냥 빼면 9시간이
+// 남아 Math.ceil이 하루를 더 얹는다(마감 8/3인데 D-6). 양쪽을 '날짜'로만 환산해 뺀다.
+function dday(d){if(!d)return'';
+  const t=new Date(d);if(isNaN(t))return'';
+  const n=new Date();
+  const diff=Math.round((Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate())
+    -Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()))/86400000);
+  return diff>0?`D-${diff}`:diff===0?'D-DAY':''}
 
 /* ================= 화면 전환 + 뒤로가기 (History API) ================= */
 let curView='Owner',curPage='opHome',navStack=[];
