@@ -3330,7 +3330,7 @@ function renderNotice(t,stages,playerCount){
   const venuePlace=ne.venue_place||'';
   const isPeriod=first.kind==='period';
   const kSchedule=isPeriod
-    ?{label:stages.length>1?`📅 ${first.name} 기간`:'📅 접수 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
+    ?{label:stages.length>1?`📅 ${first.name} 기간`:'📅 대회 기간',val:`${(first.date_start||'').replaceAll('-','.')} ~ ${(first.date_end||'').replaceAll('-','.')}`,sub:'기간 중 무제한 도전'}
     :{label:stages.length>1?`📅 ${first.name}`:'📅 대회일',val:(first.date_start||'').replaceAll('-','.'),sub:venuePlace||venuesArr[0]||''};
 
   // 핵심카드②: 결승 or 장소
@@ -3372,7 +3372,7 @@ function renderNotice(t,stages,playerCount){
   const awardRows=[];
   const tf=t.fields||{};
   if(t.awards){
-    if(t.awards.gender&&tf.sex)awardRows.push(['남녀부 시상','부문별 1·2·3위']);
+    if(t.awards.gender&&tf.sex)awardRows.push(['남녀부 시상','남·여 각 1위']);   // CH38-P0: divisionAwardPicks가 실제로 뽑는 인원에 문구를 맞춤
     if(t.awards.age&&tf.age)awardRows.push(['연령부 시상','60·70·80대 부문 1위']);
     if(t.awards.club&&tf.club)awardRows.push(['클럽 대항전','상위 4인 합산']);
   }
@@ -3389,7 +3389,8 @@ function renderNotice(t,stages,playerCount){
   const stageSteps=stages.map(s=>{
     const modeTxt=s.kind==='period'?'기간 내 코스 도전<br>베스트 기록 인정':(s.record_mode==='total'?'지정일 · 코스 총점':'지정일 · 홀별 기록');
     return`<div class="ynfstep"><b>${s.name}</b><span>${modeTxt}</span></div>`});
-  stageSteps.push(`<div class="ynfstep"><b>시상</b><span>${stages.length>1?'결승':'라운드'} 직후<br>현장 시상식</span></div>`);
+  // CH38-P0: 마지막에 붙던 '시상' 스텝은 대응 설정이 하나도 없는 지어낸 문안이라 제거했다
+  // — 참가자 화면의 모든 문장은 저장된 설정의 결과여야 한다.
   const flowSecHTML=`
     <div class="ynsec">
       <h5>⛳ 진행 방식</h5>
@@ -3399,7 +3400,7 @@ function renderNotice(t,stages,playerCount){
   // 참가 자격 · 문의 (미입력 문의는 행 숨김)
   const elig=ne.eligibility;
   const eligText=elig&&elig.type==='restricted'?(elig.text||'참가 조건이 있습니다'):'누구나 참가 가능';
-  const recordTxt=(first.record_mode==='total'?'코스 총점':'홀별 기록')+(first.kind==='round'?' (심판 입력)':' (매장 직원 입력)');
+  const recordTxt=(first.record_mode==='total'?'코스 총점':'홀별 기록')+(first.kind==='round'?' (심판 입력)':'')   // CH38-P0: 기간형에 붙던 입력 주체 괄호는 서비스에 없는 역할이라 삭제(심판은 실재해 유지);
   const eligSecHTML=`
     <div class="ynsec">
       <h5>👥 참가 자격 · 문의</h5>
@@ -3421,7 +3422,7 @@ function renderNotice(t,stages,playerCount){
       <span class="ynbadge">${badge}</span>
       <h2>${t.name}</h2>
       <p class="ynsub">${oneLine} · ${venuesArr.join(', ')||'—'}</p>
-      <p class="ynhost">주최 ${t.host_org||'—'}</p>
+      ${t.host_org?`<p class="ynhost">주최 ${t.host_org}</p>`:''}
     </div>
     <div class="ynkgrid">
       <div class="ynkcard"><small>${kSchedule.label}</small><b>${kSchedule.val}<br><span class="sm">${kSchedule.sub}</span></b></div>
@@ -4480,7 +4481,7 @@ async function openApply(id){
   $('#apName').textContent=t.name;
   const scale=t.type==='screen'?`${t.rounds}개 코스(대회기간 라운드)`:`${t.rounds*18}홀 스트로크 · ${t.rounds}개 코스`;
   const ne=t.noticeExtra||{};
-  $('#apMeta').innerHTML=`${t.place}<br>${scale} · 주최 ${t.host}<br>${ne.fee||'참가비 미정'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
+  $('#apMeta').innerHTML=`${t.place}<br>${scale}${t.host?` · 주최 ${t.host}`:''}<br>${ne.fee||'참가비 미정'}${ne.prize_total?`<br>${ne.prize_total}`:''}`;
   renderCap();
   // 접수 마감은 apply_deadline 이 있으면 그것을, 없으면 대회 시작일을 쓴다.
   // ne 는 dbToTournament(2564행)가 매핑한 notice_extra 라 별도 매핑 추가가 필요 없다.
