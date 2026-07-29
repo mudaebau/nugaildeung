@@ -3348,11 +3348,16 @@ function renderNotice(t,stages,playerCount){
     </div>`:'';
 
   // 시상 내역 (문답형, 항목 없으면 섹션 자체 숨김)
+  // CH38 ⑩: 표기 조건 = 집계 조건. 예전엔 요강이 awards 플래그만 봤는데, 실제 수상자 선정
+  // (divisionAwardPicks)은 의존 항목(성별·나이·소속 클럽)까지 켜져 있어야 계산한다. 그래서
+  // 소속 클럽을 안 받는 대회에서도 요강에 '클럽 대항전'이 떠 결과에는 영원히 안 나오는
+  // 유령 시상이 생겼다(파일럿 ⑩). 두 조건을 같은 곳에서 함께 본다.
   const awardRows=[];
+  const tf=t.fields||{};
   if(t.awards){
-    if(t.awards.gender)awardRows.push(['남녀부 시상','부문별 1·2·3위']);
-    if(t.awards.age)awardRows.push(['연령부 시상','60·70·80대 부문 1위']);
-    if(t.awards.club)awardRows.push(['클럽 대항전','상위 4인 합산']);
+    if(t.awards.gender&&tf.sex)awardRows.push(['남녀부 시상','부문별 1·2·3위']);
+    if(t.awards.age&&tf.age)awardRows.push(['연령부 시상','60·70·80대 부문 1위']);
+    if(t.awards.club&&tf.club)awardRows.push(['클럽 대항전','상위 4인 합산']);
   }
   // 콘솔 편집기는 amount, 모바일 편집기는 item 키로 저장해왔다 — 둘 다 읽어야 등위별
   // 시상이 공개 요강에 뜬다(CH37 ③: 콘솔에서 입력한 시상이 '—'로만 보이던 원인).
@@ -5761,6 +5766,22 @@ function standings(pool=players,courseIdx=-1){
 
 /* ================= 전광판 ================= */
 let boardStageKind='round',boardStageRecordMode='hole',boardActiveStage=null,boardStages=[];
+/* CH38 ⑨(a): 전광판 깜박임 — 6초 폴링이 값이 그대로여도 매번 행을 다시 그려서 생겼다.
+   렌더에 실제로 쓰이는 값만 뽑아 해시로 비교하고, 같으면 아예 그리지 않는다.
+   (행 단위 부드러운 이동 애니메이션(FLIP)은 파일럿 후 백로그 — 여기서는 건드리지 않는다) */
+let boardSnapHash=null;
+function boardDataHash(){
+  try{
+    return JSON.stringify({r:ROUNDS,h:HOLES,par:PAR_TOT,st:(boardActiveStage||{}).id||null,
+      p:players.map(p=>[p.id,p.name,p.st||'',p.ci?1:0,p.group,
+        p.best?Object.keys(p.best).sort().map(k=>k+':'+p.best[k]).join('|'):'',
+        p.scores?p.scores.join(','):'',p.playCount||0])})}
+  catch(e){console.error('[전광판 해시 실패]',e);return 'x'+Math.random()}}
+// force=true면 무조건 그린다(첫 진입·필터 변경). 폴링은 변화가 있을 때만 그린다.
+function boardRenderIfChanged(force){
+  const h=boardDataHash();
+  if(!force&&h===boardSnapHash)return false;
+  boardSnapHash=h;renderBoard();renderResult();return true}
 let boardGateId=null;
 async function submitBoardGate(){
   if(!boardGateId)return;
@@ -5823,7 +5844,7 @@ async function loadBoardData(tournamentId,trusted){
       ci:!!r.checked_in_at,paid:!!r.paid,
       best:bestMap[r.id]||{},playCount:playCountMap[r.id]||0}));
     groups=[];
-    renderBoard();renderResult();return}
+    boardRenderIfChanged(!trusted);return}   // ⑨(a) 폴링(trusted)은 변화 있을 때만
 
   ROUNDS=stageCoursePars.length||t.rounds||1;HOLES=ROUNDS*18;coursePars=stageCoursePars;
   PAR_TOT=coursePars.reduce((a,c)=>a+c.reduce((x,y)=>x+y,0),0);
@@ -5842,7 +5863,7 @@ async function loadBoardData(tournamentId,trusted){
   const maxG=players.reduce((m,p)=>Math.max(m,p.group),-1);
   groups=Array.from({length:maxG+1},()=>[]);
   players.forEach((p,i)=>{if(p.group>=0)groups[p.group].push(i)});
-  renderBoard();renderResult()}
+  boardRenderIfChanged(!trusted)}   // ⑨(a) 폴링(trusted)은 변화 있을 때만
 // CH29①: 운영자/심판 세션의 "활성 단계" 관련 전역 상태(judgeStageKind·stageRecordMode·
 // curStaff/curGroup/curHole/jRound)를 한곳에서만 갱신한다 — 재진입(loadMyTournament)과
 // 단계 전환(doAdvanceStage)이 각자 다르게 갱신하다 동기화가 어긋난 것이 원인이었다
