@@ -17,7 +17,7 @@
 .lg i{font-style:normal;color:#C9930A;margin:0 1px}
 .tname{font-size:17px;font-weight:700;color:#fff}
 .util .tools{margin-left:auto;display:flex;gap:8px;font-size:13.5px;font-weight:700}
-.util .tools span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 13px}
+.util .tools span{background:#fff;border:1px solid rgba(255,255,255,.4);color:#1F2937;border-radius:10px;padding:7px 13px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 /* ② 대단계 = 카드 행렬 + 화살표 */
 .rail{display:flex;align-items:center;background:var(--bg);border-bottom:1.5px solid var(--line);padding:13px 16px;gap:4px}
 .rl{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:13px;text-align:center;padding:11px 6px;box-shadow:0 1px 4px rgba(29,61,92,.06)}
@@ -206,17 +206,17 @@ td{padding:11px 13px;border-bottom:1px solid #EDF1F6}
   </div>
   <div class="mainA">
     <div class="strip"><div><b>41</b><p>완주</p></div><div><b style="color:var(--act)">남8·여8</b><p>진출 컷</p></div>
-      <p style="margin-left:auto;font-size:13.5px;color:var(--goldtx);font-weight:700">⚠ 남자부 8위 동점 2명 — 카운트백 적용됨</p><span class="btn">컷 적용 — 결승 명단 만들기</span></div>
+      <span style="margin-left:auto;font-size:13px;color:var(--sub);font-weight:700">컷 인원 <span class="pill" style="border:1.5px solid var(--line)">−</span> <b style="font-family:Oswald;font-size:18px">8</b> <span class="pill" style="border:1.5px solid var(--line)">＋</span></span><span class="btn">컷 적용 — 결승 명단 만들기</span></div>
     <table>
       <tr><th style="width:64px">순위</th><th>이름</th><th style="width:60px">부문</th><th style="width:100px">합계</th><th>판정</th></tr>
       <tr><td><b style="font-family:Oswald;font-size:18px">7</b></td><td><b>신동철</b></td><td>남</td><td>141</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">진출</span></td></tr>
-      <tr style="background:#FFF9E8"><td><b style="font-family:Oswald;font-size:18px">8</b></td><td><b>엄기석</b></td><td>남</td><td>142</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">진출</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 — 카운트백 우세</span></td></tr>
-      <tr style="background:#FFF9E8;border-top:2.5px dashed #C4523A"><td><b style="font-family:Oswald;font-size:18px;color:var(--dim)">9</b></td><td>백일섭</td><td>남</td><td>142</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">탈락</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 — 카운트백 열세</span></td></tr>
+      <tr style="background:#FFF9E8"><td><b style="font-family:Oswald;font-size:18px">8</b></td><td><b>엄기석</b></td><td>남</td><td>142</td><td><span class="pill" style="background:var(--mint);color:var(--minttx)">진출</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 우세</span> <span class="pill" style="background:var(--act-soft);color:var(--act)">▼ 내리기</span></td></tr>
+      <tr style="background:#FFF9E8;border-top:2.5px dashed #C4523A"><td><b style="font-family:Oswald;font-size:18px;color:var(--dim)">9</b></td><td>백일섭</td><td>남</td><td>142</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">탈락</span> <span style="font-size:11.5px;color:var(--goldtx)">동점 열세</span> <span class="pill" style="background:var(--act-soft);color:var(--act)">▲ 올리기</span></td></tr>
       <tr><td><b style="font-family:Oswald;font-size:18px;color:var(--dim)">10</b></td><td>문정숙</td><td>남</td><td>145</td><td><span class="pill" style="background:#EDF1F6;color:var(--dim)">탈락</span></td></tr>
     </table>
   </div>
 </div></div>
-<p class="cap"><b>화면 5 — 진출자 확정: 컷 라인이 보이는 순위표</b>빨간 점선=컷 라인, 경계 동점은 골드 행+판정 사유 병기(자동 해소 시). 자동 불가 동점이면 이 화면에서 수동 선택. [컷 적용]이 결승 명단을 만들고 → 결승 대단계의 '명단 확정'이 ✓로.</p>
+<p class="cap"><b>화면 5 v2 — 진출자 확정: 전원 명단·수동 교체·컷 가감 (최종 주행 ⑪ 반영)</b>전체 참가자를 진출/탈락으로 구분 표시(컷 점선·동점 골드). [▲ 올리기]/[▼ 내리기]=운영자 임의 교체, 컷 인원 −/＋=설정값 초과·미달 허용 — 수동 개입은 전부 로그. [컷 적용]=명단만 확정(마감 별도).</p>
 <div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 6 — 시상 › 결과 발표</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
 <div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div class="rail"><div class="rl done"><b>✓ 개설</b></div><span class="arw">›</span><div class="rl done"><b>✓ 모집</b></div><span class="arw">›</span><div class="rl done"><b>✓ 예선</b></div><span class="arw">›</span><div class="rl done"><b>✓ 결승</b></div><span class="arw">›</span><div class="rl cur"><b>시상</b><small>2/3</small></div><span class="arw">›</span><div class="rl todo"><b>마감</b></div></div><div class="body2">
   <div class="snav"><p>시상 — 할 일 순서</p>
@@ -236,28 +236,26 @@ td{padding:11px 13px;border-bottom:1px solid #EDF1F6}
 </div></div>
 <p class="cap"><b>화면 6 — 시상: 확인 → 발표의 흐름</b>최종 순위·부문 수상(중복 제외)을 확인하고 발표 도구 3종으로 마무리. 종료 확정은 다음 대단계(마감)의 일 — 시상은 축하, 마감은 행정.</p>
 <div class="frame"><div class="chrome"><i></i><i></i><i></i><span>화면 7 — 대회 정보 수정 허브 (유틸바 ⚙️)</span></div><div class="util"><span class="lg">누가<i>1</i>등</span><span class="tname">제1회 임팩트 챌린지컵</span>
-<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div style="background:var(--bg);padding:16px 22px 4px"><div class="strip" style="margin-bottom:0"><div><b style="color:var(--goldtx)">80<small style="font-size:15px">%</small></b><p>요강 완성도</p></div><p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100% — 완성된 요강이 신청을 늘려요</p><span style="margin-left:auto" class="btn soft">👁 요강 미리보기</span></div></div>
-<div style="background:var(--bg);padding:12px 22px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
-  <div class="hcol"><p class="h" style="color:var(--minttx)">📋 요강 내용 — 언제든 수정</p>
+<div class="tools"><span>📺 전광판</span><span>🔗 신청 링크</span><span>⚖️ 심판진</span><span>⚙️ 대회 정보</span><span>📤 내보내기</span><span style="background:#F7CF5C;border-color:#F7CF5C;color:#1F2937">리얼스톤 ▾</span></div></div><div style="background:var(--bg);padding:16px 22px 4px"><div class="strip" style="margin-bottom:0"><div><b style="color:var(--goldtx)">80<small style="font-size:15px">%</small></b><p>요강 완성도</p></div><p style="font-size:14px;color:var(--sub);font-weight:500">게임룰만 채우면 100%</p></div></div>
+<div style="background:var(--bg);padding:12px 22px 18px;display:grid;grid-template-columns:1fr 1.25fr;gap:14px">
+  <div class="hcol"><p class="h" style="color:var(--minttx)">📋 대회 요강 — 참가자에게 보이는 것</p>
     <div class="hbtn">🏷 대회명 · 주최<small>임팩트 챌린지컵</small><span class="go">›</span></div>
     <div class="hbtn">🏆 시상 내역<small style="color:var(--minttx);font-weight:700">완료 ✓</small><span class="go">›</span></div>
     <div class="hbtn">💰 참가비 · 문의<small style="color:var(--minttx);font-weight:700">완료 ✓</small><span class="go">›</span></div>
     <div class="hbtn">📖 게임룰<small style="color:var(--goldtx);font-weight:700">채우기</small><span class="go">›</span></div>
-    <div class="hbtn">👁 요강 미리보기 · 공유<small>이미지 저장</small><span class="go">›</span></div>
-  </div>
-  <div class="hcol"><p class="h" style="color:var(--goldtx)">🟡 수정 시 참가자 공지 확인</p>
-    <div class="hbtn">📅 일정 · 대회장소<small>7.25 · ○○스크린골프장</small><span class="go">›</span></div>
-    <div class="hbtn">👥 정원 · 참여 대상<small>40명 · 누구나</small><span class="go">›</span></div>
     <div class="hbtn">🔒 공개 설정<small>공개</small><span class="go">›</span></div>
     <div class="hbtn">📝 참가자 정보 항목<small>성별 · 나이 · 소속</small><span class="go">›</span></div>
+    <div class="hbtn">👁 요강 미리보기 · 공유<small>이미지 저장</small><span class="go">›</span></div>
   </div>
-  <div class="hcol"><p class="h" style="color:#C4523A">🔴 기록이 있어 잠김</p>
-    <div class="hbtn lock">⛳ 코스 구성 · 파<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small></div>
-    <div class="hbtn lock">🪜 단계 구조 · 컷 · 동점<small><span class="pill" style="background:#FBE9E4;color:#C4523A">잠김</span></small></div>
-    <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">해당 단계 기록이 없을 때만 열려요</p>
+  <div class="hcol"><p class="h" style="color:var(--act)">⚙️ 대회 운영 — 일정 · 장소 · 코스 · 구조 · 컷</p>
+    <div class="hbtn">🪜 대회 구조<small>예선+본선+결승 · <b style="color:var(--act)">단계 추가·삭제 가능</b></small><span class="go">›</span></div>
+    <div class="hbtn"><b>예선</b><small>기간 7.25~8.10 · 임팩트장 · 코스 2개 · 컷 남8·여8</small><span class="go">›</span></div>
+    <div class="hbtn"><b>본선</b><small>기간 8.11~8.20 · 코스 2개 · 컷 4명</small><span class="go">›</span></div>
+    <div class="hbtn" style="opacity:.72"><b>결승</b><small>대회일 8.29 · 솔터공원 · 코스 1개</small><span class="pill" style="background:#FBE9E4;color:#C4523A">기록 있어 잠김</span></div>
+    <p style="font-size:12.5px;color:var(--sub);padding:4px 4px">단계 행 › = 그 단계의 일정·장소·코스(추가·삭제, 최대 6개)·참가 인원(컷) 편집 · 잠금은 항목별(P31)</p>
   </div>
 </div></div>
-<p class="cap"><b>화면 7 — 허브: 3등급이 3컬럼으로</b>모바일의 세로 3그룹이 PC에선 3컬럼 — 등급 전체가 한눈에. 진입은 유틸바 ⚙️ 하나(단일 문 원칙), 잠금 조건·완성도·미리보기 전부 확정 정책 그대로.</p>
+<p class="cap"><b>화면 7 v2 — 허브 2대구분 (최종 주행 ⑥⑦⑧ 반영)</b>좌=📋대회 요강(참가자에게 보이는 것). 우=⚙️대회 운영(구조[단계 추가·삭제] + 단계별 행 › 에서 일정·장소·코스[최대 6개]·컷 편집). 잠금은 그룹이 아니라 항목별 뱃지.</p>
 
     <!-- 화면 L. 랜딩 -->
     
