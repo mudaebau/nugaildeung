@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — CH30 위저드 전체 흐름</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:10px}
+.flow{background:#fff;border:1px solid var(--line);border-radius:14px;display:inline-block;padding:12px 18px;font-size:13.5px;color:var(--muted);margin-bottom:34px;line-height:1.8}
+.flow b{color:var(--ink);font-weight:700}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* 공통 */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .sub{font-size:12px;opacity:.85;font-weight:400}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 24px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAAB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:58px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+
+/* 홈 요소 (기존 시안 재사용) */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow:first-child{border-top:1px solid rgba(255,255,255,.12)}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:14px;padding:9px 6px;text-align:center;min-width:68px}
+.dday b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:10.5px;font-weight:500}
+.opencard h4{font-size:15.5px;font-weight:700;line-height:1.4}
+.opencard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* 내 대회 목록 */
+.mycard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.open{background:var(--mint);color:#fff}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald';font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mycard .mygo.primary{background:var(--main);color:#fff}
+
+/* 관리공간 상단 탭 */
+.mtabs{display:flex;gap:8px;overflow:hidden;padding:14px 18px 4px;background:var(--bg)}
+.mtab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
+.mtab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:700}
+
+/* 대시보드 (재사용) */
+.stepper{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:27px;font-weight:700;display:block;line-height:1.1}
+.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:12px}
+.trow{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:40px;height:40px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:20px;height:20px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
+.trow .tt span{font-size:12px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* 참가자 탭 */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.ghead{background:var(--main);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.ghead b{font-weight:700}
+.ghead span{font-size:11.5px;opacity:.9}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.grow:last-child{border-bottom:none}
+.gav{width:34px;height:34px;border-radius:50%;background:#E3EEF9;color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.grow b{font-weight:700}
+.grow span{font-size:11.5px;color:var(--muted);margin-left:auto}
+.swaphint{font-size:12.5px;color:var(--muted);text-align:center;padding:4px 0 10px}
+
+/* v2.3 추가 스타일 */
+.tabA{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 6px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.fixbtn{position:absolute;left:18px;right:18px;bottom:100px}
+.dim{position:absolute;inset:0;background:rgba(23,51,80,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;border-radius:26px 26px 0 0;padding:24px 22px 30px;width:100%}
+.sheet h4{font-size:19px;font-weight:700;margin-bottom:12px}
+.sheet ul{list-style:none;margin-bottom:18px}
+.sheet li{font-size:14.5px;color:var(--ink);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;line-height:1.5}
+.sheet li:last-child{border-bottom:none}
+.sheet li i{font-style:normal;color:var(--main);font-weight:700}
+.hero{background:linear-gradient(150deg,#5A9ADA,#2F6BAA);border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:10px;letter-spacing:.02em}
+.hero h2{font-size:21.5px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--deep);font-weight:700;font-size:17px;min-height:54px;border-radius:15px}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald';font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:#D9534F}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald';font-size:22px;font-weight:700;color:var(--deep)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:#C4523A}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid #C9D8E7;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.prow2{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.prow2:last-child{border-bottom:none}
+.prow2 b{font-weight:700}
+.prow2 .meta{font-size:11.5px;color:var(--muted)}
+
+.preset{background:#fff;border:2px solid var(--line);border-radius:20px;padding:16px 18px;margin-bottom:11px;display:flex;gap:13px;align-items:center}
+.preset.on{border-color:var(--main);background:#F4F9FE}
+.preset .pic{width:44px;height:44px;border-radius:14px;background:#E3EEF9;display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 auto}
+.preset b{display:block;font-size:16px;font-weight:700}
+.preset span{font-size:12px;color:var(--muted);line-height:1.5}
+.field2{background:#fff;border:1.5px solid var(--line);border-radius:15px;padding:13px 16px;margin-bottom:11px}
+.field2 small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin-bottom:3px}
+.field2 b{font-size:17px;font-weight:700}
+.field2.cur{border-color:var(--main)}
+.sumcard{background:#fff;border:2px solid var(--line);border-radius:20px;padding:17px 19px;margin-bottom:11px}
+.sumcard.ok{border-color:var(--mint)}
+.sumcard h6{font-size:16px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.sumcard .kbadge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:#E3EEF9;color:var(--deep)}
+.sumcard .kbadge.period{background:#E7F5EE;color:#2E8B63}
+.sumline{font-size:13.5px;color:var(--muted);line-height:1.75}
+.sumline b{color:var(--ink);font-weight:700}
+.expand{font-size:13px;font-weight:700;color:var(--deep);margin-top:9px;display:inline-block}
+.donehero{background:linear-gradient(170deg,#F7CF5C,#F3C23B);border-radius:0 0 30px 30px;padding:28px 24px 24px;text-align:center;color:#22303D}
+.donehero h3{font-size:21px;font-weight:700;line-height:1.4}
+.donehero p{font-size:13px;margin-top:5px;color:#6b5310}
+.laterlist{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:13px}
+.laterlist .lrow{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px}
+.laterlist .lrow:last-child{border-bottom:none}
+.laterlist .st3{margin-left:auto;font-size:12px;font-weight:700;color:#C9930A}
+.laterlist .st3.ok{color:#2E8B63}
+
+.specgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.spec{background:#F4F8FC;border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px}
+.spec i{font-style:normal;font-size:19px;flex:0 0 auto}
+.spec b{display:block;font-size:14px;font-weight:700;line-height:1.25}
+.spec small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>대회 개설 — 위저드 전체 흐름 (CH30 완성판)</h1>
+  <p class="blead">필드 단판 기준 5화면 전부. 화면 3만 CH30 신규 설계, 나머지는 CH25 구현 완료분.</p>
+  <div class="row">
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:22px;position:relative">
+          <div style="display:flex;gap:6px;margin-bottom:24px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:22px;font-weight:700;line-height:1.45;margin-bottom:5px">어떤 대회인가요?</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">단계 구성만 고르세요 — 각 단계의 방식(지정일/기간)은 다음에서 확인해요</p>
+          <div class="preset on"><span class="pic">🏁</span><div><b>단판 대회</b><span>한 번의 라운드로 순위 결정 — 클럽 월례회 표준</span></div></div>
+          <div class="preset"><span class="pic">🥇</span><div><b>예선 + 결승</b><span>예선 통과자만 결승 진출 (컷 1회)</span></div></div>
+          <div class="preset"><span class="pic">🏆</span><div><b>예선 + 본선 + 결승</b><span>큰 대회 형식 (컷 2회)</span></div></div>
+          <div class="fixbtn"><div class="btnP">다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>화면 1 — 구조 프리셋 (CH30 개정 ★)</b><p>필드/스크린 질문 폐지 — 단계 구조 3종만. [직접 구성]도 흡수(커스텀은 단계 카드의 [상세 바꾸기]가 담당). 예선 기본값=대회기간 라운드, 결승·단판 기본값=지정일 라운드.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:22px;position:relative">
+          <div style="display:flex;gap:6px;margin-bottom:24px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:22px;font-weight:700;line-height:1.45;margin-bottom:5px">대회 이름을 지어주세요</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">신청 페이지와 전광판에 그대로 나와요</p>
+          <div class="field2 cur"><small>대회명</small><b>솔터공원 9월 월례오픈</b></div>
+          <div class="field2"><small>주최 (선택)</small><b style="color:#B9C6D4;font-weight:500">예: 솔터공원회</b></div>
+          <p class="swaphint" style="text-align:left">💡 "○○공원 ○월 월례오픈"처럼 장소+달이 들어가면 찾기 쉬워요</p>
+          <div class="fixbtn"><div class="btnP">다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>화면 2 — 대회명·주최 (기존 유지 + 작명 힌트 추가 제안)</b><p>결정 피로가 가장 낮은 화면 — 힌트 한 줄로 작명 고민만 덜어줍니다.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:22px;position:relative">
+          <div style="display:flex;gap:6px;margin-bottom:24px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:22px;font-weight:700;line-height:1.45;margin-bottom:5px">경기 방식을 확인해주세요</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">표준 설정을 미리 채워뒀어요</p>
+          <div class="sumcard ok">
+            <h6>본선 라운드 <span class="kbadge">지정일 라운드</span></h6>
+            <div class="specgrid">
+              <div class="spec"><i>⛳</i><div><b>18홀 · 1코스</b><small>코스</small></div></div>
+              <div class="spec"><i>👥</i><div><b>4인 1조</b><small>조편성</small></div></div>
+              <div class="spec"><i>✏️</i><div><b>홀별 기록</b><small>기록 방식</small></div></div>
+              <div class="spec"><i>⚖️</i><div><b>카운트백</b><small>동점 처리</small></div></div>
+            </div>
+            <span class="expand">상세 바꾸기 ∨</span>
+          </div>
+          <div class="fixbtn"><div class="btnP">이대로 좋아요 — 다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>화면 3 — 단계 확인 (CH30 신규 ★)</b><p>W1 요약+접기. 펼치면 경기 방식(kind)·코스·조편성·기록·동점 5옵션 — 상세는 CH30 목업 W2·W3 참조.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><span class="wm" style="font-size:17px">대회 개설</span></div>
+        <div class="scr" style="padding-top:22px;position:relative">
+          <div style="display:flex;gap:6px;margin-bottom:24px"><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:var(--main)"></i><i style="flex:1;height:5px;border-radius:99px;background:#DCE6F0"></i></div>
+          <h2 style="font-size:22px;font-weight:700;line-height:1.45;margin-bottom:5px">일정과 정원을 정해주세요</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">접수는 개설 즉시 시작돼요</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px">
+            <div class="field2" style="margin:0"><small>대회일</small><b>2026. 09. 13</b></div>
+            <div class="field2" style="margin:0"><small>접수 마감</small><b>2026. 09. 07</b></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <div class="field2" style="flex:1;margin:0"><small>정원</small><b>80명</b></div>
+            <div style="flex:1;border:1.5px solid var(--line);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;color:var(--muted)">인원 제한 없음</div>
+          </div>
+          <p class="swaphint" style="text-align:left">참가자 정보: 이름·전화(필수)+성별·나이·소속 — 요강 탭에서 변경 가능</p>
+          <div class="fixbtn"><div class="btnP">다음</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>화면 4 — 일정+정원 (CH25 구현 완료)</b><p>기간 대회면 시작~종료로 자동 전환, 무제한 토글 포함.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%;background:var(--bg)">
+        <div class="donehero">
+          <h3>대회가 열렸어요! 🎉</h3>
+          <p>솔터공원 9월 월례오픈 · 접수 시작됨</p>
+        </div>
+        <div class="scr" style="height:auto;padding-top:15px">
+          <div class="btnP">신청 링크 복사 — 단톡방에 공유</div>
+          <div class="laterlist">
+            <div class="lrow">시상 내역 <span class="st3">나중에 입력</span></div>
+            <div class="lrow">참가비 · 문의처 <span class="st3">나중에 입력</span></div>
+            <div class="lrow">심판 등록 <span class="st3">나중에 입력</span></div>
+            <div class="lrow">공개 설정 <span class="st3 ok">공개 (기본)</span></div>
+          </div>
+          <p class="swaphint">요강 탭·운영진 탭에서 언제든 채울 수 있어요</p>
+          <div class="btnP" style="background:#E3EEF9;color:var(--deep)">대회 관리로 가기</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>화면 5 — 완료 (CH25+B2 구현 완료)</b><p>링크 복사 최우선, "나중에" 목록에 심판 등록 포함(B2). 이후는 관리홈 다음 할 일 카드가 바통 터치.</p></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

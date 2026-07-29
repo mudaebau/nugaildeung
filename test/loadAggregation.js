@@ -9,16 +9,26 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-function extractBlock(lines, startLine, endLine, mustStartWith) {
-  // startLine/endLine: 1-based, index.html의 실제 줄 번호(그대로 복붙 가능하도록)
-  const slice = lines.slice(startLine - 1, endLine);
-  if (!slice[0].trimStart().startsWith(mustStartWith)) {
+// 시작·끝을 "마커 텍스트"로 찾는다. 예전엔 라인 번호를 박아뒀는데, index.html을 한 줄만
+// 고쳐도 범위가 밀려 12개 테스트가 통째로 깨졌다(네 번 반복됨). 이제 위아래로 코드가
+// 들어와도 블록만 정확히 잘라낸다 — 추출 대상은 여전히 프로덕션 소스 원문 그대로다.
+function extractBlock(lines, startsWith, endsBefore) {
+  const from = lines.findIndex(l => l.trimStart().startsWith(startsWith));
+  if (from < 0) {
     throw new Error(
-      `aggregation loader: index.html:${startLine}이 더 이상 "${mustStartWith}"로 시작하지 않습니다 — ` +
-      `함수가 이동했으니 test/loadAggregation.js의 라인 범위를 갱신하세요. 실제 내용: ${slice[0].slice(0, 80)}`
+      `aggregation loader: index.html에서 "${startsWith}"로 시작하는 줄을 찾지 못했습니다 — ` +
+      `함수 이름이 바뀌었는지 확인하세요.`
     );
   }
-  return slice.join('\n');
+  const rest = lines.slice(from + 1);
+  const rel = rest.findIndex(l => l.trimStart().startsWith(endsBefore));
+  if (rel < 0) {
+    throw new Error(
+      `aggregation loader: "${startsWith}" 이후에 끝 마커 "${endsBefore}"가 없습니다 — ` +
+      `블록 경계를 다시 지정하세요.`
+    );
+  }
+  return lines.slice(from, from + 1 + rel).join('\n');
 }
 
 function loadAggregation() {
@@ -28,14 +38,14 @@ function loadAggregation() {
   // 기간형 "베스트 합산"(재도전 시 더 낮은 타수만 반영)은 별도 named 함수가 아니라
   // loadBoardData 등 3곳에 반복되는 인라인 forEach다(index.html:2657-2658 등, 동일 텍스트).
   // 로직 자체(최소값 갱신 조건문)는 그대로 재사용하고, 호출 가능한 함수로만 감싼다.
-  const bestMapBody = extractBlock(lines, 2777, 2778, 'const bestMap={}');
+  const bestMapBody = extractBlock(lines, 'const bestMap={}', 'ROUNDS=');
   const computeBestMapFn = `function computeBestMap(plRows){\n${bestMapBody}\nreturn bestMap}`;
 
   const src = [
-    extractBlock(lines, 1758, 1765, 'const PRESET66'),           // PRESET66/54, coursePars, parAt, courseParTotal, isOut
-    extractBlock(lines, 2530, 2578, 'function cutCompetitors'),  // cutCompetitors ~ resolveCut(+courseSeries/courseCompare/ageCompare/tieGroupAt)
-    extractBlock(lines, 5493, 5511, 'function sums'),            // sums, standings
-    extractBlock(lines, 5715, 5740, 'function periodStandings'), // periodStandings
+    extractBlock(lines, 'const PRESET66', 'let jRound='),                    // PRESET66/54, coursePars, parAt, courseParTotal, isOut
+    extractBlock(lines, 'function cutCompetitors', 'async function renderOpsStats'), // cutCompetitors ~ resolveCut(+tieGroupAt 등)
+    extractBlock(lines, 'function sums', 'async function submitBoardGate'), // sums, standings
+    extractBlock(lines, 'function periodStandings', 'function renderPeriodBoard'), // periodStandings (P70 완주자 우선 정렬 포함)
     computeBestMapFn,
   ].join('\n\n');
 

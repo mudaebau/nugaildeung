@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>누가일등 — CH32 대회관리 IA v2 목업</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--main:#4E8FD0;--deep:#2F6BAA;--navy:#1D3D5C;--sun:#F7CF5C;--ink:#22303D;--muted:#68798C;
+--bg:#F2F5F9;--paper:#fff;--line:#E1E9F1;--mint:#57C2A8;--coral:#EF8368}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#E4EAF1;color:var(--ink);padding:40px 20px 100px}
+.num{font-family:'Oswald',sans-serif;font-variant-numeric:tabular-nums}
+.board{max-width:1840px;margin:0 auto}
+h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.blead{color:var(--muted);font-size:14.5px;margin-bottom:10px}
+.flow{background:#fff;border:1px solid var(--line);border-radius:14px;display:inline-block;padding:12px 18px;font-size:13.5px;color:var(--muted);margin-bottom:34px;line-height:1.8}
+.flow b{color:var(--ink);font-weight:700}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.shot{width:400px}
+.phone{width:400px;height:830px;background:var(--bg);border-radius:44px;border:10px solid #22303D;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(34,48,61,.22)}
+.cap{margin-top:16px;padding:0 6px}
+.cap b{display:block;font-size:16px;font-weight:700;margin-bottom:4px}
+.cap p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* 공통 */
+.ab{background:var(--deep);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;gap:10px}
+.ab .wm{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px}
+.ab .sub{font-size:12px;opacity:.85;font-weight:400}
+.ab .avatarS{margin-left:auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.abk{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.scr{padding:18px 18px 110px;height:calc(100% - 70px);overflow:hidden}
+.nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;padding:8px 24px 18px}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#9AAAB9;justify-content:center}
+.nav div.on{color:var(--deep);font-weight:700}
+.nav div.on i{background:#E3EEF9}
+.nav i{width:58px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.nav svg{width:23px;height:23px}
+.btnP{display:flex;align-items:center;justify-content:center;background:var(--main);color:#fff;font-weight:700;font-size:17px;min-height:54px;border-radius:16px}
+
+/* 홈 요소 (기존 시안 재사용) */
+.hello{font-size:14px;color:var(--muted);margin-bottom:14px}
+.hello b{color:var(--ink);font-weight:700}
+.live{background:linear-gradient(165deg,#1D3D5C,#173350);border-radius:22px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 10px 26px rgba(23,51,80,.3)}
+.live .lrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lpill{background:var(--coral);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:5px}
+.lpill i{width:6px;height:6px;border-radius:50%;background:#fff;font-style:normal}
+.live .lsub{font-size:12px;color:#9FBEDC;margin-left:auto}
+.live h3{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14.5px}
+.mrow:first-child{border-top:1px solid rgba(255,255,255,.12)}
+.mrow .rk{font-family:'Oswald';font-size:16px;font-weight:700;width:20px;color:#9FBEDC}
+.mrow.first .rk{color:var(--sun)}
+.mrow.first .nm{color:#fff;font-weight:700}
+.mrow .nm{flex:1;color:#D9E6F2}
+.mrow .sc{font-family:'Oswald';font-weight:600;font-size:16px}
+.mrow.first .sc{color:var(--sun)}
+.opencard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.dday{background:#E3EEF9;color:var(--deep);border-radius:14px;padding:9px 6px;text-align:center;min-width:68px}
+.dday b{font-family:'Oswald';font-size:22px;font-weight:700;display:block;line-height:1}
+.dday span{font-size:10.5px;font-weight:500}
+.opencard h4{font-size:15.5px;font-weight:700;line-height:1.4}
+.opencard p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* 내 대회 목록 */
+.mycard{background:#fff;border:2px solid var(--sun);border-radius:22px;padding:20px;margin-bottom:14px}
+.mycard.plain{border:1px solid var(--line)}
+.myrow1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stt{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.stt.live{background:var(--coral);color:#fff}
+.stt.done{background:#E9EEF4;color:var(--muted)}
+.stt.open{background:var(--mint);color:#fff}
+.mycard h4{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.mystats{display:flex;gap:18px;margin-bottom:14px}
+.mystats div b{font-family:'Oswald';font-size:21px;font-weight:700;display:block;line-height:1.15}
+.mystats div span{font-size:11.5px;color:var(--muted)}
+.mygo{display:flex;align-items:center;justify-content:center;background:#E3EEF9;color:var(--deep);font-weight:700;font-size:15.5px;min-height:48px;border-radius:14px}
+.mycard .mygo.primary{background:var(--main);color:#fff}
+
+/* 관리공간 상단 탭 */
+.mtabs{display:flex;gap:8px;overflow:hidden;padding:14px 18px 4px;background:var(--bg)}
+.mtab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--muted)}
+.mtab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:700}
+
+/* 대시보드 (재사용) */
+.stepper{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.st{flex:1;text-align:center}
+.st b{display:block;font-size:14.5px;font-weight:700}
+.st span{font-size:11px;color:var(--muted)}
+.st.cur b{color:var(--deep)}
+.st.cur span{color:var(--mint);font-weight:700}
+.starr{color:#C3D2E1;font-size:16px;padding:0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
+.stat b{font-family:'Oswald';font-size:27px;font-weight:700;display:block;line-height:1.1}
+.stat b small{font-size:13px;font-weight:600;color:var(--muted)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.hot b{color:var(--deep)}
+.tools{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:12px}
+.trow{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .tic{width:40px;height:40px;border-radius:13px;background:#E3EEF9;display:flex;align-items:center;justify-content:center}
+.trow .tic svg{width:20px;height:20px;stroke:var(--deep)}
+.trow .tt{flex:1}
+.trow .tt b{display:block;font-size:15px;font-weight:700}
+.trow .tt span{font-size:12px;color:var(--muted)}
+.trow .st2{font-size:12px;font-weight:700;color:var(--mint)}
+.trow .st2.warn{color:#C9930A}
+.trow .chev{color:#B7C6D5;font-size:18px}
+
+/* 참가자 탭 */
+.seg{display:flex;background:#E7EDF4;border-radius:14px;padding:4px;margin-bottom:14px}
+.seg div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:15px;font-weight:500;color:var(--muted)}
+.seg div.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(34,48,61,.08)}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.ghead{background:var(--main);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.ghead b{font-weight:700}
+.ghead span{font-size:11.5px;opacity:.9}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.grow:last-child{border-bottom:none}
+.gav{width:34px;height:34px;border-radius:50%;background:#E3EEF9;color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.grow b{font-weight:700}
+.grow span{font-size:11.5px;color:var(--muted);margin-left:auto}
+.swaphint{font-size:12.5px;color:var(--muted);text-align:center;padding:4px 0 10px}
+
+/* v2.3 추가 스타일 */
+.tabA{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 6px}
+.tabA .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;position:relative;color:#93A5B7}
+.tabA .ti svg{width:21px;height:21px}
+.tabA .ti span{font-size:11.5px;font-weight:500;white-space:nowrap}
+.tabA .ti.on{color:var(--deep)}
+.tabA .ti.on span{font-weight:700}
+.tabA .ti.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:3.5px;border-radius:99px;background:var(--deep)}
+.tabA .ti .bdg{position:absolute;top:7px;right:16%;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid #fff}
+.todo{background:#FDF6E1;border:1.5px solid #F2E3B4;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#6f5a13;margin-bottom:12px}
+.todo b{font-weight:700}
+.todo .chev{margin-left:auto;color:#C9A94E;font-weight:700}
+.fixbtn{position:absolute;left:18px;right:18px;bottom:100px}
+.dim{position:absolute;inset:0;background:rgba(23,51,80,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;border-radius:26px 26px 0 0;padding:24px 22px 30px;width:100%}
+.sheet h4{font-size:19px;font-weight:700;margin-bottom:12px}
+.sheet ul{list-style:none;margin-bottom:18px}
+.sheet li{font-size:14.5px;color:var(--ink);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;line-height:1.5}
+.sheet li:last-child{border-bottom:none}
+.sheet li i{font-style:normal;color:var(--main);font-weight:700}
+.hero{background:linear-gradient(150deg,#5A9ADA,#2F6BAA);border-radius:22px;padding:22px 20px 20px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px rgba(47,107,170,.28)}
+.hero .tagchip{display:inline-block;background:rgba(255,255,255,.18);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;margin-bottom:10px;letter-spacing:.02em}
+.hero h2{font-size:21.5px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.hero .cta{display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--deep);font-weight:700;font-size:17px;min-height:54px;border-radius:15px}
+.holegrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}
+.hc{background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:7px 2px 8px;text-align:center}
+.hc small{display:block;font-size:9.5px;color:var(--muted);font-weight:500}
+.hc b{font-family:'Oswald';font-size:19px;font-weight:600;color:var(--ink)}
+.hc.empty b{color:#B9C6D4}
+.hc.cur{border-color:var(--main);border-width:2.5px;background:#F4F9FE}
+.hc.birdie b{color:#D9534F}
+.sumrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:13px 16px;background:#F7FAFD;border-radius:14px;font-size:14.5px}
+.sumrow b{font-family:'Oswald';font-size:22px;font-weight:700;color:var(--deep)}
+.pill2{font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px}
+.pill2.pay{background:#E7F5EE;color:#2E8B63}
+.pill2.nopay{background:#FBE9E4;color:#C4523A}
+.ckc{width:30px;height:30px;border-radius:50%;border:2.5px solid #C9D8E7;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.ckc.on{background:var(--mint);border-color:var(--mint)}
+.prow2{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.prow2:last-child{border-bottom:none}
+.prow2 b{font-weight:700}
+.prow2 .meta{font-size:11.5px;color:var(--muted)}
+
+.tab4{display:flex;background:#fff;border-bottom:1.5px solid var(--line)}
+.tab4 .t{flex:1;text-align:center;padding:11px 0 10px;color:#8CA0B4}
+.tab4 .t i{display:block;margin:0 auto 3px;width:23px;height:23px}
+.tab4 .t i svg{width:23px;height:23px;stroke:currentColor}
+.tab4 .t span{font-size:12px;font-weight:700}
+.tab4 .t.on{color:var(--deep);position:relative}
+.tab4 .t.on:after{content:'';position:absolute;bottom:0;left:24%;right:24%;height:3px;border-radius:99px;background:var(--deep)}
+/* 여정 체크리스트 */
+.jlist{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.jstep{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.jstep:last-child{border-bottom:none}
+.jstep .jn{width:27px;height:27px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.jstep.done .jn{background:#E7F5EE;color:#2E8B63}
+.jstep.cur .jn{background:var(--deep);color:#fff}
+.jstep.todo .jn{background:#EDF1F6;color:#9AAAB9}
+.jstep b{font-size:14.5px;font-weight:700;display:block}
+.jstep small{font-size:11.5px;color:var(--muted)}
+.jstep.todo b{color:#9AAAB9;font-weight:500}
+.jstep .jact{margin-left:auto;background:var(--main);color:#fff;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:11px;flex:0 0 auto}
+.jstep.cur{background:#F4F9FE}
+.jact.sec{background:#E3EEF9;color:var(--deep)}
+.jact.dis{background:#EDF1F6;color:#9AAAB9}
+.subrow{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);background:#fff;font-size:14.5px}
+.subrow:last-child{border-bottom:none}
+.subrow .go{margin-left:auto;color:var(--muted);font-size:12px;flex:0 0 auto}
+.subrow .sd{flex:1;min-width:0}
+.subrow .sd b{display:block;font-size:14.5px}
+.subrow .sd small{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.prow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:#fff;font-size:14.5px}
+.prow .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px}
+.prow .ck.on{background:#2E8B63;border-color:#2E8B63;color:#fff}
+.prow .pinfo b{display:block;font-size:15px;font-weight:700}
+.prow .pinfo span{font-size:11.5px;color:var(--muted)}
+.paybadge{margin-left:auto;font-size:10.5px;font-weight:700;padding:3.5px 9px;border-radius:99px;background:#E7F5EE;color:#2E8B63}
+.ghead{background:#EDF2F8;padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--deep)}
+.srow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:#fff;font-size:14.5px}
+.srow .prog{margin-left:auto;text-align:right}
+.srow .prog b{font-family:'Oswald';font-size:15px;display:block}
+.srow .prog span{font-size:10.5px;color:var(--muted)}
+.rrow{display:grid;grid-template-columns:30px 1fr 62px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);background:#fff;font-size:14px}
+.rrow .r{font-family:'Oswald';font-weight:700;color:var(--muted)}
+.rrow .v{font-family:'Oswald';font-weight:700;text-align:right;font-size:16px}
+.rrow.g1{background:#FEF7E0;border-left:4px solid var(--sun)}
+.rrow.g1 .r,.rrow.g1 .v{color:#C9930A}
+
+.inrow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:#fff}
+.inrow:last-child{border-bottom:none}
+.inrow .who{flex:1;min-width:0}
+.inrow .who b{display:block;font-size:15px;font-weight:700}
+.inrow .who span{font-size:11.5px;color:var(--muted)}
+.numbox{width:70px;height:44px;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-family:'Oswald';font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;color:#B9C6D4}
+.numbox.filled{color:var(--ink);border-color:var(--main)}
+.okbtn{height:44px;padding:0 13px;border-radius:12px;background:var(--main);color:#fff;font-weight:700;font-size:13.5px;display:flex;align-items:center}
+.okbtn.done{background:#E7F5EE;color:#2E8B63}
+.hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.hc2{background:#fff;border:1.5px solid var(--line);border-radius:11px;text-align:center;padding:6px 2px}
+.hc2 small{display:block;font-size:9.5px;color:var(--muted);font-weight:700}
+.hc2 b{font-family:'Oswald';font-size:17px;font-weight:600}
+.hc2.bird{border-color:var(--mint);background:#F2FBF7}
+.hc2.cur2{border-color:var(--main);background:#F4F9FE}
+.hc2.emp b{color:#C9D4DF}
+.sumbar{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:13.5px}
+.sumbar b{font-family:'Oswald';font-size:19px}
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>CH32 v3 — 여정 대칭 버튼 · 통합 허브 · 메뉴 부제</h1>
+  <p class="blead">v3: 여정 모든 줄에 대응 버튼(개설↔정보수정 · 모집↔마감 · 단계↔시작/마감 · 종료↔확정), 요강 관리+대회 정보 수정 → 통합 허브 하나. 탭=[대회홈·참가자·스코어·리더보드].</p>
+  <div class="row">
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">예선 진행 중 · 예선+결승</div></div></div>
+        <div class="tab4"><div class="t on"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></i><span>대회홈</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/></svg></i><span>참가자</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg></i><span>스코어</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></i><span>리더보드</span></div></div>
+        <div class="scr" style="height:calc(100% - 128px);padding-top:12px">
+          <div class="jlist">
+            <div class="jstep done"><span class="jn">✓</span><div><b>대회 개설</b><small>요강 완성도 <b style="color:#C9930A">80%</b> · 일정·구조 관리</small></div><span class="jact sec">정보 수정</span></div>
+            <div class="jstep done"><span class="jn">✓</span><div><b>참가자 모집</b><small>41명 신청 · 8.20 마감됨</small></div><span class="jact sec">재개</span></div>
+            <div class="jstep cur"><span class="jn">3</span><div><b>예선 진행</b><small>완주 28/41 · D-4</small></div><span class="jact">예선 마감</span></div>
+            <div class="jstep todo"><span class="jn">4</span><div><b>결승 진행</b><small>진출 남8·여8 · 9.20</small></div><span class="jact dis">결승 시작</span></div>
+            <div class="jstep todo"><span class="jn">5</span><div><b>대회 종료</b><small>결과·시상 확정</small></div><span class="jact dis">종료 확정</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 1 — 대회홈: 여정 = 줄마다 자기 버튼 (대칭 구조)</b>
+      <p>개설↔[정보 수정](항상 활성) / 모집↔[마감/재개] / 예선↔[예선 마감] / 결승↔[결승 시작] / 종료↔[종료 확정]. <b>지금 할 것만 파랑, 아직인 것은 회색(비활성), 지난 것은 옅은 파랑(보조)</b> — 순서와 상태가 버튼 색으로 읽힙니다. 예선 마감↔결승 시작 분리(사이에 명단·조편성 시간). <b>단계 시작 버튼 = 사전 점검 시트 선행</b>(명단 확정·조편성·심판 상태 확인 후 시작) · 회색 버튼 탭 = 이유 토스트. 단계 수 따라 줄 자동 증감.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div class="scr" style="height:100%;padding-top:14px">
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">대회홈 이어서 (스크롤 하단) — 도구·서브 항목 상시 노출</p>
+          <div class="jlist" style="margin-bottom:12px">
+            <div class="subrow">📺 <div class="sd"><b>전광판 열기</b><small>순위를 큰 화면(TV)에 띄워요</small></div><span class="go">›</span></div>
+            <div class="subrow">🔗 <div class="sd"><b>신청 링크 공유</b><small>단톡방에 붙여넣어 참가 신청을 받아요</small></div><span class="go">›</span></div>
+          </div>
+          <div class="jlist">
+            <div class="subrow">⚖️ <div class="sd"><b>심판진</b><small>점수 입력할 분 추가 · 문자 링크 발송 — 나(운영자) 포함 3명</small></div><span class="go">›</span></div>
+            <div class="subrow">📤 <div class="sd"><b>파일로 저장</b><small>명단·조편성·순위를 엑셀용 파일로 — 협회 제출·인쇄</small></div><span class="go">›</span></div>
+          </div>
+      </div></div>
+      <div class="cap"><b>장면 2 — 대회홈 하단</b>
+      <p>도구 2행 + 심판진·파일로 저장. <b>모든 행에 부제(용도 한 줄)</b> — "내보내기(CSV)"도 "파일로 저장 — 명단·순위를 엑셀용 파일로"가 되니 무엇을 하는 문인지 열기 전에 압니다. 요강·정보수정 행은 여정 첫 줄로 통합.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">참가자</div></div></div>
+        <div class="tab4"><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></i><span>대회홈</span></div><div class="t on"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/></svg></i><span>참가자</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg></i><span>스코어</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></i><span>리더보드</span></div></div>
+        <div class="scr" style="height:calc(100% - 128px);padding-top:12px">
+          <div class="seg"><div class="on">예선 41</div><div>결승 16</div><div>대기 0</div></div>
+          <div style="display:flex;gap:8px;margin-bottom:10px"><span class="mtab on">명단</span><span class="mtab">조편성 (8조)</span></div>
+          <div style="background:#fff;border:1.5px solid var(--line);border-radius:13px;padding:11px 14px;color:#9AAAB9;font-size:14px;margin-bottom:10px">이름 또는 전화번호 뒷자리</div>
+          <div style="border:1px solid var(--line);border-radius:16px;overflow:hidden">
+            <div class="prow"><span class="ck on">✓</span><div class="pinfo"><b>김영수</b><span>010-••••-1000 · 솔터공원회</span></div><span style="font-size:15px">📞</span><span class="paybadge">입금</span></div>
+            <div class="prow"><span class="ck on">✓</span><div class="pinfo"><b>박순자</b><span>010-••••-1001 · 한강은빛회</span></div><span style="font-size:15px">📞</span><span class="paybadge">입금</span></div>
+            <div class="prow"><span class="ck"></span><div class="pinfo"><b>표순덕</b><span>010-••••-1002 · 미사리파크</span></div><span style="font-size:15px">📞</span><span class="paybadge" style="background:#EDF1F6;color:#8CA0B4">미입금</span></div>
+          </div>
+          <div class="fixbtn"><div class="btnP">＋ 참가자 추가</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 3 — 참가자: 단계별 명단 세그먼트</b>
+      <p>[예선 41 | 결승 16 | 대기] 단계 세그먼트 × 하위 [명단|조편성] 전환 — <b>단계마다 자기 명단과 자기 조편성</b>을 가짐. 어느 단계든 추가·삭제·수정, 결승 명단=콜업·확정 흐름 연결. 3단계면 자동 확장.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">스코어 · 결승 (홀별)</div></div></div>
+        <div class="tab4"><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></i><span>대회홈</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/></svg></i><span>참가자</span></div><div class="t on"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg></i><span>스코어</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></i><span>리더보드</span></div></div>
+        <div class="scr" style="height:calc(100% - 128px);padding-top:12px">
+          <div style="display:flex;gap:8px;margin-bottom:10px"><span class="mtab on">결승</span><span class="mtab">예선 (완료)</span></div>
+          <div style="border:1px solid var(--line);border-radius:16px;overflow:hidden">
+            <div class="ghead">1조</div>
+            <div class="srow"><span class="gav">김</span><b>김영수</b><div class="prog"><b class="num">18/18</b><span style="color:#2E8B63;font-weight:700">완료 67</span></div></div>
+            <div class="srow"><span class="gav">박</span><b>박순자</b><div class="prog"><b class="num">12/18</b><span>입력 중</span></div></div>
+            <div class="ghead">2조</div>
+            <div class="srow"><span class="gav">표</span><b>표순덕</b><div class="prog"><b class="num">0/18</b><span>미입력</span></div></div>
+          </div>
+          <p class="swaphint" style="margin-top:9px">이름 탭 = 18홀 입력 페이지(장면 8) · 조 없으면 가나다순</p>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 4 — 스코어: 홀별 단계 = 진행 목록</b>
+      <p>홀별 모드의 얼굴 — 조별 정렬·스티키 조 헤더·진행 N/18, <b>이름 탭 → 18홀 입력 페이지(장면 8)</b>. 총점 모드는 목록이 곧 입력(장면 7)이라 이 화면 대신 인라인 행이 뜨고, [여러 명 입력] 세그먼트도 총점 모드 전용. 두 모드가 같은 탭에서 kind 따라 자동 전환.</p></div>
+    </div>
+
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">리더보드 · 예선</div></div></div>
+        <div class="tab4"><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></i><span>대회홈</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/></svg></i><span>참가자</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg></i><span>스코어</span></div><div class="t on"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></i><span>리더보드</span></div></div>
+        <div class="scr" style="height:calc(100% - 128px);padding-top:12px">
+          <div style="display:flex;gap:6px;margin-bottom:10px"><span class="mtab on">전체</span><span class="mtab">남자부</span><span class="mtab">여자부</span><span style="flex:1"></span><span class="mtab on">종합</span></div>
+          <div style="border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:11px">
+            <div class="rrow g1"><span class="r">1</span><span><b>표순덕</b> <small style="color:var(--muted)">여 · 미사리파크</small></span><span class="v">133</span></div>
+            <div class="rrow"><span class="r" style="color:var(--ink)">2</span><span><b>김영수</b> <small style="color:var(--muted)">남 · 솔터공원회</small></span><span class="v">137</span></div>
+            <div class="rrow"><span class="r" style="color:var(--ink)">3</span><span><b>엄기석</b> <small style="color:var(--muted)">남 · 청솔클럽</small></span><span class="v">139</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 16px;font-size:13.5px;line-height:1.95;margin-bottom:11px"><b style="font-size:12.5px;color:var(--deep)">🏆 부문 수상 (종료 시 확정)</b><br>남자부 1위 김영수 · 여자부 1위 표순덕 · 도전왕 신동철</div>
+          <div class="btnP" style="background:#E3EEF9;color:var(--deep)">CSV · 인쇄</div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 5 — 리더보드 (구 리더보드+결과 통합)</b>
+      <p>순위·필터(부문×범위)·부문 수상·CSV·인쇄가 한 집 — 진행 중엔 실시간 순위, 종료 후엔 최종 결과로 같은 화면이 역할 전환. <b>마감·종료 버튼은 여기 없음</b> — 전부 대회홈 여정으로 이사(장면 1).</p></div>
+    </div>
+
+
+    <!-- 장면 6. 대회 정보 수정 (통합 허브) -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">대회 정보 수정</div></div></div>
+        <div class="scr" style="padding-top:14px">
+          <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 17px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>요강 완성도</span><span style="color:var(--deep)">80%</span></div>
+            <div style="height:8px;background:#EDF2F8;border-radius:99px;overflow:hidden;margin:8px 0 0"><i style="display:block;height:100%;width:80%;background:var(--main);border-radius:99px"></i></div>
+          </div>
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">📋 요강 내용 — 언제든 수정</p>
+          <div class="jlist" style="margin-bottom:12px">
+            <div class="subrow">🏷 <div class="sd"><b>대회명 · 주최</b><small>요강 맨 위에 나오는 이름</small></div><span class="go">›</span></div>
+            <div class="subrow">🏆 <b>시상 내역</b><span style="font-size:12px;color:#2E8B63;font-weight:700;margin-left:auto">✓</span></div>
+            <div class="subrow">💰 <b>참가비 · 문의처</b><span style="font-size:12px;color:#2E8B63;font-weight:700;margin-left:auto">✓</span></div>
+            <div class="subrow">📖 <b>게임룰</b><span style="font-size:12px;color:#C9930A;font-weight:700;margin-left:auto">채우기 ›</span></div>
+            <div class="subrow">👁 <div class="sd"><b>요강 미리보기 · 공유</b><small>참가자가 보는 화면 확인 · 단톡방용 이미지 저장</small></div><span class="go">›</span></div>
+          </div>
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">🟡 수정 시 참가자 공지 확인</p>
+          <div class="jlist" style="margin-bottom:12px">
+            <div class="subrow">📅 <div class="sd"><b>일정 · 장소</b><small>바꾸면 참가자에게 알려야 해요</small></div><span class="go">›</span></div>
+            <div class="subrow">👥 <b>정원 · 참여 대상 · 공개</b><span style="font-size:11.5px;color:var(--muted);margin-left:4px">제한 없음 · 공개</span><span class="go">›</span></div>
+            <div class="subrow">📝 <div class="sd"><b>참가자 정보 항목</b><small>신청 때 받을 정보 — 성별·나이·소속</small></div><span class="go">›</span></div>
+          </div>
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">🔴 경기 기록이 있어 잠김</p>
+          <div class="jlist">
+            <div class="subrow" style="opacity:.55">⛳ <b>코스 · 단계 구조 · 컷 · 동점</b><span style="font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:#FBE9E4;color:#C4523A;margin-left:auto">잠김</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 6 — 대회 정보 수정: 통합 허브 (요강+뼈대 한 집)</b>
+      <p>진입은 여정 첫 줄 [정보 수정] 하나. 위에서 아래로 — 완성도 카드 → 📋요강 내용(자유: 대회명·시상·참가비·게임룰·미리보기/공유) → 🟡공지 확인(일정·정원·공개·정보항목) → 🔴잠김(코스·구조). "어디서 바꾸지?"의 답이 항상 같은 곳이 됩니다.</p></div>
+    </div>
+
+
+    <!-- 장면 7. 총점 입력 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">임팩트 챌린지컵</span><div class="sub">스코어 · 예선 (총점)</div></div></div>
+        <div class="tab4"><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></i><span>대회홈</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 6.2a3 3 0 1 1 1.2 5.8"/></svg></i><span>참가자</span></div><div class="t on"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="17" rx="2"/><path d="M7 8h4M7 12h4"/><path d="m16.5 12.5 4-4-2-2-4 4V13h2z"/></svg></i><span>스코어</span></div><div class="t"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></i><span>리더보드</span></div></div>
+        <div class="scr" style="height:calc(100% - 128px);padding-top:12px">
+          <div style="display:flex;gap:8px;margin-bottom:10px"><span class="mtab on">1코스 솔터</span><span class="mtab">2코스 미사</span></div>
+          <div class="seg"><div class="on">한 명씩</div><div>여러 명 입력</div></div>
+          <div style="background:#fff;border:1.5px solid var(--line);border-radius:13px;padding:11px 14px;color:#9AAAB9;font-size:14px;margin-bottom:10px">이름 또는 전화번호 뒷자리</div>
+          <div style="border:1px solid var(--line);border-radius:16px;overflow:hidden">
+            <div class="inrow" style="background:#F4FBF8"><span class="gav">표</span><div class="who"><b>표순덕</b><span>미사리파크 · 베스트 66</span></div><span class="numbox filled">66</span><span class="okbtn done">✓ 저장</span></div>
+            <div class="inrow"><span class="gav">김</span><div class="who"><b>김영수</b><span>솔터공원회 · 베스트 68</span></div><span class="numbox filled">71</span><span class="okbtn">확인</span></div>
+            <div class="inrow"><span class="gav">박</span><div class="who"><b>박순자</b><span>한강은빛회 · 첫 도전</span></div><span class="numbox">—</span><span class="okbtn" style="background:#E7EDF4;color:#9AAAB9">확인</span></div>
+          </div>
+          <p class="swaphint" style="margin-top:9px">표순덕: 베스트 유지 (68→66 아님, 이번 71) · ✓저장 탭 = 기록 내역(수정·삭제)</p>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 7 — 스코어: 총점 입력 (인라인)</b>
+      <p>코스 칩 → 이름 옆 숫자칸+[확인] 한 줄 완결. 저장 행은 "✓ 저장"(민트)으로, 베스트 경신/유지 토스트+[실행 취소], ✓ 탭=기록 내역 시트. [여러 명 입력]은 컬럼 선언 붙여넣기(W6).</p></div>
+    </div>
+
+    <!-- 장면 8. 홀별 입력 전용 페이지 -->
+    <div class="shot">
+      <div class="phone"><div style="height:100%">
+        <div class="ab"><span class="abk">←</span><div><span class="wm" style="font-size:16.5px">박순자</span><div class="sub">1조 · 결승 · 홀별 입력</div></div></div>
+        <div class="scr" style="height:calc(100% - 70px);padding-top:12px;position:relative">
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">전반 (1~9홀) — 소계 <b style="color:var(--ink)">32</b></p>
+          <div class="hgrid">
+            <div class="hc2"><small>1·P3</small><b>3</b></div><div class="hc2"><small>2·P4</small><b>4</b></div><div class="hc2 bird"><small>3·P3</small><b>2</b></div><div class="hc2"><small>4·P3</small><b>3</b></div><div class="hc2"><small>5·P4</small><b>5</b></div><div class="hc2"><small>6·P3</small><b>3</b></div>
+            <div class="hc2"><small>7·P5</small><b>5</b></div><div class="hc2"><small>8·P4</small><b>4</b></div><div class="hc2"><small>9·P4</small><b>3</b></div>
+          </div>
+          <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">후반 (10~18홀) — 소계 <b style="color:var(--ink)">11</b></p>
+          <div class="hgrid">
+            <div class="hc2"><small>10·P3</small><b>3</b></div><div class="hc2"><small>11·P3</small><b>4</b></div><div class="hc2"><small>12·P4</small><b>4</b></div><div class="hc2 cur2"><small>13·P5</small><b>—</b></div><div class="hc2 emp"><small>14·P3</small><b>—</b></div><div class="hc2 emp"><small>15·P4</small><b>—</b></div>
+            <div class="hc2 emp"><small>16·P3</small><b>—</b></div><div class="hc2 emp"><small>17·P4</small><b>—</b></div><div class="hc2 emp"><small>18·P4</small><b>—</b></div>
+          </div>
+          <div class="sumbar"><span style="color:var(--muted)">12홀 입력 · 파 대비 <b style="color:#C4523A;font-size:15px">-1</b></span><span>합계 <b>43</b></span></div>
+          <div class="fixbtn"><div class="btnP">입력 완료 — 목록으로</div></div>
+        </div>
+      </div></div>
+      <div class="cap"><b>장면 8 — 스코어: 홀별 입력 전용 페이지</b>
+      <p>목록(조별 정렬)에서 이름 탭 → 이 사람만의 전체 화면. 18홀이 전·후반 그리드로 한 화면에(각 소계), 입력한 칸=채움·버디=민트·현재 칸=파랑 테두리, 하단 합계·파대비 상시. [입력 완료]로 목록 복귀 — 다음 칸 자동 이동 포함.</p></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

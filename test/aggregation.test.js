@@ -152,20 +152,32 @@ test('기간형 베스트 합산 — 유지(더 나쁜 재도전은 무시)', ()
   assert.equal(bestMap.p1[0], 78, '베스트가 나쁜 재도전에 덮어써지면 안 됨');
 });
 
-test('기간형 순위(periodStandings) — tot은 전 코스 완주해야 확정, 순위 자체는 실시간 페이스로 매김', () => {
+test('기간형 순위(periodStandings) — P70: 순위는 완주자만, 미완주는 페이스가 좋아도 아래로', () => {
   const sb = loadAggregation();
   sb.ROUNDS = 2; sb.coursePars = evenPars(66, 2);
-  // 진행 중인 라이브 리더보드 특성상, 아직 다 안 돈 선수도 지금까지 페이스로
-  // 순위에 함께 노출된다(실제 골프 리더보드의 "thru" 표시와 동일한 설계) —
-  // 완주 여부는 tot(null 여부)로만 구분하고, 정렬 자체를 완주자 우선으로 막지 않는다.
-  // 단, 한 코스도 안 친 선수(completed===0)는 항상 맨 뒤로 밀린다.
+  // 기준서 P70(R13 교훈)으로 규칙이 바뀌었다. 예전엔 아직 다 안 돈 선수도 잠정 페이스로
+  // 함께 순위를 받았는데(골프 리더보드 thru 표시 발상), 코스를 덜 친 사람이 완주자보다
+  // 위에 오는 결과가 나왔다 — 화면 캡션("미완주자는 완주자 아래로")과도, 배포되는 결과
+  // CSV와도 어긋났다. 이제 완주(tot!=null)가 1차 정렬 키다.
   const players = [
     { name: 'A', age: 40, st: '', best: { 0: 65, 1: 65 } },  // 완주, 합 130, topar -2
-    { name: 'B', age: 40, st: '', best: { 0: 60 } },         // 1코스만, topar -6(더 좋은 페이스)
+    { name: 'B', age: 40, st: '', best: { 0: 60 } },         // 1코스만 — 페이스는 더 좋지만 미완주
     { name: 'C', age: 40, st: '', best: {} },                // 미출전
   ];
   const res = sb.periodStandings(players);
-  assert.deepEqual(res.map(r => r.p.name), ['B', 'A', 'C'], '페이스 좋은 진행 중 선수가 위, 미출전은 항상 맨 뒤');
+  assert.deepEqual(res.map(r => r.p.name), ['A', 'B', 'C'], '완주자 → 미완주(친 코스 많은 순) → 미출전');
   assert.equal(res.find(r => r.p.name === 'A').tot, 130);
   assert.equal(res.find(r => r.p.name === 'B').tot, null, '미완주는 tot 확정 전이어야 함');
+});
+
+test('기간형 순위 — 미완주끼리는 친 코스 수, 그다음 잠정 합계 순', () => {
+  const sb = loadAggregation();
+  sb.ROUNDS = 3; sb.coursePars = evenPars(66, 3);
+  const players = [
+    { name: '한코스좋음', age: 40, st: '', best: { 0: 60 } },
+    { name: '두코스', age: 40, st: '', best: { 0: 70, 1: 70 } },
+    { name: '한코스나쁨', age: 40, st: '', best: { 0: 80 } },
+  ];
+  const res = sb.periodStandings(players);
+  assert.deepEqual(res.map(r => r.p.name), ['두코스', '한코스좋음', '한코스나쁨']);
 });
